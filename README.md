@@ -18,6 +18,7 @@ Plataforma web integral que se desarrollara con **Angular**, **Vite** y **Supaba
 # 🎯 Visión
 # 🎯 Objetivos
 ## Objetivo General
+Diseñar e implementar una aplicación que permita hacer seguimiento en tiempo real a los buses escolares, garantizando la seguridad de los estudiantes y optimizando la gestión del transporte.
 
 ## Objetivos Epecíficos
 

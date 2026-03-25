@@ -13,4 +13,51 @@ Plataforma web integral que se desarrollara con **Angular**, **Vite** y **Supaba
 
 </div>
 
+<h2 align="center">Descripción del proyecto </h2>
+
+# 🎯 Visión
+# 🎯 Objetivos
+## Objetivo General
+
+## Objetivos Epecíficos
+
+# Usuarios del Sistema
+
+
+# ⚙️ Funcionalidades principales
+
+#  Tecnologías utilizadas
+El sistema fue desarrollado utilizando las siguientes tecnologías:
+
+# **Backend**
+
+**Base de Datos**
+
+
+# **Frontend**
+
+
+# **Control de Versiones**
+* Git – Sistema de control de versiones.
+
+# **Repositorio del Proyecto**
+
+ ## Herramienta de Scrum
+https://trello.com/invite/b/69be1364f3228e2addf4032d/ATTIb2742128c14ad31a945f30b16f52bafa0CDEEB0E/seminarioproyecto
+  
+ ## 🔒 Estado del Proyecto
+* 🟡 Proximo a desarrollar
+  
+## 👥 Roles del equipo
+
+* Scrum Master: Daniella Rodriguez
+### Equipo de Desarrollo:
+* Frontend Developer Luisa y Karol
+* Backend Developer Christian Tellez y Elkin
+* Base de datos: Christian Tellez
+
+## 📄 Licencia
+* Este proyecto es de uso académico y puede ser modificado para fines educativos.
+
+
 

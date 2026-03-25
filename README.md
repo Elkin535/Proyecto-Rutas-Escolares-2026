@@ -31,7 +31,7 @@ El sistema fue desarrollado utilizando las siguientes tecnologías:
 
 # **Backend**
 
-**Base de Datos**
+# **Base de Datos**
 
 
 # **Frontend**

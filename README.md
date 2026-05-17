@@ -22,12 +22,12 @@ El proyecto consiste en el desarrollo de una plataforma web y móvil de alta esc
 ### Objetivo General
 Diseñar e implementar una aplicación que permita hacer seguimiento en tiempo real a los buses escolares, garantizando la seguridad de los estudiantes y optimizando la gestión del transporte.
 
-## Objetivos Epecíficos
+### Objetivos Epecíficos
 
-## El Problema que Resuelve
+### El Problema que Resuelve
 Hoy en día, los padres experimentan altos niveles de ansiedad debido a la falta de visibilidad sobre el trayecto diario de sus hijos (colegio-casa y viceversa). Por otro lado, los colegios y transportistas carecen de herramientas centralizadas y eficientes para registrar eventos críticos de manera inmediata, dependiendo a menudo de reportes manuales o mensajes de texto informales.
 
-# Usuarios del Sistema
+### Usuarios del Sistema
 
 
 # ⚙️ Funcionalidades principales

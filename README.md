@@ -19,7 +19,7 @@ Plataforma web integral que se desarrollara con **React**, **Vite** y **PosgreSQ
 El proyecto consiste en el desarrollo de una plataforma web y móvil de alta escalabilidad diseñada para mitigar la incertidumbre y optimizar la seguridad en el transporte de estudiantes de colegios. El sistema actúa como un puente de comunicación digital y en tiempo real entre tres actores fundamentales: los acudientes (padres de familia), los conductores y las instituciones educativas.
 
 # 🎯 Objetivos
-## Objetivo General
+### Objetivo General
 Diseñar e implementar una aplicación que permita hacer seguimiento en tiempo real a los buses escolares, garantizando la seguridad de los estudiantes y optimizando la gestión del transporte.
 
 ## Objetivos Epecíficos

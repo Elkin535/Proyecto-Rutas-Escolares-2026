@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TransporteEscolarAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5947d2676c9ce4048ffb967c7d7cf67f2eee0abe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aa3801e96e547a687ae981ce362de8df2a20d190")]
 [assembly: System.Reflection.AssemblyProductAttribute("TransporteEscolarAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TransporteEscolarAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

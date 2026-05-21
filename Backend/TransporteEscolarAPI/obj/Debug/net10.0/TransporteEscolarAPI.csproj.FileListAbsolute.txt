@@ -32,3 +32,10 @@ C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\Transpor
 C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\obj\Debug\net10.0\TransporteEscolarAPI.pdb
 C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\obj\Debug\net10.0\TransporteEscolarAPI.genruntimeconfig.cache
 C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\obj\Debug\net10.0\ref\TransporteEscolarAPI.dll
+C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.dll
+C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\bin\Debug\net10.0\Npgsql.dll
+C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\usuario\Documents\GitHub\Proyecto-Rutas-Escolares-2026\Backend\TransporteEscolarAPI\bin\Debug\net10.0\openapi.json

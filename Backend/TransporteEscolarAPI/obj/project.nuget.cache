@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "KbSfH2G9MMY=",
+  "dgSpecHash": "CbdfSGEUyQI=",
   "success": true,
-  "projectFilePath": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj",
+  "projectFilePath": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\Backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\usuario\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.8\\microsoft.aspnetcore.openapi.10.0.8.nupkg.sha512",
     "C:\\Users\\usuario\\.nuget\\packages\\microsoft.entityframeworkcore\\10.0.4\\microsoft.entityframeworkcore.10.0.4.nupkg.sha512",

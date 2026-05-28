@@ -18,4 +18,4 @@ jobs:
 
       - name: Subir archivos al servidor
         run: |
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" rsync -avz --delete ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}
+          sshpass -p "${{ secrets.SSH_PRIVATE_KEY }}" rsync -avz --delete ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_IP }}

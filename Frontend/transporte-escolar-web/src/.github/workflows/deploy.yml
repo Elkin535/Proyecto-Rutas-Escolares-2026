@@ -1,0 +1,21 @@
+name: Deploy to Apache Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Subir archivos al servidor
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" rsync -avz --delete ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}

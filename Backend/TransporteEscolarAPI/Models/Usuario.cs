@@ -24,6 +24,11 @@ namespace TransporteEscolarAPI.Models
         [StringLength(150)]
         public string Apellido { get; set; } = string.Empty;
 
+        [Column("correo")]
+        [Required]
+        [StringLength(150)]
+        public string Correo { get; set; } = string.Empty;
+        
         [Column("contrasena")]
         [Required]
         [StringLength(255)]

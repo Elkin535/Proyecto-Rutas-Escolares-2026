@@ -1,4 +1,4 @@
-name: Deploy HTML to VPS
+name: Deploy SchoolTrack Frontend
 
 on:
   push:
@@ -13,6 +13,19 @@ jobs:
       - name: Clonar repositorio
         uses: actions/checkout@v4
 
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.16.0
+
+      - name: Instalar dependencias
+        working-directory: ./Frontend/transporte-escolar-web
+        run: npm install
+
+      - name: Generar build React
+        working-directory: ./Frontend/transporte-escolar-web
+        run: npm run build
+
       - name: Configurar SSH
         run: |
           mkdir -p ~/.ssh
@@ -21,6 +34,7 @@ jobs:
 
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Subir archivos HTML al VPS
+      - name: Subir dist al servidor
         run: |
-          rsync -avz --delete ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/seminario1/schooltrack/
+          rsync -avz --delete ./Frontend/transporte-escolar-web/dist/ \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/seminario1/schooltrack/

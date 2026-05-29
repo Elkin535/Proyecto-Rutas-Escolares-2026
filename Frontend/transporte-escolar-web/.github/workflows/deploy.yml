@@ -1,0 +1,43 @@
+```yml
+name: Deploy Frontend SchoolTrack
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Clonar repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Instalar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.16.0
+
+      # Entrar al frontend e instalar dependencias
+      - name: Install dependencies
+        working-directory: ./Frontend/transporte-escolar-web
+        run: npm install
+
+      # Generar build
+      - name: Build project
+        working-directory: ./Frontend/transporte-escolar-web
+        run: npm run build
+
+      # Copiar dist al servidor
+      - name: Deploy to server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SERVER_HOST }}
+          REMOTE_USER: ${{ secrets.SERVER_USER }}
+          TARGET: /var/www/seminario1/schooltrack/
+          SOURCE: Frontend/transporte-escolar-web/dist/
+```

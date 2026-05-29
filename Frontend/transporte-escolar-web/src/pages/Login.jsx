@@ -19,7 +19,7 @@ function Login() {
 
       <div className="right-panel">
         <div className="login-box">
-          <h1>Rutas Escolares</h1>
+          <h1>SchoolTrack</h1>
 
           <input type="text" placeholder="Usuario" />
 

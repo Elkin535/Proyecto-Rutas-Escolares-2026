@@ -40,12 +40,6 @@ jobs:
             mkdir -p /home/schooltrack/backend
           "
 
-      - name: Verificar .NET en servidor
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            dotnet --info
-          "
-
       - name: Verificar sudo
         run: |
            ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "

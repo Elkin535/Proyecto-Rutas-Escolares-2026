@@ -20,25 +20,30 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restaurar paquetes
-        run: dotnet restore
         working-directory: ./Backend/TransporteEscolarAPI
+        run: dotnet restore
 
       - name: Publicar Backend
-        run: dotnet publish -c Release -o ./publish
         working-directory: ./Backend/TransporteEscolarAPI
+        run: dotnet publish -c Release -o ./publish
 
       - name: Configurar SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Crear carpeta backend
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             mkdir -p /home/schooltrack/backend
+          "
+
+      - name: Verificar .NET en servidor
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            dotnet --info
           "
 
       - name: Subir backend

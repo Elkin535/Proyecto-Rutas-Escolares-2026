@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj": {}
+    "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\Backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj": {
+    "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\Backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj",
+        "projectUniqueName": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\Backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj",
         "projectName": "TransporteEscolarAPI",
-        "projectPath": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj",
+        "projectPath": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\Backend\\TransporteEscolarAPI\\TransporteEscolarAPI.csproj",
         "packagesPath": "C:\\Users\\usuario\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\backend\\TransporteEscolarAPI\\obj\\",
+        "outputPath": "C:\\Users\\usuario\\Documents\\GitHub\\Proyecto-Rutas-Escolares-2026\\Backend\\TransporteEscolarAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -56,9 +56,15 @@
               "target": "Package",
               "version": "[10.0.8, )"
             },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.8, )"
+            },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
-              "version": "[10.0.1, )"
+              "version": "[10.0.2, )"
             },
             "Swashbuckle.AspNetCore.SwaggerUI": {
               "target": "Package",

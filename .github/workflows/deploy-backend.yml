@@ -46,6 +46,12 @@ jobs:
             dotnet --info
           "
 
+      - name: Verificar sudo
+        run: |
+           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+              sudo -n true
+            "
+
       - name: Subir backend
         run: |
           rsync -avz --delete \

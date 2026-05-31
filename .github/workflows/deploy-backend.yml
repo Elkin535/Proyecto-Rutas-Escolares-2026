@@ -1,0 +1,48 @@
+name: Deploy SchoolTrack Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restaurar paquetes
+        run: dotnet restore
+        working-directory: ./Backend/TransporteEscolarAPI
+
+      - name: Publicar Backend
+        run: dotnet publish -c Release -o ./publish
+        working-directory: ./Backend/TransporteEscolarAPI
+
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Crear carpeta backend
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            mkdir -p /home/schooltrack/backend
+          "
+
+      - name: Subir backend
+        run: |
+          rsync -avz --delete \
+          ./Backend/TransporteEscolarAPI/publish/ \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/schooltrack/backend/

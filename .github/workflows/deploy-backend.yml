@@ -11,41 +11,79 @@ jobs:
 
     steps:
 
+      # Clonar repositorio
       - name: Clonar repositorio
         uses: actions/checkout@v4
 
+      # Instalar .NET
       - name: Instalar .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
+      # Restaurar paquetes
       - name: Restaurar paquetes
         working-directory: ./Backend/TransporteEscolarAPI
         run: dotnet restore
 
+      # Publicar backend
       - name: Publicar Backend
         working-directory: ./Backend/TransporteEscolarAPI
         run: dotnet publish -c Release -o ./publish
 
-      - name: Configurar SSH
+      # Crear carpeta SSH
+      - name: Crear carpeta SSH
+        run: mkdir -p ~/.ssh
+
+      # Crear llave privada
+      - name: Crear llave privada
         run: |
-          mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
+      # Agregar host conocido
+      - name: Agregar host conocido
+        run: |
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
+      # Verificar conexión SSH
+      - name: Verificar SSH
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            whoami
+          "
+
+      # Verificar sistema operativo
+      - name: Verificar sistema operativo
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            cat /etc/os-release
+          "
+
+      # Verificar permisos sudo
+      - name: Verificar sudo
+        continue-on-error: true
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            sudo -n true
+          "
+
+      # Verificar .NET
+      - name: Verificar .NET
+        continue-on-error: true
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            dotnet --info
+          "
+
+      # Crear carpeta backend
       - name: Crear carpeta backend
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             mkdir -p /home/schooltrack/backend
           "
 
-      - name: Verificar sudo
-        run: |
-           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-              sudo -n true
-            "
-
+      # Subir backend
       - name: Subir backend
         run: |
           rsync -avz --delete \

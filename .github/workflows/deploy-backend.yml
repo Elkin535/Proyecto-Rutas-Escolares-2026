@@ -56,3 +56,9 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             sudo systemctl restart schooltrack
           "
+
+      - name: Ver estado del servicio
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            sudo systemctl status schooltrack --no-pager
+          "

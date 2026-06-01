@@ -51,14 +51,6 @@ jobs:
           ./Backend/TransporteEscolarAPI/publish/ \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/schooltrack/backend/
 
-      - name: Ejecutar migraciones EF
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            export PATH=\$PATH:/home/schooltrack/.dotnet/tools
-            cd /home/schooltrack/backend
-            /home/schooltrack/bin/dotnet ef database update
-          "
-
       - name: Reiniciar API
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "

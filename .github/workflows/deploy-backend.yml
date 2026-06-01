@@ -27,6 +27,12 @@ jobs:
         working-directory: ./Backend/TransporteEscolarAPI
         run: dotnet publish -c Release -o ./publish
 
+      - name: Ver logs backend
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+          sudo journalctl -u schooltrack -n 50 --no-pager
+              "
+
       - name: Crear carpeta SSH
         run: mkdir -p ~/.ssh
 

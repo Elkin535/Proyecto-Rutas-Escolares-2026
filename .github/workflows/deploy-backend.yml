@@ -27,12 +27,6 @@ jobs:
         working-directory: ./Backend/TransporteEscolarAPI
         run: dotnet publish -c Release -o ./publish
 
-      - name: Ver logs backend
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-          sudo journalctl -u schooltrack -n 50 --no-pager
-              "
-
       - name: Crear carpeta SSH
         run: mkdir -p ~/.ssh
 
@@ -57,14 +51,16 @@ jobs:
           ./Backend/TransporteEscolarAPI/publish/ \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/schooltrack/backend/
 
+      - name: Ejecutar migraciones EF
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            export PATH=\$PATH:/home/schooltrack/.dotnet/tools
+            cd /home/schooltrack/backend
+            dotnet ef database update
+          "
+
       - name: Reiniciar API
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             sudo systemctl restart schooltrack
-          "
-
-      - name: Ver estado del servicio
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            sudo systemctl status schooltrack --no-pager
           "

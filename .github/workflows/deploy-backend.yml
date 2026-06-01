@@ -56,7 +56,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             export PATH=\$PATH:/home/schooltrack/.dotnet/tools
             cd /home/schooltrack/backend
-            dotnet ef database update
+            /home/schooltrack/bin/dotnet ef database update
           "
 
       - name: Reiniciar API

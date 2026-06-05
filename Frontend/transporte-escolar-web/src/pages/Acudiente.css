@@ -1,0 +1,430 @@
+/* src/pages/Acudiente.css */
+
+.acudiente-container {
+  min-height: 100vh;
+  width: 100%;
+  background: #081120;
+  color: #f8fafc;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.acudiente-header {
+  background: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.acudiente-header .header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #00d4ff;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.acudiente-logout {
+  background: none;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.acudiente-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* MAIN BODY */
+.acudiente-main {
+  flex-grow: 1;
+  padding: 24px;
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* WELCOME BANNER */
+.welcome-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(236, 72, 153, 0.06);
+  border: 1px solid rgba(236, 72, 153, 0.15);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.heart-icon-wrapper {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(236, 72, 153, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-banner h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.welcome-banner p {
+  font-size: 0.88rem;
+  color: #94a3b8;
+}
+
+/* HIJO CARD */
+.hijo-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hijo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 16px;
+}
+
+.hijo-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hijo-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #db2777;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.hijo-profile h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.hijo-profile p {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.status-badge-parent {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.status-badge-parent.Pendiente { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+.status-badge-parent.Abordo { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+.status-badge-parent.Entregado { background: rgba(16, 185, 129, 0.12); color: #34d399; }
+.status-badge-parent.NoViaja { background: rgba(100, 116, 139, 0.12); color: #94a3b8; }
+
+.hijo-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.detail-item svg {
+  color: #64748b;
+}
+
+.detail-item strong {
+  color: #00d4ff;
+}
+
+/* NOVEDADES PANEL */
+.report-novedad-wrapper {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.novedad-text h5 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.novedad-text p {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.toggle-novedad-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.toggle-novedad-btn.active {
+  color: #ef4444;
+}
+
+.toggle-novedad-btn svg {
+  width: 48px;
+  height: 48px;
+  transition: transform 0.2s;
+}
+
+.toggle-novedad-btn:hover svg {
+  transform: scale(1.05);
+}
+
+.toggle-novedad-btn span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* MAPA SIMULADOR */
+.realtime-map-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.map-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.map-title-pulse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-title-pulse h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulseGreen 1.6s infinite;
+}
+
+@keyframes pulseGreen {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.map-route-name {
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: monospace;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* CANVAS MAPA */
+.map-simulation-canvas {
+  height: 180px;
+  background: radial-gradient(circle, rgba(15,23,42,0.8) 0%, rgba(8,17,32,0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+}
+
+/* Red vial ficticia */
+.map-road-line {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* Paradas fijas */
+.map-stop {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-stop .stop-icon {
+  background: #0f172a;
+  border: 2px solid #64748b;
+  color: #64748b;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.3s;
+}
+
+.map-stop .stop-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  position: absolute;
+  top: 32px;
+  white-space: nowrap;
+}
+
+/* Estilo para paradas visitadas o superadas */
+.map-stop.visited .stop-icon {
+  border-color: #00d4ff;
+  color: #00d4ff;
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+.map-stop.visited .stop-label {
+  color: #cbd5e1;
+}
+
+/* Parada particular del hijo */
+.map-stop.student-point .stop-icon {
+  border-color: #ec4899;
+  color: #ec4899;
+}
+
+.map-stop.student-point.visited .stop-icon {
+  border-color: #10b981;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* Bus marcador flotante */
+.bus-marker-container {
+  position: absolute;
+  top: -12px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+  transition: left 0.5s linear; /* Animación de movimiento fluida */
+}
+
+.bus-marker-icon {
+  background: #00d4ff;
+  color: #040c18;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 6px;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+  border: 2px solid #ffffff;
+}
+
+.bus-plate-tag {
+  background: #00d4ff;
+  color: #040c18;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  position: absolute;
+  top: -20px;
+  white-space: nowrap;
+}
+
+.map-legend {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  padding: 4px 10px;
+}
+
+/* RESPONSIVO */
+@media (max-width: 500px) {
+  .map-simulation-canvas {
+    padding: 0 20px;
+  }
+  .map-stop .stop-label {
+    display: none; /* Oculta textos largos en móviles para no colapsar */
+  }
+  .hijo-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

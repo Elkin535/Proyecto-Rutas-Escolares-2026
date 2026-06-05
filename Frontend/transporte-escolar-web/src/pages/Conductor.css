@@ -1,0 +1,434 @@
+/* src/pages/Conductor.css */
+
+.conductor-container {
+  min-height: 100vh;
+  width: 100%;
+  background: #081120;
+  color: #f8fafc;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.conductor-header {
+  background: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #00d4ff;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.header-brand svg {
+  color: #00d4ff;
+}
+
+.conductor-logout {
+  background: none;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.conductor-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* MAIN */
+.conductor-main {
+  flex-grow: 1;
+  padding: 24px;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* PROFILE CARD */
+.conductor-profile-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.driver-avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.1);
+  border: 2px solid #00d4ff;
+  color: #00d4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.driver-meta h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.license-info {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.license-info strong {
+  color: #cbd5e1;
+}
+
+.route-info {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.route-info span {
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+/* PANEL CONTROLES */
+.route-control-panel {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+}
+
+.start-panel p {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.btn-iniciar-viaje {
+  width: 100%;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  transition: all 0.3s;
+}
+
+.btn-iniciar-viaje:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.success-recorrido-alert {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.active-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.active-badge-pulse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #00d4ff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #00d4ff;
+  box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7);
+  animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(0, 212, 255, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 212, 255, 0);
+  }
+}
+
+.btn-finalizar-viaje {
+  width: 100%;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  transition: all 0.3s;
+}
+
+.btn-finalizar-viaje:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+/* LISTADO DE ASISTENCIA */
+.students-attendance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #00d4ff;
+  border-left: 3px solid #00d4ff;
+  padding-left: 8px;
+}
+
+.section-title-wrapper h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.student-attendance-card {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.25s ease;
+}
+
+.student-attendance-card.Abordó {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.student-attendance-card.Entregado {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.04);
+  opacity: 0.75;
+}
+
+.student-attendance-card.Ausente {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.04);
+  opacity: 0.75;
+}
+
+.student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.student-stop {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.student-time-stamp {
+  font-size: 0.75rem;
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+.attendance-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn.absent {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1.5px solid rgba(239, 68, 68, 0.2);
+}
+
+.action-btn.absent:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.action-btn.board {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1.5px solid rgba(245, 158, 11, 0.2);
+}
+
+.action-btn.board:hover {
+  background: #f59e0b;
+  color: white;
+}
+
+.boarded-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-transform: uppercase;
+}
+
+.badge.onboard {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.badge.delivered {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.badge.no-travel {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.action-btn.deliver {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: auto;
+}
+
+.action-btn.deliver:hover {
+  background: #059669;
+}
+
+.completed-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.reset-state-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.reset-state-btn:hover {
+  color: #00d4ff;
+  text-decoration: underline;
+}
+
+/* MENSAJE DE ESPERA */
+.no-active-trip-msg {
+  background: rgba(15, 23, 42, 0.3);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.no-active-trip-msg p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 380px;
+}

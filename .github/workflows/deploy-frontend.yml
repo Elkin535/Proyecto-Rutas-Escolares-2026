@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,7 +16,7 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24.16.0
+          node-version: '24.16.0'
 
       - name: Instalar dependencias
         working-directory: ./Frontend/transporte-escolar-web
@@ -31,10 +31,10 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Subir dist al servidor
+      - name: Subir dist al servidor Apache
         run: |
-          rsync -avz --delete ./Frontend/transporte-escolar-web/dist/ \
+          rsync -avz --delete \
+          ./Frontend/transporte-escolar-web/dist/ \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/seminario1/schooltrack/

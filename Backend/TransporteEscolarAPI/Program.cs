@@ -23,6 +23,9 @@ builder.Services.AddScoped<IConductorRepository, ConductorRepository>();
 builder.Services.AddScoped<IEstudianteRepository, EstudianteRepository>();
 builder.Services.AddScoped<IVehiculoRepository, VehiculoRepository>(); 
 builder.Services.AddScoped<IHistorialRepository, HistorialRepository>();
+builder.Services.AddScoped<IRutaRepository, RutaRepository>();
+builder.Services.AddScoped<IParadaRepository, ParadaRepository>();
+builder.Services.AddScoped<IAsistenciaViajeRepository, AsistenciaViajeRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

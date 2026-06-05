@@ -20,5 +20,8 @@ namespace TransporteEscolarAPI.DTOs
 
         [StringLength(50)]
         public string? CursoGrado { get; set; }
+
+        public int? IdRuta { get; set; }
+        public int? IdParada { get; set; }
     }
 }

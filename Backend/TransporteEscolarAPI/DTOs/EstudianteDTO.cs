@@ -9,5 +9,7 @@ namespace TransporteEscolarAPI.DTOs
         public string? Colegio { get; set; }
         public string? CursoGrado { get; set; }
         public bool Estado { get; set; }
+        public int? IdRuta { get; set; }
+        public int? IdParada { get; set; }
     }
 }

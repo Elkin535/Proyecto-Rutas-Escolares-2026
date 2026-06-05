@@ -18,6 +18,9 @@ namespace TransporteEscolarAPI.Data
         public DbSet<Estudiante> Estudiantes { get; set; }
         public DbSet<Vehiculo> Vehiculos { get; set; }
         public DbSet<Historial> Historiales { get; set; }
+        public DbSet<Ruta> Rutas { get; set; }
+        public DbSet<Parada> Paradas { get; set; }
+        public DbSet<AsistenciaViaje> AsistenciasViajes { get; set; }
 
         // Este método sirve para configurar reglas avanzadas (mapeos, llaves compuestas, etc.)
         protected override void OnModelCreating(ModelBuilder modelBuilder)

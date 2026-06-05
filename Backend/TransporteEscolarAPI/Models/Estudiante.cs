@@ -34,5 +34,11 @@ namespace TransporteEscolarAPI.Models
 
         [Column("estado")]
         public bool Estado { get; set; } = true;
+
+        [Column("id_ruta")]
+        public int? IdRuta { get; set; }
+
+        [Column("id_parada")]
+        public int? IdParada { get; set; }
     }
 }

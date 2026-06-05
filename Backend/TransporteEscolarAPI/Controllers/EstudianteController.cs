@@ -31,7 +31,9 @@ namespace TransporteEscolarAPI.Controllers
                 Apellido = e.Apellido,
                 Colegio = e.Colegio,
                 CursoGrado = e.CursoGrado,
-                Estado = e.Estado
+                Estado = e.Estado,
+                IdRuta = e.IdRuta,
+                IdParada = e.IdParada
             });
 
             return Ok(estudiantesDTO);
@@ -51,7 +53,9 @@ namespace TransporteEscolarAPI.Controllers
                 Apellido = estudiante.Apellido,
                 Colegio = estudiante.Colegio,
                 CursoGrado = estudiante.CursoGrado,
-                Estado = estudiante.Estado
+                Estado = estudiante.Estado,
+                IdRuta = estudiante.IdRuta,
+                IdParada = estudiante.IdParada
             };
 
             return Ok(estudianteDTO);
@@ -70,7 +74,9 @@ namespace TransporteEscolarAPI.Controllers
                 Apellido = e.Apellido,
                 Colegio = e.Colegio,
                 CursoGrado = e.CursoGrado,
-                Estado = e.Estado
+                Estado = e.Estado,
+                IdRuta = e.IdRuta,
+                IdParada = e.IdParada
             });
 
             return Ok(estudiantesDTO);
@@ -86,7 +92,9 @@ namespace TransporteEscolarAPI.Controllers
                 Apellido = estudianteCreateDTO.Apellido,
                 Colegio = estudianteCreateDTO.Colegio,
                 CursoGrado = estudianteCreateDTO.CursoGrado,
-                Estado = true // Por defecto activo al crearse
+                Estado = true, // Por defecto activo al crearse
+                IdRuta = estudianteCreateDTO.IdRuta,
+                IdParada = estudianteCreateDTO.IdParada
             };
 
             var nuevoEstudiante = await _estudianteRepository.CrearAsync(estudiante);
@@ -99,7 +107,9 @@ namespace TransporteEscolarAPI.Controllers
                 Apellido = nuevoEstudiante.Apellido,
                 Colegio = nuevoEstudiante.Colegio,
                 CursoGrado = nuevoEstudiante.CursoGrado,
-                Estado = nuevoEstudiante.Estado
+                Estado = nuevoEstudiante.Estado,
+                IdRuta = nuevoEstudiante.IdRuta,
+                IdParada = nuevoEstudiante.IdParada
             };
 
             return CreatedAtAction(nameof(GetEstudiante), new { id = estudianteDTO.IdEstudiante }, estudianteDTO);

@@ -31,21 +31,25 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
+          echo "=== SSH Diagnostics ==="
           if [ -z "$SSH_KEY" ]; then
             echo "ERROR: SSH_PRIVATE_KEY no está configurado en GitHub Secrets."
             exit 1
           fi
+          echo "SSH_KEY is defined."
           if [ -z "$SERVER_IP" ]; then
             echo "ERROR: SERVER_IP no está configurado en GitHub Secrets."
             exit 1
           fi
+          echo "SERVER_IP is defined."
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
+          echo "SSH configuration complete."
 
       - name: Subir dist al servidor Apache
         run: |
           rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
           ./Frontend/transporte-escolar-web/dist/ \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/seminario1/schooltrack/

@@ -57,6 +57,13 @@ jobs:
           ./Backend/TransporteEscolarAPI/publish/ \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/schooltrack/backend/
 
+      - name: Ejecutar Migraciones de Entity Framework
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            cd /home/schooltrack/backend
+            sudo -u schooltrack /home/schooltrack/bin/dotnet exec /home/schooltrack/backend/TransporteEscolarAPI.dll --ef-database-update
+          "
+
       - name: Reiniciar API
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "

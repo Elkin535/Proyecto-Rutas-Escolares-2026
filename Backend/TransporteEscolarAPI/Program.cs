@@ -33,6 +33,26 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+if (args.Contains("--ef-database-update"))
+{
+    Console.WriteLine("Executing database migrations (--ef-database-update)...");
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
+        }
+        Console.WriteLine("Database migrations applied successfully.");
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error applying database migrations: {ex.Message}");
+        return 1;
+    }
+}
+
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 //{
@@ -53,3 +73,4 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+return 0;

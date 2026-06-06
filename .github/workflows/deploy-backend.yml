@@ -64,8 +64,24 @@ jobs:
       - name: Ejecutar Migraciones de Entity Framework
         run: |
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            cd /home/schooltrack/backend
-            /home/schooltrack/bin/dotnet exec /home/schooltrack/backend/TransporteEscolarAPI.dll --ef-database-update
+            echo '=== systemd Service Configuration ==='
+            systemctl cat schooltrack || cat /etc/systemd/system/schooltrack.service || true
+            
+            echo '=== Global Dotnet Info ==='
+            dotnet --info || true
+            
+            echo '=== User Dotnet Info ==='
+            /home/schooltrack/bin/dotnet --info || true
+            
+            echo '=== Running Migrations ==='
+            # Detect which dotnet has .NET 10 AspNetCore runtime
+            if command -v dotnet &> /dev/null && dotnet --list-runtimes | grep -q 'Microsoft.AspNetCore.App 10'; then
+              echo 'Using global dotnet to run migrations...'
+              dotnet exec /home/schooltrack/backend/TransporteEscolarAPI.dll --ef-database-update
+            else
+              echo 'Using user dotnet to run migrations...'
+              /home/schooltrack/bin/dotnet exec /home/schooltrack/backend/TransporteEscolarAPI.dll --ef-database-update
+            fi
           "
 
       - name: Reiniciar API

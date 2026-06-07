@@ -75,6 +75,7 @@ jobs:
 
             # 2. Ejecutar la migración
             echo 'Executing database migrations...'
+            cd /home/schooltrack/backend
             /home/schooltrack/bin/dotnet exec /home/schooltrack/backend/TransporteEscolarAPI.dll --ef-database-update
           "
 

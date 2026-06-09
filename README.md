@@ -81,7 +81,8 @@ Hace:
 * sudo systemctl restart schooltrack
 
 # **Base de Datos**
-
+## **Motor:**
+ * PostgreSQL
 
 # **Frontend**
 *ubicacion:*
@@ -113,16 +114,16 @@ Workflow:
 
 Hace:
 - Checkout
-↓
-Node 24.16.0
-↓
-npm install
-↓
-npm run build
-↓
-rsync dist/
-↓
-Servidor
+- ↓
+- Node 24.16.0
+- ↓
+- npm install
+- ↓
+- npm run build
+- ↓
+- rsync dist/
+- ↓
+- Servidor
 
 # **Control de Versiones**
 * Git – Sistema de control de versiones.

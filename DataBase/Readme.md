@@ -59,7 +59,7 @@ Patrón Arquitectónico
 
 Actualmente usas:
 
-Controller
+Controller\
 ↓
 Repository
 ↓

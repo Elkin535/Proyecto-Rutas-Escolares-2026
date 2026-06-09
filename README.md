@@ -55,37 +55,13 @@ https://schooltrack.seminario1.eleueleo.com/api
 * Repository Pattern
 * REST API
 
-**Target Framework:**
-
-<TargetFramework>net10.0</TargetFramework>
-
-**Deploy Backend**
-Workflow:
-.github/workflows/deploy-backend.yml
-
-Hace:
-* Checkout
-* ↓
-* .NET 10
-* ↓
-* dotnet restore
-* ↓
-* dotnet publish
-* ↓
-* publish/
-* ↓
-* rsync
-* ↓
-* /home/schooltrack/backend/
-* ↓
-* sudo systemctl restart schooltrack
 
 # **Base de Datos**
 ## **Motor:**
  * PostgreSQL
 
 # **Frontend**
-*ubicacion:*
+**ubicacion:**
 Frontend/transporte-escolar-web
 
 ### tecnologias:

@@ -35,13 +35,80 @@ Hoy en día, los padres experimentan altos niveles de ansiedad debido a la falta
 #  Tecnologías utilizadas
 El sistema fue desarrollado utilizando las siguientes tecnologías:
 
+* ASP.NET Core 10
+* Entity Framework Core
+* PostgreSQL
+* Repository Pattern
+* REST API
+
 # **Backend**
+Deploy Backend
+
+Workflow:
+
+.github/workflows/deploy-backend.yml
+
+Hace:
+
+Checkout
+↓
+.NET 10
+↓
+dotnet restore
+↓
+dotnet publish
+↓
+publish/
+↓
+rsync
+↓
+/home/schooltrack/backend/
+↓
+sudo systemctl restart schooltrack
 
 # **Base de Datos**
 
 
 # **Frontend**
+ubicacion:
+Frontend/transporte-escolar-web
 
+### tecnologias:
+React
+Vite
+HTML
+CSS
+JavaScript
+
+actualmente por el momento xd
++ Home creado
++ Login creado
++ Deploy automático funcionando
+- Aún no consume la API
+- Aún no consume PostgreSQL
+
+URL pública:
+
+https://schooltrack.seminario1.eleueleo.com
+
+### Deploy Frontend
+
+Workflow:
+
+.github/workflows/primero.yml
+
+Hace:
+Checkout
+↓
+Node 24.16.0
+↓
+npm install
+↓
+npm run build
+↓
+rsync dist/
+↓
+Servidor
 
 # **Control de Versiones**
 * Git – Sistema de control de versiones.

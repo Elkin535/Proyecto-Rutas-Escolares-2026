@@ -49,11 +49,11 @@ https://schooltrack.seminario1.eleueleo.com/api
 # **Backend**
 ## **Tecnologías:**
 
-*ASP.NET Core 10
-*Entity Framework Core
-*PostgreSQL
-*Repository Pattern
-*REST API
+* ASP.NET Core 10
+* Entity Framework Core
+* PostgreSQL
+* Repository Pattern
+* REST API
 
 **Target Framework:**
 

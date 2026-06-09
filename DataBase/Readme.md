@@ -5,7 +5,7 @@
 
 * PostgreSQL
 
-# *Credenciales:*
+# **Credenciales:**
 
 Host: localhost
 Port: 5432

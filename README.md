@@ -64,21 +64,21 @@ Workflow:
 .github/workflows/deploy-backend.yml
 
 Hace:
-Checkout
-↓
-.NET 10
-↓
-dotnet restore
-↓
-dotnet publish
-↓
-publish/
-↓
-rsync
-↓
-/home/schooltrack/backend/
-↓
-sudo systemctl restart schooltrack
+* Checkout
+* ↓
+* .NET 10
+* ↓
+* dotnet restore
+* ↓
+* dotnet publish
+* ↓
+* publish/
+* ↓
+* rsync
+* ↓
+* /home/schooltrack/backend/
+* ↓
+* sudo systemctl restart schooltrack
 
 # **Base de Datos**
 

@@ -29,23 +29,23 @@
 
 # Entity Framework
 
-## **DbContext:**
+###  **DbContext:**
 
 **AppDbContext**
 
-**Tablas configuradas:**
+### **Tablas configuradas:**
 
-DbSet<Rol>\
-DbSet<Usuario>\
-DbSet<Acudiente>\
-DbSet<Conductor>\
-DbSet<Estudiante>\
-DbSet<Vehiculo>\
-DbSet<Historial>\
+DbSet<Rol> \
+DbSet<Usuario> \
+DbSet<Acudiente> \
+DbSet<Conductor> \
+DbSet<Estudiante> \
+DbSet<Vehiculo> \
+DbSet<Historial> \
 
-**Modelos:**
+## **Modelos:**
 
-Actualmente tenemos:
+* Actualmente tenemos:
 
 Rol\
 Usuario\

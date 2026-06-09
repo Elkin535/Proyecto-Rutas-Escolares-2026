@@ -36,33 +36,33 @@
 **Tablas configuradas:**
 
 DbSet<Rol>\
-DbSet<Usuario>
-DbSet<Acudiente>
-DbSet<Conductor>
-DbSet<Estudiante>
-DbSet<Vehiculo>
-DbSet<Historial>
+DbSet<Usuario>\
+DbSet<Acudiente>\
+DbSet<Conductor>\
+DbSet<Estudiante>\
+DbSet<Vehiculo>\
+DbSet<Historial>\
 
 **Modelos:**
 
 Actualmente tenemos:
 
 Rol\
-Usuario
-Acudiente
-Conductor
-Estudiante
-Vehiculo
-Historial
+Usuario\
+Acudiente\
+Conductor\
+Estudiante\
+Vehiculo\
+Historial\
 
 Patrón Arquitectónico
 
-Actualmente usas:
+Actualmente se usas:
 
 Controller\
-↓
-Repository
-↓
-DbContext
-↓
-PostgreSQL
+↓\
+Repository\
+↓\
+DbContext\
+↓\
+PostgreSQL\

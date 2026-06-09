@@ -27,9 +27,49 @@ namespace TransporteEscolarAPI.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Nota: Como en tus modelos ya usamos los atributos [Table] y [Column], 
-            // no es estrictamente necesario escribir código Fluent API aquí para los nombres,
-            // pero si necesitas definir relaciones complejas en el futuro, se hace en este método.
+            // Seeding default roles
+            modelBuilder.Entity<Rol>().HasData(
+                new Rol { IdRol = 1, NombreRol = "Administrador" },
+                new Rol { IdRol = 2, NombreRol = "Conductor" },
+                new Rol { IdRol = 3, NombreRol = "Acudiente" }
+            );
+
+            // Seeding default users
+            modelBuilder.Entity<Usuario>().HasData(
+                new Usuario
+                {
+                    IdUsuario = 1,
+                    IdRol = 1, // Administrador
+                    Nombre = "Admin",
+                    Apellido = "SchoolTrack",
+                    Correo = "admin@schooltrack.com",
+                    Contrasena = "admin123",
+                    Telefono = "123456789",
+                    FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Usuario
+                {
+                    IdUsuario = 2,
+                    IdRol = 2, // Conductor
+                    Nombre = "Carlos",
+                    Apellido = "Driver",
+                    Correo = "conductor.carlos@schooltrack.com",
+                    Contrasena = "conductor123",
+                    Telefono = "987654321",
+                    FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Usuario
+                {
+                    IdUsuario = 3,
+                    IdRol = 3, // Acudiente
+                    Nombre = "Maria",
+                    Apellido = "Parent",
+                    Correo = "acudiente.maria@schooltrack.com",
+                    Contrasena = "acudiente123",
+                    Telefono = "555123456",
+                    FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
         }
     }
 }

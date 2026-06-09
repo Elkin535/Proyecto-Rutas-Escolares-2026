@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TransporteEscolarAPI.Data;
@@ -11,9 +12,11 @@ using TransporteEscolarAPI.Data;
 namespace TransporteEscolarAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260609002216_SeedRolesAndAdmin")]
+    partial class SeedRolesAndAdmin
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -377,28 +380,6 @@ namespace TransporteEscolarAPI.Migrations
                             IdRol = 1,
                             Nombre = "Admin",
                             Telefono = "123456789"
-                        },
-                        new
-                        {
-                            IdUsuario = 2,
-                            Apellido = "Driver",
-                            Contrasena = "conductor123",
-                            Correo = "conductor.carlos@schooltrack.com",
-                            FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IdRol = 2,
-                            Nombre = "Carlos",
-                            Telefono = "987654321"
-                        },
-                        new
-                        {
-                            IdUsuario = 3,
-                            Apellido = "Parent",
-                            Contrasena = "acudiente123",
-                            Correo = "acudiente.maria@schooltrack.com",
-                            FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IdRol = 3,
-                            Nombre = "Maria",
-                            Telefono = "555123456"
                         });
                 });
 

@@ -13,10 +13,12 @@ namespace TransporteEscolarAPI.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioRepository _usuarioRepository;
+        private readonly IRolRepository _rolRepository;
 
-        public UsuarioController(IUsuarioRepository usuarioRepository)
+        public UsuarioController(IUsuarioRepository usuarioRepository, IRolRepository rolRepository)
         {
             _usuarioRepository = usuarioRepository;
+            _rolRepository = rolRepository;
         }
 
         [HttpGet]
@@ -29,6 +31,7 @@ namespace TransporteEscolarAPI.Controllers
                 IdRol = u.IdRol,
                 Nombre = u.Nombre,
                 Apellido = u.Apellido,
+                Correo = u.Correo,
                 Telefono = u.Telefono,
                 FechaCreacion = u.FechaCreacion
             });
@@ -48,6 +51,7 @@ namespace TransporteEscolarAPI.Controllers
                 IdRol = usuario.IdRol,
                 Nombre = usuario.Nombre,
                 Apellido = usuario.Apellido,
+                Correo = usuario.Correo,
                 Telefono = usuario.Telefono,
                 FechaCreacion = usuario.FechaCreacion
             };
@@ -63,6 +67,7 @@ namespace TransporteEscolarAPI.Controllers
                 IdRol = usuarioCreateDTO.IdRol,
                 Nombre = usuarioCreateDTO.Nombre,
                 Apellido = usuarioCreateDTO.Apellido,
+                Correo = usuarioCreateDTO.Correo,
                 Contrasena = usuarioCreateDTO.Contrasena, // Nota: Idealmente aplicar Hash aquí en el futuro
                 Telefono = usuarioCreateDTO.Telefono,
                 FechaCreacion = DateTime.UtcNow
@@ -76,11 +81,37 @@ namespace TransporteEscolarAPI.Controllers
                 IdRol = nuevoUsuario.IdRol,
                 Nombre = nuevoUsuario.Nombre,
                 Apellido = nuevoUsuario.Apellido,
+                Correo = nuevoUsuario.Correo,
                 Telefono = nuevoUsuario.Telefono,
                 FechaCreacion = nuevoUsuario.FechaCreacion
             };
 
             return CreatedAtAction(nameof(GetUsuario), new { id = usuarioDTO.IdUsuario }, usuarioDTO);
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<LoginResponseDTO>> Login(LoginRequestDTO loginRequest)
+        {
+            var usuario = await _usuarioRepository.ObtenerPorCorreoAsync(loginRequest.Correo);
+            if (usuario == null || usuario.Contrasena != loginRequest.Contrasena)
+            {
+                return Unauthorized(new { mensaje = "Correo o contraseña incorrectos" });
+            }
+
+            var rol = await _rolRepository.ObtenerPorIdAsync(usuario.IdRol);
+            var nombreRol = rol?.NombreRol ?? "Usuario";
+
+            var response = new LoginResponseDTO
+            {
+                IdUsuario = usuario.IdUsuario,
+                IdRol = usuario.IdRol,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Correo = usuario.Correo,
+                NombreRol = nombreRol
+            };
+
+            return Ok(response);
         }
 
         [HttpDelete("{id}")]

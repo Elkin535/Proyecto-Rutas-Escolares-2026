@@ -26,6 +26,11 @@ namespace TransporteEscolarAPI.Repositories
             return await _context.Usuarios.FindAsync(id);
         }
 
+        public async Task<Usuario?> ObtenerPorCorreoAsync(string correo)
+        {
+            return await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == correo);
+        }
+
         public async Task<Usuario> CrearAsync(Usuario usuario)
         {
             _context.Usuarios.Add(usuario);

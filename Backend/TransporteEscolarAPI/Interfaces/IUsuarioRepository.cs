@@ -8,6 +8,7 @@ namespace TransporteEscolarAPI.Interfaces
     {
         Task<IEnumerable<Usuario>> ObtenerTodosAsync();
         Task<Usuario?> ObtenerPorIdAsync(int id);
+        Task<Usuario?> ObtenerPorCorreoAsync(string correo);
         Task<Usuario> CrearAsync(Usuario usuario);
         Task<bool> ActualizarAsync(Usuario usuario);
         Task<bool> EliminarAsync(int id);

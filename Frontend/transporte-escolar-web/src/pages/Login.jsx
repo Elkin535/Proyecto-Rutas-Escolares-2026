@@ -12,7 +12,7 @@ function Login() {
   const [mensajeRecuperacion, setMensajeRecuperacion] = useState("");
   const [error, setError] = useState("");
 
-  const iniciarSesion = (e) => {
+  const iniciarSesion = async (e) => {
     e.preventDefault();
     if (!usuario.trim() || !contrasena.trim()) {
       setError("Por favor completa todos los campos");
@@ -20,18 +20,40 @@ function Login() {
     }
 
     setError("");
-    const userLower = usuario.toLowerCase();
+    try {
+      const response = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Usuario/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          correo: usuario.trim(),
+          contrasena: contrasena
+        })
+      });
 
-    // Redirección simulada por nombre de usuario o selección
-    if (userLower.includes("admin")) {
-      navigate("/admin");
-    } else if (userLower.includes("cond") || userLower.includes("chofer") || userLower.includes("driver")) {
-      navigate("/conductor");
-    } else if (userLower.includes("acu") || userLower.includes("padre") || userLower.includes("madre")) {
-      navigate("/acudiente");
-    } else {
-      // Por defecto si no coincide ninguno especial, asume admin para pruebas generales
-      navigate("/admin");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.mensaje || "Correo o contraseña incorrectos");
+        return;
+      }
+
+      const data = await response.json();
+      localStorage.setItem("usuario", JSON.stringify(data));
+
+      const roleLower = data.nombreRol.toLowerCase();
+      if (roleLower.includes("admin") || roleLower.includes("administrador")) {
+        navigate("/admin");
+      } else if (roleLower.includes("cond") || roleLower.includes("chofer") || roleLower.includes("driver") || roleLower.includes("conductor")) {
+        navigate("/conductor");
+      } else if (roleLower.includes("acu") || roleLower.includes("padre") || roleLower.includes("madre") || roleLower.includes("acudiente")) {
+        navigate("/acudiente");
+      } else {
+        navigate("/admin");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo conectar con el servidor. Inténtalo más tarde.");
     }
   };
 
@@ -51,13 +73,13 @@ function Login() {
     setMensajeRecuperacion("");
     if (rol === "admin") {
       setUsuario("admin@schooltrack.com");
-      setContrasena("••••••••");
+      setContrasena("admin123");
     } else if (rol === "conductor") {
       setUsuario("conductor.carlos@schooltrack.com");
-      setContrasena("••••••••");
+      setContrasena("conductor123");
     } else if (rol === "acudiente") {
       setUsuario("acudiente.maria@schooltrack.com");
-      setContrasena("••••••••");
+      setContrasena("acudiente123");
     }
   };
 

@@ -11,6 +11,9 @@ namespace TransporteEscolarAPI.DTOs
         [Required]
         public string Apellido { get; set; } = string.Empty;
         [Required]
+        [EmailAddress]
+        public string Correo { get; set; } = string.Empty;
+        [Required]
         public string Contrasena { get; set; } = string.Empty;
         public string? Telefono { get; set; }
     }

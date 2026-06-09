@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -18,11 +18,7 @@ import "./Admin.css";
 function Admin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("resumen");
-  const [rutas, setRutas] = useState([
-    { id: 1, nombre: "Ruta 01 - Norte", conductor: "Carlos Gómez", vehiculo: "TOW-345", paradas: 6, estado: "En servicio" },
-    { id: 2, nombre: "Ruta 02 - Sur", conductor: "Marta Rodríguez", vehiculo: "XPF-890", paradas: 8, estado: "En servicio" },
-    { id: 3, nombre: "Ruta 03 - Centro", conductor: "Julio Martínez", vehiculo: "KLS-231", paradas: 5, estado: "Mantenimiento" }
-  ]);
+  const [rutas, setRutas] = useState([]);
 
   const [estudiantes, setEstudiantes] = useState([
     { id: 1, nombre: "Sofía", apellido: "García", acudiente: "María García", ruta: "Ruta 01 - Norte", colegio: "Colegio Distrital A", curso: "4° Primaria" },
@@ -31,33 +27,96 @@ function Admin() {
     { id: 4, nombre: "Valeria", apellido: "Díaz", acudiente: "Andrés Díaz", ruta: "Ruta 03 - Centro", colegio: "Colegio Mayor", curso: "9° Bachillerato" }
   ]);
 
-  // Variables para agregar ruta simulada
+  // Variables para agregar ruta
   const [nuevaRutaNombre, setNuevaRutaNombre] = useState("");
   const [nuevaRutaConductor, setNuevaRutaConductor] = useState("");
   const [nuevaRutaPlaca, setNuevaRutaPlaca] = useState("");
 
-  const agregarRuta = (e) => {
-    e.preventDefault();
-    if (!nuevaRutaNombre || !nuevaRutaConductor) return;
-    const nueva = {
-      id: rutas.length + 1,
-      nombre: nuevaRutaNombre,
-      conductor: nuevaRutaConductor,
-      vehiculo: nuevaRutaPlaca || "SIN-PLACA",
-      paradas: Math.floor(Math.random() * 5) + 3,
-      estado: "En servicio"
-    };
-    setRutas([...rutas, nueva]);
-    setNuevaRutaNombre("");
-    setNuevaRutaConductor("");
-    setNuevaRutaPlaca("");
+  useEffect(() => {
+    cargarRutas();
+  }, []);
+
+  const cargarRutas = async () => {
+    try {
+      const response = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Ruta");
+      if (response.ok) {
+        const data = await response.json();
+        const mappedRutas = data.map(r => {
+          let conductor = "No asignado";
+          let vehiculo = "Sin placa";
+          if (r.descripcion && r.descripcion.includes("Conductor:") && r.descripcion.includes("Vehículo:")) {
+            const parts = r.descripcion.split(" | ");
+            conductor = parts[0].replace("Conductor: ", "");
+            vehiculo = parts[1].replace("Vehículo: ", "");
+          } else {
+            conductor = r.descripcion || "No asignado";
+          }
+          return {
+            id: r.idRuta,
+            nombre: r.nombreRuta,
+            conductor: conductor,
+            vehiculo: vehiculo,
+            paradas: Math.floor(Math.random() * 5) + 3,
+            estado: r.estado ? "En servicio" : "Mantenimiento"
+          };
+        });
+        setRutas(mappedRutas);
+      }
+    } catch (err) {
+      console.error("Error al cargar rutas de la API:", err);
+    }
   };
 
-  const eliminarRuta = (id) => {
-    setRutas(rutas.filter(r => r.id !== id));
+  const agregarRuta = async (e) => {
+    e.preventDefault();
+    if (!nuevaRutaNombre || !nuevaRutaConductor) return;
+
+    const descripcion = `Conductor: ${nuevaRutaConductor} | Vehículo: ${nuevaRutaPlaca || "SIN PLACA"}`;
+
+    try {
+      const response = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Ruta", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombreRuta: nuevaRutaNombre,
+          descripcion: descripcion
+        })
+      });
+
+      if (response.ok) {
+        await cargarRutas();
+        setNuevaRutaNombre("");
+        setNuevaRutaConductor("");
+        setNuevaRutaPlaca("");
+      } else {
+        alert("Error al guardar la ruta en el servidor.");
+      }
+    } catch (err) {
+      console.error("Error al guardar ruta:", err);
+      alert("No se pudo conectar con el servidor para guardar la ruta.");
+    }
+  };
+
+  const eliminarRuta = async (id) => {
+    try {
+      const response = await fetch(`https://schooltrack.seminario1.eleueleo.com/api/Ruta/${id}`, {
+        method: "DELETE"
+      });
+      if (response.ok) {
+        setRutas(rutas.filter(r => r.id !== id));
+      } else {
+        alert("Error al eliminar la ruta del servidor.");
+      }
+    } catch (err) {
+      console.error("Error al eliminar ruta:", err);
+      alert("No se pudo conectar con el servidor para eliminar la ruta.");
+    }
   };
 
   const cerrarSesion = () => {
+    localStorage.removeItem("usuario");
     navigate("/login");
   };
 

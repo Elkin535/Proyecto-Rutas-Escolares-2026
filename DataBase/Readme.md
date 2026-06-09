@@ -1,39 +1,44 @@
-
 # Base de Datos
 
-### **Motor:**
+---
 
-* PostgreSQL
+## Motor de Base de Datos
 
-# **Credenciales:**
+| Configuración | Valor |
+|--------------|--------|
+| Motor | PostgreSQL |
+| Host | localhost |
+| Puerto | 5432 |
+| Base de Datos | semi1_schooltrack_prod |
+| Usuario | semi1_schooltrack |
 
-**Host:**  localhost
-**Port:** 5432
+---
 
-**Database:**
-* semi1_schooltrack_prod
+## Credenciales de Conexión
 
-**User:**
-* semi1_schooltrack
+> ⚠️ **Importante:** No publiques credenciales reales en repositorios públicos.
 
-**Password:**
-* $eminario$c00lTrack
+### Cadena de conexión actual
 
-**Cadena actual:**
-
+```json
 {
   "ConnectionStrings": {
     "PostgreSQLConnection": "Host=localhost;Port=5432;Database=semi1_schooltrack_prod;Username=semi1_schooltrack;Password=$eminario$c00lTrack"
   }
 }
+```
+
+---
 
 # Entity Framework
 
-###  **DbContext:**
+## DbContext
 
-**AppDbContext**
+```csharp
+AppDbContext
+```
 
-### **Tablas configuradas:**
+## Tablas Configuradas
 
 ```csharp
 DbSet<Rol>
@@ -44,26 +49,56 @@ DbSet<Estudiante>
 DbSet<Vehiculo>
 DbSet<Historial>
 ```
-## **Modelos:**
 
-* Actualmente tenemos:
+---
 
-Rol\
-Usuario\
-Acudiente\
-Conductor\
-Estudiante\
-Vehiculo\
-Historial\
+# Modelos
 
-Patrón Arquitectónico
+Actualmente el sistema cuenta con los siguientes modelos:
 
-Actualmente se usas:
+```text
+Rol
+Usuario
+Acudiente
+Conductor
+Estudiante
+Vehiculo
+Historial
+```
 
-Controller\
-↓\
-Repository\
-↓\
-DbContext\
-↓\
-PostgreSQL\
+---
+
+# Patrón Arquitectónico
+
+El proyecto sigue una arquitectura por capas para separar responsabilidades y facilitar el mantenimiento del código.
+
+```text
+Controller
+    ↓
+Repository
+    ↓
+DbContext
+    ↓
+PostgreSQL
+```
+
+### Descripción de las capas
+
+| Capa | Responsabilidad |
+|--------|--------|
+| Controller | Gestiona las solicitudes HTTP y las respuestas de la API |
+| Repository | Contiene la lógica de acceso a datos |
+| DbContext | Administra las entidades mediante Entity Framework Core |
+| PostgreSQL | Almacena la información del sistema |
+
+---
+
+# Resumen General
+
+| Elemento | Implementación |
+|-----------|----------------|
+| Base de Datos | PostgreSQL |
+| ORM | Entity Framework Core |
+| DbContext Principal | AppDbContext |
+| Arquitectura | Controller → Repository → DbContext → PostgreSQL |
+| Entidades | 7 |

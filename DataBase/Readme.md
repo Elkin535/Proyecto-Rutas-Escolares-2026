@@ -43,11 +43,11 @@ DbSet<Estudiante>
 DbSet<Vehiculo>
 DbSet<Historial>
 
-Modelos
+**Modelos:**
 
 Actualmente tenemos:
 
-Rol
+Rol\
 Usuario
 Acudiente
 Conductor

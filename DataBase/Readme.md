@@ -11,7 +11,7 @@
 | Puerto | 5432 |
 | Base de Datos | semi1_schooltrack_prod |
 | Usuario | semi1_schooltrack |
-| Password | $eminario$c00lTrack |
+
 
 ---
 

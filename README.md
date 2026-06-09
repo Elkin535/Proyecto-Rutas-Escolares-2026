@@ -47,7 +47,7 @@ https://schooltrack.seminario1.eleueleo.com/api
 502 Bad Gateway
 
 # **Backend**
-# **Tecnologías:**
+## **Tecnologías:**
 
 ASP.NET Core 10
 Entity Framework Core

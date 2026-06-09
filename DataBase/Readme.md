@@ -35,14 +35,15 @@
 
 ### **Tablas configuradas:**
 
-DbSet<Rol> \
-DbSet<Usuario> \
-DbSet<Acudiente> \
-DbSet<Conductor> \
-DbSet<Estudiante> \
-DbSet<Vehiculo> \
-DbSet<Historial> \
-
+```csharp
+DbSet<Rol>
+DbSet<Usuario>
+DbSet<Acudiente>
+DbSet<Conductor>
+DbSet<Estudiante>
+DbSet<Vehiculo>
+DbSet<Historial>
+```
 ## **Modelos:**
 
 * Actualmente tenemos:

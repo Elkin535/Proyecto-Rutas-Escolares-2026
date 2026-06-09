@@ -94,7 +94,7 @@ HTML
 CSS
 JavaScript
 
-actualmente por el momento xd
+actualmente 
 + Home creado
 + Login creado
 + Deploy automático funcionando
@@ -112,7 +112,7 @@ Workflow:
 .github/workflows/primero.yml
 
 Hace:
-Checkout
+- Checkout
 ↓
 Node 24.16.0
 ↓

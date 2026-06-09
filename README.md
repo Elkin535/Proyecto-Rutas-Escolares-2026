@@ -106,24 +106,6 @@ URL pública:
 
 https://schooltrack.seminario1.eleueleo.com
 
-### Deploy Frontend
-
-Workflow:
-
-.github/workflows/primero.yml
-
-Hace:
-- Checkout
-- ↓
-- Node 24.16.0
-- ↓
-- npm install
-- ↓
-- npm run build
-- ↓
-- rsync dist/
-- ↓
-- Servidor
 
 # **Control de Versiones**
 * Git – Sistema de control de versiones.

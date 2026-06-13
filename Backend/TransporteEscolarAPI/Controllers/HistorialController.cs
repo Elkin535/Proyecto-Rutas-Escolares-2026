@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
 using TransporteEscolarAPI.Models;
+using Microsoft.AspNetCore.SignalR;
+using TransporteEscolarAPI.Hubs;
 
 namespace TransporteEscolarAPI.Controllers
 {
@@ -14,10 +16,12 @@ namespace TransporteEscolarAPI.Controllers
     public class HistorialController : ControllerBase
     {
         private readonly IHistorialRepository _historialRepository;
+        private readonly IHubContext<TrackingHub> _hubContext;
 
-        public HistorialController(IHistorialRepository historialRepository)
+        public HistorialController(IHistorialRepository historialRepository, IHubContext<TrackingHub> hubContext)
         {
             _historialRepository = historialRepository;
+            _hubContext = hubContext;
         }
 
         [HttpGet]
@@ -62,6 +66,13 @@ namespace TransporteEscolarAPI.Controllers
             viaje.LongitudActual = gpsDto.LongitudActual;
 
             await _historialRepository.ActualizarAsync(viaje);
+
+            // Broadcast the location update to all clients in this trip's group
+            await _hubContext.Clients.Group($"viaje_{idViaje}").SendAsync("RecibirUbicacion", new {
+                latitud = gpsDto.LatitudActual,
+                longitud = gpsDto.LongitudActual
+            });
+
             return Ok(new { mensaje = "Coordenadas GPS actualizadas con éxito" });
         }
 

@@ -27,6 +27,8 @@ builder.Services.AddScoped<IRutaRepository, RutaRepository>();
 builder.Services.AddScoped<IParadaRepository, ParadaRepository>();
 builder.Services.AddScoped<IAsistenciaViajeRepository, AsistenciaViajeRepository>();
 
+builder.Services.AddSignalR();
+
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -35,9 +37,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // URLs de Vite y CRA típicos
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials(); // Requerido para SignalR WebSockets
     });
 });
 
@@ -77,6 +80,7 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TransporteEscolarAPI.Hubs.TrackingHub>("/trackingHub");
 
 using (var scope = app.Services.CreateScope())
 {

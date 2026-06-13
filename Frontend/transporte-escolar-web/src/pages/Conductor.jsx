@@ -1,12 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bus, User, LogOut, Check, X, Navigation, Award, AlertCircle } from "lucide-react";
+import { Bus, User, LogOut, Check, X, Navigation, Award, AlertCircle, ClipboardList } from "lucide-react";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import "./Conductor.css";
 
 function Conductor() {
   const navigate = useNavigate();
   const [viajeActivo, setViajeActivo] = useState(false);
   const [recorridoCompletado, setRecorridoCompletado] = useState(false);
+  const [idViaje, setIdViaje] = useState(null);
+  const [simulacionActiva, setSimulacionActiva] = useState(false);
+
+  // Default Paradas for demonstration (usually fetched from API)
+  const paradasDemo = [
+    { id: 1, lat: 4.7000, lng: -74.0700, nombre: "Paradero Inicial" },
+    { id: 2, lat: 4.7110, lng: -74.0721, nombre: "Calle 100 con Cra 15" },
+    { id: 3, lat: 4.7200, lng: -74.0800, nombre: "Av. Suba con Calle 127" },
+    { id: 4, lat: 4.7450, lng: -74.0910, nombre: "Colegio" }
+  ];
+
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   const [estudiantes, setEstudiantes] = useState([
     { id: 1, nombre: "Sofía García", parada: "Calle 100 con Cra 15", estado: "Pendiente", hora: "" },
@@ -15,33 +31,138 @@ function Conductor() {
     { id: 4, nombre: "Camila Sánchez", parada: "Calle 183 con Cra 7", estado: "Pendiente", hora: "" }
   ]);
 
+  const watchIdRef = useRef(null);
+  const simIntervalRef = useRef(null);
+
+  // Initialize Map
+  useEffect(() => {
+    if (mapRef.current && !mapInstanceRef.current) {
+      mapInstanceRef.current = L.map(mapRef.current).setView([4.7000, -74.0700], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstanceRef.current);
+      
+      // Draw path
+      const latlngs = paradasDemo.map(p => [p.lat, p.lng]);
+      L.polyline(latlngs, {color: 'blue'}).addTo(mapInstanceRef.current);
+
+      // Add stops
+      paradasDemo.forEach(p => {
+        L.circleMarker([p.lat, p.lng], { color: 'green', radius: 5 }).addTo(mapInstanceRef.current).bindPopup(p.nombre);
+      });
+      
+      // Add bus marker
+      const busIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', // Simple bus icon
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+      markerRef.current = L.marker([4.7000, -74.0700], { icon: busIcon }).addTo(mapInstanceRef.current);
+    }
+  }, []);
+
+  const enviarUbicacionGPS = async (lat, lng) => {
+    if (markerRef.current && mapInstanceRef.current) {
+      markerRef.current.setLatLng([lat, lng]);
+      mapInstanceRef.current.panTo([lat, lng]);
+    }
+    
+    // In a real scenario, this would use the real idViaje created via POST /api/Historial/iniciar
+    const currentIdViaje = 123; 
+
+    try {
+      await fetch(`http://localhost:5150/api/Historial/${currentIdViaje}/gps`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          latitudActual: lat,
+          longitudActual: lng
+        })
+      });
+    } catch (error) {
+      console.error("Error enviando ubicación GPS:", error);
+    }
+  };
+
   const iniciarRecorrido = () => {
     setViajeActivo(true);
     setRecorridoCompletado(false);
-    // Resetear estados al iniciar
+    setIdViaje(123); // Simulated ID for now
     setEstudiantes(estudiantes.map(e => ({ ...e, estado: "Pendiente", hora: "" })));
+
+    if (navigator.geolocation && !simulacionActiva) {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          enviarUbicacionGPS(position.coords.latitude, position.coords.longitude);
+        },
+        (error) => console.error("Error GPS:", error),
+        { enableHighAccuracy: true }
+      );
+    }
+  };
+
+  const alternarSimulacion = () => {
+    const nuevoEstado = !simulacionActiva;
+    setSimulacionActiva(nuevoEstado);
+    
+    if (nuevoEstado && viajeActivo) {
+      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+      
+      let index = 0;
+      let step = 0;
+      const numSteps = 20; // steps between stops
+      
+      simIntervalRef.current = setInterval(() => {
+        if (index >= paradasDemo.length - 1) {
+          clearInterval(simIntervalRef.current);
+          return;
+        }
+        
+        const currentStop = paradasDemo[index];
+        const nextStop = paradasDemo[index + 1];
+        
+        const lat = currentStop.lat + (nextStop.lat - currentStop.lat) * (step / numSteps);
+        const lng = currentStop.lng + (nextStop.lng - currentStop.lng) * (step / numSteps);
+        
+        enviarUbicacionGPS(lat, lng);
+        
+        step++;
+        if (step > numSteps) {
+          step = 0;
+          index++;
+        }
+      }, 1000); // Send update every second in simulation
+    } else {
+      clearInterval(simIntervalRef.current);
+      if (viajeActivo && navigator.geolocation) {
+         watchIdRef.current = navigator.geolocation.watchPosition(
+            (pos) => enviarUbicacionGPS(pos.coords.latitude, pos.coords.longitude),
+            (err) => console.error(err),
+            { enableHighAccuracy: true }
+         );
+      }
+    }
   };
 
   const finalizarRecorrido = () => {
     setViajeActivo(false);
     setRecorridoCompletado(true);
+    setIdViaje(null);
+    if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+    if (simIntervalRef.current) clearInterval(simIntervalRef.current);
   };
 
   const marcarAsistencia = (id, nuevoEstado) => {
     const ahora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setEstudiantes(estudiantes.map(e => {
       if (e.id === id) {
-        return { 
-          ...e, 
-          estado: nuevoEstado, 
-          hora: nuevoEstado === "Pendiente" ? "" : ahora 
-        };
+        return { ...e, estado: nuevoEstado, hora: nuevoEstado === "Pendiente" ? "" : ahora };
       }
       return e;
     }));
   };
 
   const cerrarSesion = () => {
+    if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+    if (simIntervalRef.current) clearInterval(simIntervalRef.current);
     navigate("/login");
   };
 
@@ -71,6 +192,20 @@ function Conductor() {
             <p className="license-info">Licencia: C2 - Placa: <strong>TOW-345</strong></p>
             <p className="route-info">Ruta Asignada: <span>Ruta 01 - Norte</span></p>
           </div>
+        </section>
+
+        {/* MAPA DE RUTAS */}
+        <section className="map-section" style={{ marginTop: '20px', borderRadius: '10px', overflow: 'hidden' }}>
+            <div ref={mapRef} style={{ height: '300px', width: '100%' }}></div>
+            {viajeActivo && (
+                <div style={{ padding: '10px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Transmisión GPS Activa</span>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                        <input type="checkbox" checked={simulacionActiva} onChange={alternarSimulacion} />
+                        Simular Movimiento (Para pruebas en PC)
+                    </label>
+                </div>
+            )}
         </section>
 
         {/* Controles de Viaje */}

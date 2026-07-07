@@ -32,6 +32,14 @@ function Admin() {
   const [nuevaRutaConductor, setNuevaRutaConductor] = useState("");
   const [nuevaRutaPlaca, setNuevaRutaPlaca] = useState("");
 
+  // Variables para agregar estudiante
+  const [nuevoEstudianteNombre, setNuevoEstudianteNombre] = useState("");
+  const [nuevoEstudianteApellido, setNuevoEstudianteApellido] = useState("");
+  const [nuevoEstudianteAcudiente, setNuevoEstudianteAcudiente] = useState("");
+  const [nuevoEstudianteColegio, setNuevoEstudianteColegio] = useState("");
+  const [nuevoEstudianteCurso, setNuevoEstudianteCurso] = useState("");
+  const [nuevoEstudianteRuta, setNuevoEstudianteRuta] = useState("");
+
   useEffect(() => {
     cargarRutas();
   }, []);
@@ -113,6 +121,30 @@ function Admin() {
       console.error("Error al eliminar ruta:", err);
       alert("No se pudo conectar con el servidor para eliminar la ruta.");
     }
+  };
+
+  const agregarEstudiante = (e) => {
+    e.preventDefault();
+    if (!nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
+
+    const nuevoId = estudiantes.length ? Math.max(...estudiantes.map(e => e.id)) + 1 : 1;
+    
+    setEstudiantes([...estudiantes, {
+      id: nuevoId,
+      nombre: nuevoEstudianteNombre,
+      apellido: nuevoEstudianteApellido,
+      acudiente: nuevoEstudianteAcudiente || "Sin asignar",
+      colegio: nuevoEstudianteColegio || "Sin asignar",
+      curso: nuevoEstudianteCurso || "Sin asignar",
+      ruta: nuevoEstudianteRuta || "Sin asignar"
+    }]);
+
+    setNuevoEstudianteNombre("");
+    setNuevoEstudianteApellido("");
+    setNuevoEstudianteAcudiente("");
+    setNuevoEstudianteColegio("");
+    setNuevoEstudianteCurso("");
+    setNuevoEstudianteRuta("");
   };
 
   const cerrarSesion = () => {
@@ -357,32 +389,100 @@ function Admin() {
                 <h3>Base de Alumnos Registrados</h3>
               </div>
 
-              <div className="crud-list card-table">
-                <div className="table-responsive">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Estudiante</th>
-                        <th>Acudiente</th>
-                        <th>Colegio</th>
-                        <th>Grado</th>
-                        <th>Ruta Asignada</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {estudiantes.map(e => (
-                        <tr key={e.id}>
-                          <td><strong>{e.nombre} {e.apellido}</strong></td>
-                          <td>{e.acudiente}</td>
-                          <td>{e.colegio}</td>
-                          <td>{e.curso}</td>
-                          <td>
-                            <span className="route-tag">{e.ruta}</span>
-                          </td>
+              <div className="crud-container">
+                {/* Formulario Estudiante */}
+                <form className="crud-form card-form" onSubmit={agregarEstudiante}>
+                  <h4>Crear Nuevo Estudiante</h4>
+                  <div className="form-group">
+                    <label>Nombre</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. Carlos" 
+                      value={nuevoEstudianteNombre}
+                      onChange={(e) => setNuevoEstudianteNombre(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Apellido</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. Gómez" 
+                      value={nuevoEstudianteApellido}
+                      onChange={(e) => setNuevoEstudianteApellido(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Acudiente</label>
+                    <input 
+                      type="text" 
+                      placeholder="Nombre del acudiente" 
+                      value={nuevoEstudianteAcudiente}
+                      onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Colegio</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. Colegio Central" 
+                      value={nuevoEstudianteColegio}
+                      onChange={(e) => setNuevoEstudianteColegio(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Grado</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. 5° Primaria" 
+                      value={nuevoEstudianteCurso}
+                      onChange={(e) => setNuevoEstudianteCurso(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Ruta Asignada</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. Ruta 01 - Norte" 
+                      value={nuevoEstudianteRuta}
+                      onChange={(e) => setNuevoEstudianteRuta(e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" className="add-btn">
+                    <Plus size={16} />
+                    <span>Guardar Estudiante</span>
+                  </button>
+                </form>
+
+                {/* Listado Estudiantes */}
+                <div className="crud-list flex-grow">
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Estudiante</th>
+                          <th>Acudiente</th>
+                          <th>Colegio</th>
+                          <th>Grado</th>
+                          <th>Ruta Asignada</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {estudiantes.map(e => (
+                          <tr key={e.id}>
+                            <td><strong>{e.nombre} {e.apellido}</strong></td>
+                            <td>{e.acudiente}</td>
+                            <td>{e.colegio}</td>
+                            <td>{e.curso}</td>
+                            <td>
+                              <span className="route-tag">{e.ruta}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>

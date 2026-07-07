@@ -104,8 +104,8 @@ Al finalizar los cuatro Sprints el sistema permitirá:
 - ✅ Registro digital de abordaje y entrega.
 - ✅ Notificaciones automáticas a los acudientes.
 - ✅ Dashboard administrativo con reportes históricos.
-- ✅ Plataforma segura mediante autenticación JWT.
-- ✅ Arquitectura basada en Spring Boot, WebSocket y MariaDB/PostgreSQL.
+- ✅ Plataforma segura mediante autenticación 
+
 
 
 # 🌐 URLs del Proyecto

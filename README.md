@@ -94,6 +94,19 @@ SchoolTrack busca solucionar estos problemas mediante una plataforma unificada, 
 - Autenticación y control de acceso por roles.
 
 ---
+# 🏁 Resultado Esperado
+
+Al finalizar los cuatro Sprints el sistema permitirá:
+
+- ✅ Administración completa de usuarios y rutas.
+- ✅ Seguimiento GPS en tiempo real.
+- ✅ Monitoreo simultáneo de múltiples vehículos.
+- ✅ Registro digital de abordaje y entrega.
+- ✅ Notificaciones automáticas a los acudientes.
+- ✅ Dashboard administrativo con reportes históricos.
+- ✅ Plataforma segura mediante autenticación 
+
+
 
 # 🌐 URLs del Proyecto
 

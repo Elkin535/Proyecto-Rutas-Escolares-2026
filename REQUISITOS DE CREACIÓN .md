@@ -38,3 +38,78 @@
 - RNF-02 (Disponibilidad): El servicio de geolocalización debe garantizar una disponibilidad del 99.9% durante las horas de operación escolar (05:00 a 19:00).
 - RNF-03 (Seguridad/Privacidad): Los datos de ubicación de los menores deben estar encriptados en tránsito (HTTPS/WSS) y solo accesibles por los acudientes vinculados y el administrador.
 - RNF-04 (Escalabilidad): El backend debe ser capaz de procesar solicitudes simultáneas de geolocalización de múltiples rutas concurrentes usando arquitectura reactiva o hilos optimizado
+
+  # 📚 Product Backlog y Sprint Backlog
+## 🚍 Sistema SCHOOLTRACK
+
+---
+
+# 👥 Historias de Usuario (Product Backlog)
+## 🛡️ Administrador (Admin)
+
+### 📌 HU-ADMIN-01 — Gestión de Entidades Base
+> **Como** Administrador,  
+> **quiero** registrar, editar y dar de baja usuarios, estudiantes, vehículos y rutas,  
+> **para** mantener la base de datos actualizada.
+
+---
+
+### 📌 HU-ADMIN-02 — Asignación de Rutas
+> **Como** Administrador,  
+> **quiero** asociar alumnos y un conductor a una ruta específica,  
+> **para** estructurar correctamente el recorrido diario del transporte escolar.
+
+---
+
+### 📌 HU-ADMIN-03 — Dashboard Global de Monitoreo
+> **Como** Administrador,  
+> **quiero** visualizar todas las rutas activas sobre un mapa en tiempo real,  
+> **para** supervisar el servicio y actuar rápidamente ante retrasos o incidencias.
+
+---
+
+# 🚍 Conductor (Driver)
+
+### 📌 HU-COND-01 — Visualización del Itinerario
+> **Como** Conductor,  
+> **quiero** consultar la lista ordenada de paradas y estudiantes asignados para el día,  
+> **para** conocer el recorrido que debo realizar.
+
+---
+
+### 📌 HU-COND-02 — Transmisión de Ubicación
+> **Como** Conductor,  
+> **quiero** iniciar mi ruta desde la aplicación móvil,  
+> **para** transmitir automáticamente mi ubicación GPS durante todo el recorrido.
+
+---
+
+### 📌 HU-COND-03 — Registro de Eventos
+> **Como** Conductor,  
+> **quiero** registrar cuando un estudiante aborda, no asiste o es entregado,  
+> **para** mantener actualizado el estado del viaje en tiempo real.
+
+---
+
+# 👨‍👩‍👧 Acudiente (Parent)
+
+### 📌 HU-ACUD-01 — Visualización de Ruta en Vivo
+> **Como** Acudiente,  
+> **quiero** observar la ubicación del autobús en tiempo real,  
+> **para** conocer con precisión cuándo llegará a la parada o al colegio.
+
+---
+
+### 📌 HU-ACUD-02 — Alerta de Recogida
+> **Como** Acudiente,  
+> **quiero** recibir una notificación cuando mi hijo aborde el autobús,  
+> **para** confirmar que inició su viaje de forma segura.
+
+---
+
+### 📌 HU-ACUD-03 — Alerta de Entrega
+> **Como** Acudiente,  
+> **quiero** recibir una notificación cuando mi hijo llegue al colegio o a casa,  
+> **para** tener la tranquilidad de que llegó correctamente a su destino.
+
+

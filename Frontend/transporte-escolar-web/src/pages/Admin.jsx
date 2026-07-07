@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Route as RouteIcon, 
-  Users, 
-  Bus, 
-  ShieldAlert, 
-  LogOut, 
-  Plus, 
-  Trash2, 
-  ClipboardList, 
+import {
+  LayoutDashboard,
+  Route as RouteIcon,
+  Users,
+  Bus,
+  ShieldAlert,
+  LogOut,
+  Plus,
+  Trash2,
+  ClipboardList,
   CheckCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  X
 } from "lucide-react";
 import "./Admin.css";
 
@@ -39,6 +40,7 @@ function Admin() {
   const [nuevoEstudianteColegio, setNuevoEstudianteColegio] = useState("");
   const [nuevoEstudianteCurso, setNuevoEstudianteCurso] = useState("");
   const [nuevoEstudianteRuta, setNuevoEstudianteRuta] = useState("");
+  const [mostrarModalEstudiante, setMostrarModalEstudiante] = useState(false);
 
   useEffect(() => {
     cargarRutas();
@@ -128,7 +130,7 @@ function Admin() {
     if (!nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
 
     const nuevoId = estudiantes.length ? Math.max(...estudiantes.map(e => e.id)) + 1 : 1;
-    
+
     setEstudiantes([...estudiantes, {
       id: nuevoId,
       nombre: nuevoEstudianteNombre,
@@ -145,6 +147,7 @@ function Admin() {
     setNuevoEstudianteColegio("");
     setNuevoEstudianteCurso("");
     setNuevoEstudianteRuta("");
+    setMostrarModalEstudiante(false);
   };
 
   const cerrarSesion = () => {
@@ -169,21 +172,21 @@ function Admin() {
         </div>
 
         <nav className="sidebar-menu">
-          <button 
+          <button
             className={`menu-item ${activeTab === "resumen" ? "active" : ""}`}
             onClick={() => setActiveTab("resumen")}
           >
             <LayoutDashboard size={20} />
             <span>Resumen</span>
           </button>
-          <button 
+          <button
             className={`menu-item ${activeTab === "rutas" ? "active" : ""}`}
             onClick={() => setActiveTab("rutas")}
           >
             <RouteIcon size={20} />
             <span>Gestionar Rutas</span>
           </button>
-          <button 
+          <button
             className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`}
             onClick={() => setActiveTab("estudiantes")}
           >
@@ -314,9 +317,9 @@ function Admin() {
                   <h4>Crear Nueva Ruta</h4>
                   <div className="form-group">
                     <label>Nombre de la Ruta</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Ruta 04 - Occidente" 
+                    <input
+                      type="text"
+                      placeholder="Ej. Ruta 04 - Occidente"
                       value={nuevaRutaNombre}
                       onChange={(e) => setNuevaRutaNombre(e.target.value)}
                       required
@@ -324,9 +327,9 @@ function Admin() {
                   </div>
                   <div className="form-group">
                     <label>Conductor Asignado</label>
-                    <input 
-                      type="text" 
-                      placeholder="Nombre del conductor" 
+                    <input
+                      type="text"
+                      placeholder="Nombre del conductor"
                       value={nuevaRutaConductor}
                       onChange={(e) => setNuevaRutaConductor(e.target.value)}
                       required
@@ -334,9 +337,9 @@ function Admin() {
                   </div>
                   <div className="form-group">
                     <label>Placa del Vehículo</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. ABC-123" 
+                    <input
+                      type="text"
+                      placeholder="Ej. ABC-123"
                       value={nuevaRutaPlaca}
                       onChange={(e) => setNuevaRutaPlaca(e.target.value)}
                     />
@@ -385,76 +388,15 @@ function Admin() {
           {/* TAB 3: ESTUDIANTES */}
           {activeTab === "estudiantes" && (
             <div className="tab-pane">
-              <div className="section-header">
+              <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3>Base de Alumnos Registrados</h3>
+                <button className="add-btn" style={{ width: "auto", marginTop: 0 }} onClick={() => setMostrarModalEstudiante(true)}>
+                  <Plus size={16} />
+                  <span>Nuevo Estudiante</span>
+                </button>
               </div>
 
               <div className="crud-container">
-                {/* Formulario Estudiante */}
-                <form className="crud-form card-form" onSubmit={agregarEstudiante}>
-                  <h4>Crear Nuevo Estudiante</h4>
-                  <div className="form-group">
-                    <label>Nombre</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Carlos" 
-                      value={nuevoEstudianteNombre}
-                      onChange={(e) => setNuevoEstudianteNombre(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Apellido</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Gómez" 
-                      value={nuevoEstudianteApellido}
-                      onChange={(e) => setNuevoEstudianteApellido(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Acudiente</label>
-                    <input 
-                      type="text" 
-                      placeholder="Nombre del acudiente" 
-                      value={nuevoEstudianteAcudiente}
-                      onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Colegio</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Colegio Central" 
-                      value={nuevoEstudianteColegio}
-                      onChange={(e) => setNuevoEstudianteColegio(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Grado</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. 5° Primaria" 
-                      value={nuevoEstudianteCurso}
-                      onChange={(e) => setNuevoEstudianteCurso(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Ruta Asignada</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Ruta 01 - Norte" 
-                      value={nuevoEstudianteRuta}
-                      onChange={(e) => setNuevoEstudianteRuta(e.target.value)}
-                    />
-                  </div>
-                  <button type="submit" className="add-btn">
-                    <Plus size={16} />
-                    <span>Guardar Estudiante</span>
-                  </button>
-                </form>
-
                 {/* Listado Estudiantes */}
                 <div className="crud-list flex-grow">
                   <div className="table-responsive">
@@ -485,6 +427,80 @@ function Admin() {
                   </div>
                 </div>
               </div>
+
+              {/* Modal Crear Nuevo Estudiante */}
+              {mostrarModalEstudiante && (
+                <div className="modal-overlay" onClick={() => setMostrarModalEstudiante(false)}>
+                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <button className="modal-close-btn" onClick={() => setMostrarModalEstudiante(false)}>
+                      <X size={20} />
+                    </button>
+                    <form className="card-form" onSubmit={agregarEstudiante} style={{ width: "100%", padding: 0, background: "none", border: "none" }}>
+                      <h4 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px", color: "#00d4ff" }}>Crear Nuevo Estudiante</h4>
+                      <div className="form-group">
+                        <label>Nombre</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Carlos"
+                          value={nuevoEstudianteNombre}
+                          onChange={(e) => setNuevoEstudianteNombre(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Apellido</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Gómez"
+                          value={nuevoEstudianteApellido}
+                          onChange={(e) => setNuevoEstudianteApellido(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Acudiente</label>
+                        <input
+                          type="text"
+                          placeholder="Nombre del acudiente"
+                          value={nuevoEstudianteAcudiente}
+                          onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Colegio</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Colegio Central"
+                          value={nuevoEstudianteColegio}
+                          onChange={(e) => setNuevoEstudianteColegio(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Grado</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. 5° Primaria"
+                          value={nuevoEstudianteCurso}
+                          onChange={(e) => setNuevoEstudianteCurso(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Ruta Asignada</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Ruta 01 - Norte"
+                          value={nuevoEstudianteRuta}
+                          onChange={(e) => setNuevoEstudianteRuta(e.target.value)}
+                        />
+                      </div>
+                      <button type="submit" className="add-btn">
+                        <Plus size={16} />
+                        <span>Guardar Estudiante</span>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

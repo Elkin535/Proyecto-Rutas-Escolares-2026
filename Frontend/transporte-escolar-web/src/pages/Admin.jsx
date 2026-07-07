@@ -12,7 +12,8 @@ import {
   ClipboardList,
   CheckCircle,
   FileSpreadsheet,
-  X
+  X,
+  Pencil
 } from "lucide-react";
 import "./Admin.css";
 
@@ -41,6 +42,25 @@ function Admin() {
   const [nuevoEstudianteCurso, setNuevoEstudianteCurso] = useState("");
   const [nuevoEstudianteRuta, setNuevoEstudianteRuta] = useState("");
   const [mostrarModalEstudiante, setMostrarModalEstudiante] = useState(false);
+
+  // Modales y Edición
+  const [mostrarModalConfirmar, setMostrarModalConfirmar] = useState(false);
+  const [itemAEliminar, setItemAEliminar] = useState(null);
+
+  const [mostrarModalEditRuta, setMostrarModalEditRuta] = useState(false);
+  const [selectedRuta, setSelectedRuta] = useState(null);
+  const [editRutaNombre, setEditRutaNombre] = useState("");
+  const [editRutaConductor, setEditRutaConductor] = useState("");
+  const [editRutaPlaca, setEditRutaPlaca] = useState("");
+
+  const [mostrarModalEditEstudiante, setMostrarModalEditEstudiante] = useState(false);
+  const [selectedEstudiante, setSelectedEstudiante] = useState(null);
+  const [editEstudianteNombre, setEditEstudianteNombre] = useState("");
+  const [editEstudianteApellido, setEditEstudianteApellido] = useState("");
+  const [editEstudianteAcudiente, setEditEstudianteAcudiente] = useState("");
+  const [editEstudianteColegio, setEditEstudianteColegio] = useState("");
+  const [editEstudianteCurso, setEditEstudianteCurso] = useState("");
+  const [editEstudianteRuta, setEditEstudianteRuta] = useState("");
 
   useEffect(() => {
     cargarRutas();
@@ -148,6 +168,100 @@ function Admin() {
     setNuevoEstudianteCurso("");
     setNuevoEstudianteRuta("");
     setMostrarModalEstudiante(false);
+  };
+
+  // Confirmación de eliminación genérica
+  const abrirConfirmarEliminar = (type, id) => {
+    setItemAEliminar({ type, id });
+    setMostrarModalConfirmar(true);
+  };
+
+  const ejecutarEliminacion = async () => {
+    if (!itemAEliminar) return;
+    if (itemAEliminar.type === "ruta") {
+      await eliminarRuta(itemAEliminar.id);
+    } else if (itemAEliminar.type === "estudiante") {
+      setEstudiantes(estudiantes.filter(e => e.id !== itemAEliminar.id));
+    }
+    setMostrarModalConfirmar(false);
+    setItemAEliminar(null);
+  };
+
+  // Edición de rutas
+  const abrirEditarRuta = (ruta) => {
+    setSelectedRuta(ruta);
+    setEditRutaNombre(ruta.nombre);
+    setEditRutaConductor(ruta.conductor);
+    setEditRutaPlaca(ruta.vehiculo);
+    setMostrarModalEditRuta(true);
+  };
+
+  const guardarEdicionRuta = async (e) => {
+    e.preventDefault();
+    if (!editRutaNombre || !editRutaConductor) return;
+
+    const descripcion = `Conductor: ${editRutaConductor} | Vehículo: ${editRutaPlaca || "SIN PLACA"}`;
+
+    try {
+      const response = await fetch(`https://schooltrack.seminario1.eleueleo.com/api/Ruta/${selectedRuta.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          idRuta: selectedRuta.id,
+          nombreRuta: editRutaNombre,
+          descripcion: descripcion,
+          estado: selectedRuta.estado === "En servicio"
+        })
+      });
+
+      if (response.ok) {
+        await cargarRutas();
+        setMostrarModalEditRuta(false);
+        setSelectedRuta(null);
+      } else {
+        alert("Error al guardar los cambios de la ruta en el servidor.");
+      }
+    } catch (err) {
+      console.error("Error al editar ruta:", err);
+      alert("No se pudo conectar con el servidor para guardar los cambios.");
+    }
+  };
+
+  // Edición de estudiantes
+  const abrirEditarEstudiante = (est) => {
+    setSelectedEstudiante(est);
+    setEditEstudianteNombre(est.nombre);
+    setEditEstudianteApellido(est.apellido);
+    setEditEstudianteAcudiente(est.acudiente);
+    setEditEstudianteColegio(est.colegio);
+    setEditEstudianteCurso(est.curso);
+    setEditEstudianteRuta(est.ruta);
+    setMostrarModalEditEstudiante(true);
+  };
+
+  const guardarEdicionEstudiante = (e) => {
+    e.preventDefault();
+    if (!editEstudianteNombre || !editEstudianteApellido) return;
+
+    setEstudiantes(estudiantes.map(est => {
+      if (est.id === selectedEstudiante.id) {
+        return {
+          ...est,
+          nombre: editEstudianteNombre,
+          apellido: editEstudianteApellido,
+          acudiente: editEstudianteAcudiente || "Sin asignar",
+          colegio: editEstudianteColegio || "Sin asignar",
+          curso: editEstudianteCurso || "Sin asignar",
+          ruta: editEstudianteRuta || "Sin asignar"
+        };
+      }
+      return est;
+    }));
+
+    setMostrarModalEditEstudiante(false);
+    setSelectedEstudiante(null);
   };
 
   const cerrarSesion = () => {
@@ -360,7 +474,7 @@ function Admin() {
                           <th>Conductor</th>
                           <th>Vehículo</th>
                           <th>Paradas</th>
-                          <th>Acción</th>
+                          <th>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -371,9 +485,14 @@ function Admin() {
                             <td><span className="badge-plate">{r.vehiculo}</span></td>
                             <td>{r.paradas} paradas</td>
                             <td>
-                              <button className="delete-row-btn" onClick={() => eliminarRuta(r.id)}>
-                                <Trash2 size={16} />
-                              </button>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <button className="edit-row-btn" onClick={() => abrirEditarRuta(r)} title="Editar Ruta">
+                                  <Pencil size={16} />
+                                </button>
+                                <button className="delete-row-btn" onClick={() => abrirConfirmarEliminar("ruta", r.id)} title="Eliminar Ruta">
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -408,6 +527,7 @@ function Admin() {
                           <th>Colegio</th>
                           <th>Grado</th>
                           <th>Ruta Asignada</th>
+                          <th>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -419,6 +539,16 @@ function Admin() {
                             <td>{e.curso}</td>
                             <td>
                               <span className="route-tag">{e.ruta}</span>
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <button className="edit-row-btn" onClick={() => abrirEditarEstudiante(e)} title="Editar Estudiante">
+                                  <Pencil size={16} />
+                                </button>
+                                <button className="delete-row-btn" onClick={() => abrirConfirmarEliminar("estudiante", e.id)} title="Eliminar Estudiante">
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -501,6 +631,179 @@ function Admin() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {/* Modal Editar Ruta */}
+          {mostrarModalEditRuta && (
+            <div className="modal-overlay" onClick={() => { setMostrarModalEditRuta(false); setSelectedRuta(null); }}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="modal-close-btn" onClick={() => { setMostrarModalEditRuta(false); setSelectedRuta(null); }}>
+                  <X size={20} />
+                </button>
+                <form className="card-form" onSubmit={guardarEdicionRuta} style={{ width: "100%", padding: 0, background: "none", border: "none" }}>
+                  <h4 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px", color: "#00d4ff" }}>Editar Ruta</h4>
+                  <div className="form-group">
+                    <label>Nombre de la Ruta</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Ruta 04 - Occidente"
+                      value={editRutaNombre}
+                      onChange={(e) => setEditRutaNombre(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Conductor Asignado</label>
+                    <input
+                      type="text"
+                      placeholder="Nombre del conductor"
+                      value={editRutaConductor}
+                      onChange={(e) => setEditRutaConductor(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Placa del Vehículo</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. ABC-123"
+                      value={editRutaPlaca}
+                      onChange={(e) => setEditRutaPlaca(e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" className="add-btn">
+                    <Plus size={16} />
+                    <span>Guardar Cambios</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Editar Estudiante */}
+          {mostrarModalEditEstudiante && (
+            <div className="modal-overlay" onClick={() => { setMostrarModalEditEstudiante(false); setSelectedEstudiante(null); }}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="modal-close-btn" onClick={() => { setMostrarModalEditEstudiante(false); setSelectedEstudiante(null); }}>
+                  <X size={20} />
+                </button>
+                <form className="card-form" onSubmit={guardarEdicionEstudiante} style={{ width: "100%", padding: 0, background: "none", border: "none" }}>
+                  <h4 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "20px", color: "#00d4ff" }}>Editar Estudiante</h4>
+                  <div className="form-group">
+                    <label>Nombre</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Carlos"
+                      value={editEstudianteNombre}
+                      onChange={(e) => setEditEstudianteNombre(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Apellido</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Gómez"
+                      value={editEstudianteApellido}
+                      onChange={(e) => setEditEstudianteApellido(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Acudiente</label>
+                    <input
+                      type="text"
+                      placeholder="Nombre del acudiente"
+                      value={editEstudianteAcudiente}
+                      onChange={(e) => setEditEstudianteAcudiente(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Colegio</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Colegio Central"
+                      value={editEstudianteColegio}
+                      onChange={(e) => setEditEstudianteColegio(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Grado</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 5° Primaria"
+                      value={editEstudianteCurso}
+                      onChange={(e) => setEditEstudianteCurso(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Ruta Asignada</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Ruta 01 - Norte"
+                      value={editEstudianteRuta}
+                      onChange={(e) => setEditEstudianteRuta(e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" className="add-btn">
+                    <Plus size={16} />
+                    <span>Guardar Cambios</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Confirmar Eliminación */}
+          {mostrarModalConfirmar && (
+            <div className="modal-overlay" onClick={() => { setMostrarModalConfirmar(false); setItemAEliminar(null); }}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ width: "380px" }}>
+                <button className="modal-close-btn" onClick={() => { setMostrarModalConfirmar(false); setItemAEliminar(null); }}>
+                  <X size={20} />
+                </button>
+                <h4 style={{ color: "#ef4444", fontSize: "1.2rem", fontWeight: 700, marginBottom: "16px" }}>Confirmar Eliminación</h4>
+                <p style={{ color: "#94a3b8", fontSize: "0.95rem", marginBottom: "24px", lineHeight: "1.5" }}>
+                  ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
+                </p>
+                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => { setMostrarModalConfirmar(false); setItemAEliminar(null); }}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.05)",
+                      color: "#ffffff",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      padding: "10px 16px",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      transition: "background 0.2s"
+                    }}
+                    onMouseOver={(e) => e.target.style.background = "rgba(255, 255, 255, 0.1)"}
+                    onMouseOut={(e) => e.target.style.background = "rgba(255, 255, 255, 0.05)"}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={ejecutarEliminacion}
+                    style={{
+                      background: "#ef4444",
+                      color: "#ffffff",
+                      border: "none",
+                      padding: "10px 16px",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      transition: "background 0.2s"
+                    }}
+                    onMouseOver={(e) => e.target.style.background = "#dc2626"}
+                    onMouseOut={(e) => e.target.style.background = "#ef4444"}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -585,3 +585,21 @@
     opacity: 1;
   }
 }
+
+.edit-row-btn {
+  background: none;
+  border: none;
+  color: #00d4ff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-row-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  transform: scale(1.1);
+}

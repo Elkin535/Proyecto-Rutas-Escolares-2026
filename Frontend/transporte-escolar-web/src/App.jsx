@@ -6,6 +6,10 @@ import Admin from "./pages/Admin";
 import Conductor from "./pages/Conductor";
 import Acudiente from "./pages/Acudiente";
 
+
+
+
+
 function App() {
   return (
     <BrowserRouter>

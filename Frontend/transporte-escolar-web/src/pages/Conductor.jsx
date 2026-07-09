@@ -284,7 +284,7 @@ function Conductor() {
                       </div>
                     ) : est.estado === "Entregado" ? (
                       <div className="completed-state">
-                        <span className="badge delivered">Entregado</span>
+                        <span className="badge delivered">Llego a destino</span>
                         <button className="reset-state-btn" onClick={() => marcarAsistencia(est.id, "Pendiente")}>
                           Corregir
                         </button>

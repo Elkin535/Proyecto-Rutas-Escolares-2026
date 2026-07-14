@@ -5,11 +5,8 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import Conductor from "./pages/Conductor";
 import Acudiente from "./pages/Acudiente";
+import Error403 from "./pages/Error403";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-
-
-
 
 function App() {
   return (
@@ -17,6 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/403" element={<Error403 />} />
         <Route
           path="/admin"
           element={

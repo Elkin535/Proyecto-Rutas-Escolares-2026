@@ -17,8 +17,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       const hasAccess = allowedRoles.some(role => userRole.includes(role.toLowerCase()));
       
       if (!hasAccess) {
-        // Si no tiene el rol adecuado, redirigirlo (en este caso lo mandamos al login para seguridad)
-        return <Navigate to="/login" replace />;
+        // Si no tiene el rol adecuado, redirigirlo a la página de error 403 (Acceso Denegado)
+        return <Navigate to="/403" replace />;
       }
     } catch (e) {
       // Si el JSON en localStorage está corrupto

@@ -117,7 +117,8 @@ function Acudiente() {
   };
 
   const cerrarSesion = () => {
-    navigate("/login");
+    localStorage.removeItem("usuario");
+    navigate("/login", { replace: true });
   };
 
   return (

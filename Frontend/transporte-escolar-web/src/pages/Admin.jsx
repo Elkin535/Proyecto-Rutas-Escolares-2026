@@ -491,7 +491,7 @@ function Admin() {
 
   const cerrarSesion = () => {
     localStorage.removeItem("usuario");
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   return (

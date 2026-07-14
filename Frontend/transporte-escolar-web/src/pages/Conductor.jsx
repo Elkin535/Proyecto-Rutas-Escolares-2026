@@ -163,7 +163,8 @@ function Conductor() {
   const cerrarSesion = () => {
     if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
     if (simIntervalRef.current) clearInterval(simIntervalRef.current);
-    navigate("/login");
+    localStorage.removeItem("usuario");
+    navigate("/login", { replace: true });
   };
 
   return (

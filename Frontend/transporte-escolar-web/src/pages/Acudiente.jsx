@@ -9,12 +9,35 @@ import "./Acudiente.css";
 function Acudiente() {
   const navigate = useNavigate();
   const [usuarioData, setUsuarioData] = useState({});
+  const [estudianteData, setEstudianteData] = useState(null);
 
   useEffect(() => {
+    const fetchEstudiante = async (userId) => {
+      try {
+        const resAcu = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Acudiente");
+        const acudientes = await resAcu.json();
+        const miAcudiente = acudientes.find(a => a.idUsuario === userId);
+        
+        if (miAcudiente) {
+          const resEst = await fetch(`https://schooltrack.seminario1.eleueleo.com/api/Estudiante/acudiente/${miAcudiente.idAcudiente}`);
+          const estudiantes = await resEst.json();
+          if (estudiantes && estudiantes.length > 0) {
+            setEstudianteData(estudiantes[0]); // Por ahora toma el primer hijo
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching estudiante:", err);
+      }
+    };
+
     const userStr = localStorage.getItem("usuario");
     if (userStr) {
       try {
-        setUsuarioData(JSON.parse(userStr));
+        const userObj = JSON.parse(userStr);
+        setUsuarioData(userObj);
+        if (userObj.idUsuario) {
+          fetchEstudiante(userObj.idUsuario);
+        }
       } catch (e) {}
     }
   }, []);
@@ -170,10 +193,12 @@ function Acudiente() {
         <section className="hijo-card">
           <div className="hijo-header">
             <div className="hijo-profile">
-              <div className="hijo-avatar"><User size={24} /></div>
+              <div className="hijo-avatar">
+                {estudianteData ? `${estudianteData.nombre.charAt(0)}${estudianteData.apellido.charAt(0)}`.toUpperCase() : <User size={24} />}
+              </div>
               <div>
-                <h4>{usuarioData?.nombreEstudiante || "Estudiante Asignado"}</h4>
-                <p>Grado Asignado - Colegio Destino</p>
+                <h4>{estudianteData ? `${estudianteData.nombre} ${estudianteData.apellido}` : "Estudiante Asignado"}</h4>
+                <p>{estudianteData?.cursoGrado ? `Grado: ${estudianteData.cursoGrado}` : "Grado Asignado"} - {estudianteData?.colegio || "Colegio Destino"}</p>
               </div>
             </div>
             <span className={`status-badge-parent ${hijoEstado}`}>

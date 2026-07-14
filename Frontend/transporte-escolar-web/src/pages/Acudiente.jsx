@@ -8,6 +8,16 @@ import "./Acudiente.css";
 
 function Acudiente() {
   const navigate = useNavigate();
+  const [usuarioData, setUsuarioData] = useState({});
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("usuario");
+    if (userStr) {
+      try {
+        setUsuarioData(JSON.parse(userStr));
+      } catch (e) {}
+    }
+  }, []);
   
   const [hijoEstado, setHijoEstado] = useState("Pendiente"); 
   const [noViajaHoy, setNoViajaHoy] = useState(false);
@@ -30,7 +40,7 @@ function Acudiente() {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstanceRef.current);
       
       // Parada y Colegio Markers
-      L.circleMarker([miParada.lat, miParada.lng], { color: 'orange', radius: 8 }).addTo(mapInstanceRef.current).bindPopup("Tu Parada (Sofía)");
+      L.circleMarker([miParada.lat, miParada.lng], { color: 'orange', radius: 8 }).addTo(mapInstanceRef.current).bindPopup("Tu Parada");
       L.circleMarker([colegio.lat, colegio.lng], { color: 'purple', radius: 8 }).addTo(mapInstanceRef.current).bindPopup("Colegio");
 
       const busIcon = L.icon({
@@ -140,7 +150,7 @@ function Acudiente() {
             <Heart size={24} fill="#ec4899" color="#ec4899" />
           </div>
           <div>
-            <h2>Hola, María García</h2>
+            <h2>Hola, {usuarioData?.nombre || "Acudiente"}</h2>
             <p>Monitorea la seguridad del transporte escolar de tus hijos hoy.</p>
           </div>
         </section>
@@ -148,7 +158,7 @@ function Acudiente() {
         {/* Alertas dinámicas */}
         {alertaParada && hijoEstado === "Pendiente" && (
           <div style={{ backgroundColor: '#fef3c7', padding: '15px', borderRadius: '8px', marginBottom: '15px', borderLeft: '4px solid #f59e0b', color: '#92400e', fontWeight: 'bold' }}>
-            ⚠️ ¡El transporte escolar está a menos de 500 metros de tu parada! Sal a esperar a Sofía.
+            ⚠️ ¡El transporte escolar está a menos de 500 metros de tu parada! Sal a esperar a tu hijo(a).
           </div>
         )}
         {alertaColegio && hijoEstado === "Abordo" && (
@@ -160,10 +170,10 @@ function Acudiente() {
         <section className="hijo-card">
           <div className="hijo-header">
             <div className="hijo-profile">
-              <div className="hijo-avatar">SG</div>
+              <div className="hijo-avatar"><User size={24} /></div>
               <div>
-                <h4>Sofía García</h4>
-                <p>Grado: 4° Primaria - Colegio Distrital A</p>
+                <h4>{usuarioData?.nombreEstudiante || "Estudiante Asignado"}</h4>
+                <p>Grado Asignado - Colegio Destino</p>
               </div>
             </div>
             <span className={`status-badge-parent ${hijoEstado}`}>
@@ -181,11 +191,11 @@ function Acudiente() {
             </div>
             <div className="detail-item">
               <Bus size={16} />
-              <span>Ruta Asignada: <strong>Ruta 01 - Norte</strong></span>
+              <span>Ruta Asignada: <strong>Ruta Asignada</strong></span>
             </div>
             <div className="detail-item">
               <User size={16} />
-              <span>Conductor: <strong>Carlos Gómez (312-456-7890)</strong></span>
+              <span>Conductor: <strong>Conductor Asignado</strong></span>
             </div>
           </div>
 
@@ -208,7 +218,7 @@ function Acudiente() {
                 <span className="pulse-dot"></span>
                 <h4>Ubicación de la Ruta en Tiempo Real</h4>
               </div>
-              <span className="map-route-name">Bus TOW-345</span>
+              <span className="map-route-name">Bus Asignado</span>
             </div>
 
             <div ref={mapRef} style={{ height: '400px', width: '100%', borderRadius: '0 0 10px 10px' }}></div>

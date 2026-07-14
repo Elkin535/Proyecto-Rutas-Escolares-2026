@@ -173,7 +173,15 @@ function Acudiente() {
             <Heart size={24} fill="#ec4899" color="#ec4899" />
           </div>
           <div>
-            <h2>Hola, {usuarioData?.nombre || "Acudiente"}</h2>
+            <h2>Hola, {
+              usuarioData?.nombre 
+              ? usuarioData.nombre 
+              : usuarioData?.Nombre 
+                ? usuarioData.Nombre 
+                : usuarioData?.correo 
+                  ? usuarioData.correo.split('@')[0] 
+                  : "Acudiente"
+            }</h2>
             <p>Monitorea la seguridad del transporte escolar de tus hijos hoy.</p>
           </div>
         </section>

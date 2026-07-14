@@ -95,6 +95,42 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetConductor), new { id = conductorDTO.IdConductor }, conductorDTO);
         }
 
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ConductorDTO>> PutConductor(int id, ConductorUpdateDTO conductorUpdateDTO)
+        {
+            var conductor = await _conductorRepository.ObtenerPorIdAsync(id);
+            if (conductor == null) return NotFound(new { mensaje = "Conductor no encontrado" });
+
+            // Validar si se está cambiando de vehículo y este ya tiene otro conductor asignado
+            if (conductorUpdateDTO.IdVehiculo.HasValue && conductor.IdVehiculo != conductorUpdateDTO.IdVehiculo)
+            {
+                var vehiculoAsignado = await _conductorRepository.ObtenerPorIdVehiculoAsync(conductorUpdateDTO.IdVehiculo.Value);
+                if (vehiculoAsignado != null && vehiculoAsignado.IdConductor != id)
+                {
+                    return BadRequest(new { mensaje = "El vehículo seleccionado ya está asignado a otro conductor." });
+                }
+            }
+
+            conductor.IdUsuario = conductorUpdateDTO.IdUsuario;
+            conductor.IdVehiculo = conductorUpdateDTO.IdVehiculo;
+            conductor.NumeroLicencia = conductorUpdateDTO.NumeroLicencia;
+            conductor.CategoriaLicencia = conductorUpdateDTO.CategoriaLicencia;
+
+            var actualizado = await _conductorRepository.ActualizarAsync(conductor);
+            if (!actualizado) return StatusCode(500, new { mensaje = "Error al actualizar el conductor" });
+
+            var conductorDTO = new ConductorDTO
+            {
+                IdConductor = conductor.IdConductor,
+                IdUsuario = conductor.IdUsuario,
+                IdVehiculo = conductor.IdVehiculo,
+                NumeroLicencia = conductor.NumeroLicencia,
+                CategoriaLicencia = conductor.CategoriaLicencia
+            };
+
+            return Ok(conductorDTO);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteConductor(int id)
         {

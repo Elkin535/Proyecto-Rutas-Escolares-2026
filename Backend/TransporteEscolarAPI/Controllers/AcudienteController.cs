@@ -77,6 +77,28 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetAcudiente), new { id = acudienteDTO.IdAcudiente }, acudienteDTO);
         }
 
+        [HttpPut("{id}")]
+        public async Task<ActionResult<AcudienteDTO>> PutAcudiente(int id, AcudienteUpdateDTO acudienteUpdateDTO)
+        {
+            var acudiente = await _acudienteRepository.ObtenerPorIdAsync(id);
+            if (acudiente == null) return NotFound(new { mensaje = "Acudiente no encontrado" });
+
+            acudiente.IdUsuario = acudienteUpdateDTO.IdUsuario;
+            acudiente.DireccionResidencia = acudienteUpdateDTO.DireccionResidencia;
+
+            var actualizado = await _acudienteRepository.ActualizarAsync(acudiente);
+            if (!actualizado) return StatusCode(500, new { mensaje = "Error al actualizar el acudiente" });
+
+            var acudienteDTO = new AcudienteDTO
+            {
+                IdAcudiente = acudiente.IdAcudiente,
+                IdUsuario = acudiente.IdUsuario,
+                DireccionResidencia = acudiente.DireccionResidencia
+            };
+
+            return Ok(acudienteDTO);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAcudiente(int id)
         {

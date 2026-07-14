@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Route as RouteIcon, 
-  Users, 
-  Bus, 
-  ShieldAlert, 
-  LogOut, 
-  Plus, 
-  Trash2, 
-  ClipboardList, 
+import {
+  LayoutDashboard,
+  Route as RouteIcon,
+  Users,
+  Bus,
+  ShieldAlert,
+  LogOut,
+  Plus,
+  Trash2,
+  ClipboardList,
   CheckCircle,
   FileSpreadsheet,
   Pencil,
@@ -42,6 +42,26 @@ function Admin() {
   const [nuevoEstudianteColegio, setNuevoEstudianteColegio] = useState("");
   const [nuevoEstudianteCurso, setNuevoEstudianteCurso] = useState("");
   const [nuevoEstudianteRuta, setNuevoEstudianteRuta] = useState("");
+  const [mostrarModalEstudiante, setMostrarModalEstudiante] = useState(false);
+
+  // Modales y Edición
+  const [mostrarModalConfirmar, setMostrarModalConfirmar] = useState(false);
+  const [itemAEliminar, setItemAEliminar] = useState(null);
+
+  const [mostrarModalEditRuta, setMostrarModalEditRuta] = useState(false);
+  const [selectedRuta, setSelectedRuta] = useState(null);
+  const [editRutaNombre, setEditRutaNombre] = useState("");
+  const [editRutaConductor, setEditRutaConductor] = useState("");
+  const [editRutaPlaca, setEditRutaPlaca] = useState("");
+
+  const [mostrarModalEditEstudiante, setMostrarModalEditEstudiante] = useState(false);
+  const [selectedEstudiante, setSelectedEstudiante] = useState(null);
+  const [editEstudianteNombre, setEditEstudianteNombre] = useState("");
+  const [editEstudianteApellido, setEditEstudianteApellido] = useState("");
+  const [editEstudianteAcudiente, setEditEstudianteAcudiente] = useState("");
+  const [editEstudianteColegio, setEditEstudianteColegio] = useState("");
+  const [editEstudianteCurso, setEditEstudianteCurso] = useState("");
+  const [editEstudianteRuta, setEditEstudianteRuta] = useState("");
 
   useEffect(() => {
     cargarRutas();
@@ -276,6 +296,101 @@ function Admin() {
     setNuevoEstudianteColegio("");
     setNuevoEstudianteCurso("");
     setNuevoEstudianteRuta("");
+    setMostrarModalEstudiante(false);
+  };
+
+  // Confirmación de eliminación genérica
+  const abrirConfirmarEliminar = (type, id) => {
+    setItemAEliminar({ type, id });
+    setMostrarModalConfirmar(true);
+  };
+
+  const ejecutarEliminacion = async () => {
+    if (!itemAEliminar) return;
+    if (itemAEliminar.type === "ruta") {
+      await eliminarRuta(itemAEliminar.id);
+    } else if (itemAEliminar.type === "estudiante") {
+      setEstudiantes(estudiantes.filter(e => e.id !== itemAEliminar.id));
+    }
+    setMostrarModalConfirmar(false);
+    setItemAEliminar(null);
+  };
+
+  // Edición de rutas
+  const abrirEditarRuta = (ruta) => {
+    setSelectedRuta(ruta);
+    setEditRutaNombre(ruta.nombre);
+    setEditRutaConductor(ruta.conductor);
+    setEditRutaPlaca(ruta.vehiculo);
+    setMostrarModalEditRuta(true);
+  };
+
+  const guardarEdicionRuta = async (e) => {
+    e.preventDefault();
+    if (!editRutaNombre || !editRutaConductor) return;
+
+    const descripcion = `Conductor: ${editRutaConductor} | Vehículo: ${editRutaPlaca || "SIN PLACA"}`;
+
+    try {
+      const response = await fetch(`https://schooltrack.seminario1.eleueleo.com/api/Ruta/${selectedRuta.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          idRuta: selectedRuta.id,
+          nombreRuta: editRutaNombre,
+          descripcion: descripcion,
+          estado: selectedRuta.estado === "En servicio"
+        })
+      });
+
+      if (response.ok) {
+        await cargarRutas();
+        setMostrarModalEditRuta(false);
+        setSelectedRuta(null);
+      } else {
+        alert("Error al guardar los cambios de la ruta en el servidor.");
+      }
+    } catch (err) {
+      console.error("Error al editar ruta:", err);
+      alert("No se pudo conectar con el servidor para guardar los cambios.");
+    }
+  };
+
+  // Edición de estudiantes
+  const abrirEditarEstudiante = (est) => {
+    setSelectedEstudiante(est);
+    setEditEstudianteNombre(est.nombre);
+    setEditEstudianteApellido(est.apellido);
+    setEditEstudianteAcudiente(est.acudiente);
+    setEditEstudianteColegio(est.colegio);
+    setEditEstudianteCurso(est.curso);
+    setEditEstudianteRuta(est.ruta);
+    setMostrarModalEditEstudiante(true);
+  };
+
+  const guardarEdicionEstudiante = (e) => {
+    e.preventDefault();
+    if (!editEstudianteNombre || !editEstudianteApellido) return;
+
+    setEstudiantes(estudiantes.map(est => {
+      if (est.id === selectedEstudiante.id) {
+        return {
+          ...est,
+          nombre: editEstudianteNombre,
+          apellido: editEstudianteApellido,
+          acudiente: editEstudianteAcudiente || "Sin asignar",
+          colegio: editEstudianteColegio || "Sin asignar",
+          curso: editEstudianteCurso || "Sin asignar",
+          ruta: editEstudianteRuta || "Sin asignar"
+        };
+      }
+      return est;
+    }));
+
+    setMostrarModalEditEstudiante(false);
+    setSelectedEstudiante(null);
   };
 
   // Helper: obtener nombre de ruta por id
@@ -306,21 +421,21 @@ function Admin() {
         </div>
 
         <nav className="sidebar-menu">
-          <button 
+          <button
             className={`menu-item ${activeTab === "resumen" ? "active" : ""}`}
             onClick={() => setActiveTab("resumen")}
           >
             <LayoutDashboard size={20} />
             <span>Resumen</span>
           </button>
-          <button 
+          <button
             className={`menu-item ${activeTab === "rutas" ? "active" : ""}`}
             onClick={() => setActiveTab("rutas")}
           >
             <RouteIcon size={20} />
             <span>Gestionar Rutas</span>
           </button>
-          <button 
+          <button
             className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`}
             onClick={() => setActiveTab("estudiantes")}
           >
@@ -451,9 +566,9 @@ function Admin() {
                   <h4>Crear Nueva Ruta</h4>
                   <div className="form-group">
                     <label>Nombre de la Ruta</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Ruta 04 - Occidente" 
+                    <input
+                      type="text"
+                      placeholder="Ej. Ruta 04 - Occidente"
                       value={nuevaRutaNombre}
                       onChange={(e) => setNuevaRutaNombre(e.target.value)}
                       required
@@ -461,9 +576,9 @@ function Admin() {
                   </div>
                   <div className="form-group">
                     <label>Conductor Asignado</label>
-                    <input 
-                      type="text" 
-                      placeholder="Nombre del conductor" 
+                    <input
+                      type="text"
+                      placeholder="Nombre del conductor"
                       value={nuevaRutaConductor}
                       onChange={(e) => setNuevaRutaConductor(e.target.value)}
                       required
@@ -471,9 +586,9 @@ function Admin() {
                   </div>
                   <div className="form-group">
                     <label>Placa del Vehículo</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. ABC-123" 
+                    <input
+                      type="text"
+                      placeholder="Ej. ABC-123"
                       value={nuevaRutaPlaca}
                       onChange={(e) => setNuevaRutaPlaca(e.target.value)}
                     />
@@ -494,7 +609,7 @@ function Admin() {
                           <th>Conductor</th>
                           <th>Vehículo</th>
                           <th>Paradas</th>
-                          <th>Acción</th>
+                          <th>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -505,9 +620,14 @@ function Admin() {
                             <td><span className="badge-plate">{r.vehiculo}</span></td>
                             <td>{r.paradas} paradas</td>
                             <td>
-                              <button className="delete-row-btn" onClick={() => eliminarRuta(r.id)}>
-                                <Trash2 size={16} />
-                              </button>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <button className="edit-row-btn" onClick={() => abrirEditarRuta(r)} title="Editar Ruta">
+                                  <Pencil size={16} />
+                                </button>
+                                <button className="delete-row-btn" onClick={() => abrirConfirmarEliminar("ruta", r.id)} title="Eliminar Ruta">
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -522,8 +642,12 @@ function Admin() {
           {/* TAB 3: ESTUDIANTES */}
           {activeTab === "estudiantes" && (
             <div className="tab-pane">
-              <div className="section-header">
+              <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3>Base de Alumnos Registrados</h3>
+                <button className="add-btn" style={{ width: "auto", marginTop: 0 }} onClick={() => setMostrarModalEstudiante(true)}>
+                  <Plus size={16} />
+                  <span>Nuevo Estudiante</span>
+                </button>
               </div>
 
               <div className="crud-container">
@@ -535,21 +659,21 @@ function Admin() {
                   <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
                   <div className="form-group">
                     <label>Nombre</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Carlos" 
-                      value={nuevoEstudianteNombre}
-                      onChange={(e) => setNuevoEstudianteNombre(e.target.value)}
+                    <input
+                      type="text"
+                      placeholder="Ej. Carlos"
+                      value={editEstudianteNombre}
+                      onChange={(e) => setEditEstudianteNombre(e.target.value)}
                       required
                     />
                   </div>
                   <div className="form-group">
                     <label>Apellido</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Gómez" 
-                      value={nuevoEstudianteApellido}
-                      onChange={(e) => setNuevoEstudianteApellido(e.target.value)}
+                    <input
+                      type="text"
+                      placeholder="Ej. Gómez"
+                      value={editEstudianteApellido}
+                      onChange={(e) => setEditEstudianteApellido(e.target.value)}
                       required
                     />
                   </div>
@@ -570,20 +694,20 @@ function Admin() {
                   </div>
                   <div className="form-group">
                     <label>Colegio</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Colegio Central" 
-                      value={nuevoEstudianteColegio}
-                      onChange={(e) => setNuevoEstudianteColegio(e.target.value)}
+                    <input
+                      type="text"
+                      placeholder="Ej. Colegio Central"
+                      value={editEstudianteColegio}
+                      onChange={(e) => setEditEstudianteColegio(e.target.value)}
                     />
                   </div>
                   <div className="form-group">
                     <label>Grado</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. 5° Primaria" 
-                      value={nuevoEstudianteCurso}
-                      onChange={(e) => setNuevoEstudianteCurso(e.target.value)}
+                    <input
+                      type="text"
+                      placeholder="Ej. 5° Primaria"
+                      value={editEstudianteCurso}
+                      onChange={(e) => setEditEstudianteCurso(e.target.value)}
                     />
                   </div>
                   <div className="form-group">
@@ -611,6 +735,9 @@ function Admin() {
                     </button>
                   )}
                 </form>
+              </div>
+            </div>
+          )}
 
                 {/* Listado Estudiantes */}
                 <div className="crud-list flex-grow">

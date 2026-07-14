@@ -115,6 +115,40 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetEstudiante), new { id = estudianteDTO.IdEstudiante }, estudianteDTO);
         }
 
+        [HttpPut("{id}")]
+        public async Task<ActionResult<EstudianteDTO>> PutEstudiante(int id, EstudianteUpdateDTO estudianteUpdateDTO)
+        {
+            var estudiante = await _estudianteRepository.ObtenerPorIdAsync(id);
+            if (estudiante == null) return NotFound(new { mensaje = "Estudiante no encontrado" });
+
+            estudiante.IdAcudiente = estudianteUpdateDTO.IdAcudiente;
+            estudiante.Nombre = estudianteUpdateDTO.Nombre;
+            estudiante.Apellido = estudianteUpdateDTO.Apellido;
+            estudiante.Colegio = estudianteUpdateDTO.Colegio;
+            estudiante.CursoGrado = estudianteUpdateDTO.CursoGrado;
+            estudiante.Estado = estudianteUpdateDTO.Estado;
+            estudiante.IdRuta = estudianteUpdateDTO.IdRuta;
+            estudiante.IdParada = estudianteUpdateDTO.IdParada;
+
+            var actualizado = await _estudianteRepository.ActualizarAsync(estudiante);
+            if (!actualizado) return StatusCode(500, new { mensaje = "Error al actualizar el estudiante" });
+
+            var estudianteDTO = new EstudianteDTO
+            {
+                IdEstudiante = estudiante.IdEstudiante,
+                IdAcudiente = estudiante.IdAcudiente,
+                Nombre = estudiante.Nombre,
+                Apellido = estudiante.Apellido,
+                Colegio = estudiante.Colegio,
+                CursoGrado = estudiante.CursoGrado,
+                Estado = estudiante.Estado,
+                IdRuta = estudiante.IdRuta,
+                IdParada = estudiante.IdParada
+            };
+
+            return Ok(estudianteDTO);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEstudiante(int id)
         {

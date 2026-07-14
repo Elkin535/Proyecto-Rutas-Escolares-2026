@@ -11,28 +11,31 @@ import {
   Trash2, 
   ClipboardList, 
   CheckCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Pencil,
+  X
 } from "lucide-react";
 import "./Admin.css";
+
+const API_BASE = "https://schooltrack.seminario1.eleueleo.com/api";
 
 function Admin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("resumen");
   const [rutas, setRutas] = useState([]);
 
-  const [estudiantes, setEstudiantes] = useState([
-    { id: 1, nombre: "Sofía", apellido: "García", acudiente: "María García", ruta: "Ruta 01 - Norte", colegio: "Colegio Distrital A", curso: "4° Primaria" },
-    { id: 2, nombre: "Juan", apellido: "López", acudiente: "Pedro López", ruta: "Ruta 02 - Sur", colegio: "Colegio Distrital B", curso: "6° Bachillerato" },
-    { id: 3, nombre: "Mateo", apellido: "Ríos", acudiente: "Lucía Ríos", ruta: "Ruta 01 - Norte", colegio: "Colegio Distrital A", curso: "1° Primaria" },
-    { id: 4, nombre: "Valeria", apellido: "Díaz", acudiente: "Andrés Díaz", ruta: "Ruta 03 - Centro", colegio: "Colegio Mayor", curso: "9° Bachillerato" }
-  ]);
+  // ── Estudiantes state ──
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [acudientes, setAcudientes] = useState([]);
+  const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
+  const [estudianteEditando, setEstudianteEditando] = useState(null); // null = modo crear, obj = modo editar
 
   // Variables para agregar ruta
   const [nuevaRutaNombre, setNuevaRutaNombre] = useState("");
   const [nuevaRutaConductor, setNuevaRutaConductor] = useState("");
   const [nuevaRutaPlaca, setNuevaRutaPlaca] = useState("");
 
-  // Variables para agregar estudiante
+  // Variables para agregar/editar estudiante
   const [nuevoEstudianteNombre, setNuevoEstudianteNombre] = useState("");
   const [nuevoEstudianteApellido, setNuevoEstudianteApellido] = useState("");
   const [nuevoEstudianteAcudiente, setNuevoEstudianteAcudiente] = useState("");
@@ -42,11 +45,17 @@ function Admin() {
 
   useEffect(() => {
     cargarRutas();
+    cargarEstudiantes();
+    cargarAcudientes();
   }, []);
+
+  // ════════════════════════════════════════
+  //  RUTAS — funciones existentes sin cambios
+  // ════════════════════════════════════════
 
   const cargarRutas = async () => {
     try {
-      const response = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Ruta");
+      const response = await fetch(`${API_BASE}/Ruta`);
       if (response.ok) {
         const data = await response.json();
         const mappedRutas = data.map(r => {
@@ -82,7 +91,7 @@ function Admin() {
     const descripcion = `Conductor: ${nuevaRutaConductor} | Vehículo: ${nuevaRutaPlaca || "SIN PLACA"}`;
 
     try {
-      const response = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Ruta", {
+      const response = await fetch(`${API_BASE}/Ruta`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -109,7 +118,7 @@ function Admin() {
 
   const eliminarRuta = async (id) => {
     try {
-      const response = await fetch(`https://schooltrack.seminario1.eleueleo.com/api/Ruta/${id}`, {
+      const response = await fetch(`${API_BASE}/Ruta/${id}`, {
         method: "DELETE"
       });
       if (response.ok) {
@@ -123,28 +132,156 @@ function Admin() {
     }
   };
 
-  const agregarEstudiante = (e) => {
+  // ════════════════════════════════════════
+  //  ACUDIENTES — cargar para el dropdown
+  // ════════════════════════════════════════
+
+  const cargarAcudientes = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/Acudiente`);
+      if (response.ok) {
+        const data = await response.json();
+        setAcudientes(data);
+      }
+    } catch (err) {
+      console.error("Error al cargar acudientes:", err);
+    }
+  };
+
+  // ════════════════════════════════════════
+  //  ESTUDIANTES — CRUD conectado a la API
+  // ════════════════════════════════════════
+
+  const cargarEstudiantes = async () => {
+    setCargandoEstudiantes(true);
+    try {
+      const response = await fetch(`${API_BASE}/Estudiante`);
+      if (response.ok) {
+        const data = await response.json();
+        setEstudiantes(data);
+      }
+    } catch (err) {
+      console.error("Error al cargar estudiantes:", err);
+    } finally {
+      setCargandoEstudiantes(false);
+    }
+  };
+
+  const agregarEstudiante = async (e) => {
     e.preventDefault();
     if (!nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
 
-    const nuevoId = estudiantes.length ? Math.max(...estudiantes.map(e => e.id)) + 1 : 1;
-    
-    setEstudiantes([...estudiantes, {
-      id: nuevoId,
+    const body = {
+      idAcudiente: nuevoEstudianteAcudiente ? parseInt(nuevoEstudianteAcudiente) : 0,
       nombre: nuevoEstudianteNombre,
       apellido: nuevoEstudianteApellido,
-      acudiente: nuevoEstudianteAcudiente || "Sin asignar",
-      colegio: nuevoEstudianteColegio || "Sin asignar",
-      curso: nuevoEstudianteCurso || "Sin asignar",
-      ruta: nuevoEstudianteRuta || "Sin asignar"
-    }]);
+      colegio: nuevoEstudianteColegio || null,
+      cursoGrado: nuevoEstudianteCurso || null,
+      idRuta: nuevoEstudianteRuta ? parseInt(nuevoEstudianteRuta) : null,
+      idParada: null
+    };
 
+    try {
+      const response = await fetch(`${API_BASE}/Estudiante`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (response.ok) {
+        await cargarEstudiantes();
+        limpiarFormularioEstudiante();
+      } else {
+        const errorData = await response.json().catch(() => null);
+        alert(errorData?.mensaje || "Error al guardar el estudiante en el servidor.");
+      }
+    } catch (err) {
+      console.error("Error al guardar estudiante:", err);
+      alert("No se pudo conectar con el servidor para guardar el estudiante.");
+    }
+  };
+
+  const actualizarEstudiante = async (e) => {
+    e.preventDefault();
+    if (!estudianteEditando || !nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
+
+    const body = {
+      idAcudiente: nuevoEstudianteAcudiente ? parseInt(nuevoEstudianteAcudiente) : 0,
+      nombre: nuevoEstudianteNombre,
+      apellido: nuevoEstudianteApellido,
+      colegio: nuevoEstudianteColegio || null,
+      cursoGrado: nuevoEstudianteCurso || null,
+      estado: true,
+      idRuta: nuevoEstudianteRuta ? parseInt(nuevoEstudianteRuta) : null,
+      idParada: null
+    };
+
+    try {
+      const response = await fetch(`${API_BASE}/Estudiante/${estudianteEditando.idEstudiante}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (response.ok) {
+        await cargarEstudiantes();
+        limpiarFormularioEstudiante();
+      } else {
+        const errorData = await response.json().catch(() => null);
+        alert(errorData?.mensaje || "Error al actualizar el estudiante.");
+      }
+    } catch (err) {
+      console.error("Error al actualizar estudiante:", err);
+      alert("No se pudo conectar con el servidor para actualizar el estudiante.");
+    }
+  };
+
+  const eliminarEstudiante = async (id) => {
+    if (!window.confirm("¿Estás seguro de eliminar este estudiante?")) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/Estudiante/${id}`, {
+        method: "DELETE"
+      });
+      if (response.ok) {
+        await cargarEstudiantes();
+        // Si estábamos editando el que se eliminó, limpiar formulario
+        if (estudianteEditando && estudianteEditando.idEstudiante === id) {
+          limpiarFormularioEstudiante();
+        }
+      } else {
+        alert("Error al eliminar el estudiante del servidor.");
+      }
+    } catch (err) {
+      console.error("Error al eliminar estudiante:", err);
+      alert("No se pudo conectar con el servidor para eliminar el estudiante.");
+    }
+  };
+
+  const iniciarEdicionEstudiante = (est) => {
+    setEstudianteEditando(est);
+    setNuevoEstudianteNombre(est.nombre);
+    setNuevoEstudianteApellido(est.apellido);
+    setNuevoEstudianteAcudiente(est.idAcudiente ? String(est.idAcudiente) : "");
+    setNuevoEstudianteColegio(est.colegio || "");
+    setNuevoEstudianteCurso(est.cursoGrado || "");
+    setNuevoEstudianteRuta(est.idRuta ? String(est.idRuta) : "");
+  };
+
+  const limpiarFormularioEstudiante = () => {
+    setEstudianteEditando(null);
     setNuevoEstudianteNombre("");
     setNuevoEstudianteApellido("");
     setNuevoEstudianteAcudiente("");
     setNuevoEstudianteColegio("");
     setNuevoEstudianteCurso("");
     setNuevoEstudianteRuta("");
+  };
+
+  // Helper: obtener nombre de ruta por id
+  const obtenerNombreRuta = (idRuta) => {
+    const ruta = rutas.find(r => r.id === idRuta);
+    return ruta ? ruta.nombre : "Sin asignar";
   };
 
   const cerrarSesion = () => {
@@ -391,8 +528,11 @@ function Admin() {
 
               <div className="crud-container">
                 {/* Formulario Estudiante */}
-                <form className="crud-form card-form" onSubmit={agregarEstudiante}>
-                  <h4>Crear Nuevo Estudiante</h4>
+                <form 
+                  className={`crud-form card-form ${estudianteEditando ? "edit-mode" : ""}`} 
+                  onSubmit={estudianteEditando ? actualizarEstudiante : agregarEstudiante}
+                >
+                  <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
                   <div className="form-group">
                     <label>Nombre</label>
                     <input 
@@ -415,12 +555,18 @@ function Admin() {
                   </div>
                   <div className="form-group">
                     <label>Acudiente</label>
-                    <input 
-                      type="text" 
-                      placeholder="Nombre del acudiente" 
+                    <select
                       value={nuevoEstudianteAcudiente}
                       onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)}
-                    />
+                      required
+                    >
+                      <option value="">Seleccionar acudiente...</option>
+                      {acudientes.map(a => (
+                        <option key={a.idAcudiente} value={a.idAcudiente}>
+                          Acudiente #{a.idAcudiente} — {a.direccionResidencia || "Sin dirección"}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Colegio</label>
@@ -442,47 +588,91 @@ function Admin() {
                   </div>
                   <div className="form-group">
                     <label>Ruta Asignada</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej. Ruta 01 - Norte" 
+                    <select
                       value={nuevoEstudianteRuta}
                       onChange={(e) => setNuevoEstudianteRuta(e.target.value)}
-                    />
+                    >
+                      <option value="">Sin ruta asignada</option>
+                      {rutas.map(r => (
+                        <option key={r.id} value={r.id}>
+                          {r.nombre}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <button type="submit" className="add-btn">
                     <Plus size={16} />
-                    <span>Guardar Estudiante</span>
+                    <span>{estudianteEditando ? "Actualizar Estudiante" : "Guardar Estudiante"}</span>
                   </button>
+                  {estudianteEditando && (
+                    <button type="button" className="cancel-btn" onClick={limpiarFormularioEstudiante}>
+                      <X size={16} />
+                      <span>Cancelar Edición</span>
+                    </button>
+                  )}
                 </form>
 
                 {/* Listado Estudiantes */}
                 <div className="crud-list flex-grow">
-                  <div className="table-responsive">
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Estudiante</th>
-                          <th>Acudiente</th>
-                          <th>Colegio</th>
-                          <th>Grado</th>
-                          <th>Ruta Asignada</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {estudiantes.map(e => (
-                          <tr key={e.id}>
-                            <td><strong>{e.nombre} {e.apellido}</strong></td>
-                            <td>{e.acudiente}</td>
-                            <td>{e.colegio}</td>
-                            <td>{e.curso}</td>
-                            <td>
-                              <span className="route-tag">{e.ruta}</span>
-                            </td>
+                  {cargandoEstudiantes ? (
+                    <div className="loading-state">
+                      <div className="loading-spinner"></div>
+                      <p>Cargando estudiantes...</p>
+                    </div>
+                  ) : estudiantes.length === 0 ? (
+                    <div className="empty-state">
+                      <Users size={40} />
+                      <p>No hay estudiantes registrados aún</p>
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Estudiante</th>
+                            <th>Acudiente</th>
+                            <th>Colegio</th>
+                            <th>Grado</th>
+                            <th>Ruta Asignada</th>
+                            <th>Acciones</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {estudiantes.map(est => (
+                            <tr key={est.idEstudiante}>
+                              <td><strong>{est.nombre} {est.apellido}</strong></td>
+                              <td>Acudiente #{est.idAcudiente}</td>
+                              <td>{est.colegio || "Sin asignar"}</td>
+                              <td>{est.cursoGrado || "Sin asignar"}</td>
+                              <td>
+                                <span className="route-tag">
+                                  {est.idRuta ? obtenerNombreRuta(est.idRuta) : "Sin asignar"}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="action-buttons">
+                                  <button 
+                                    className="edit-row-btn" 
+                                    onClick={() => iniciarEdicionEstudiante(est)}
+                                    title="Editar estudiante"
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button 
+                                    className="delete-row-btn" 
+                                    onClick={() => eliminarEstudiante(est.idEstudiante)}
+                                    title="Eliminar estudiante"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

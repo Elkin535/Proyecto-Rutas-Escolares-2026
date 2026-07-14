@@ -17,29 +17,29 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute allowedRoles={["admin", "administrador"]}>
               <Admin />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/conductor" 
+        <Route
+          path="/conductor"
           element={
             <ProtectedRoute allowedRoles={["cond", "chofer", "driver", "conductor"]}>
               <Conductor />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/acudiente" 
+        <Route
+          path="/acudiente"
           element={
             <ProtectedRoute allowedRoles={["acu", "padre", "madre", "acudiente"]}>
               <Acudiente />
             </ProtectedRoute>
-          } 
+          }
         />
       </Routes>
     </BrowserRouter>

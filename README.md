@@ -320,7 +320,7 @@ https://trello.com/invite/b/69be1364f3228e2addf4032d/ATTIb2742128c14ad31a945f30b
 | ------------------ | -----------------------|
 | Scrum Master       | Daniella Rodriguez     |
 | Frontend Developer | Luisa                  |
-| Frontend Developer | Karol                  |
+| Frontend Developer | Karol Caicedo          |
 | Backend Developer  | Christian Tellez       |
 | Backend Developer  | Elkin  Andres Chalarka |
 | Base de Datos      | Christian Tellez       |

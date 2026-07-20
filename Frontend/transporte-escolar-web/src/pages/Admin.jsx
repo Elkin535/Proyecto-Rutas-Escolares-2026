@@ -14,7 +14,8 @@ import {
   Pencil,
   X,
   UserSquare2,
-  Contact
+  Contact,
+  Menu
 } from "lucide-react";
 import "./Admin.css";
 
@@ -23,6 +24,7 @@ const API_BASE = "https://schooltrack.seminario1.eleueleo.com/api";
 function Admin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("resumen");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rutas, setRutas] = useState([]);
 
   // ── Estados generales ──
@@ -496,8 +498,28 @@ function Admin() {
 
   return (
     <div className="admin-container">
+      {/* BARRA MÓVIL (VISIBLE SOLO EN MÓVILES Y TABLETS PEOUEÑAS) */}
+      <div className="mobile-admin-bar">
+        <button 
+          className="mobile-menu-toggle" 
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Abrir menú de navegación"
+        >
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        <div className="mobile-brand">
+          <Bus size={24} />
+          <span>SchoolTrack</span>
+        </div>
+      </div>
+
+      {/* OVERLAY PARA CERRAR MENÚ AL HACER CLIC FUERA */}
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* SIDEBAR */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-brand">
           <Bus size={28} />
           <span>SchoolTrack</span>
@@ -511,19 +533,19 @@ function Admin() {
         </div>
 
         <nav className="sidebar-menu">
-          <button className={`menu-item ${activeTab === "resumen" ? "active" : ""}`} onClick={() => setActiveTab("resumen")}>
+          <button className={`menu-item ${activeTab === "resumen" ? "active" : ""}`} onClick={() => { setActiveTab("resumen"); setSidebarOpen(false); }}>
             <LayoutDashboard size={20} /><span>Resumen</span>
           </button>
-          <button className={`menu-item ${activeTab === "rutas" ? "active" : ""}`} onClick={() => setActiveTab("rutas")}>
+          <button className={`menu-item ${activeTab === "rutas" ? "active" : ""}`} onClick={() => { setActiveTab("rutas"); setSidebarOpen(false); }}>
             <RouteIcon size={20} /><span>Gestionar Rutas</span>
           </button>
-          <button className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`} onClick={() => setActiveTab("estudiantes")}>
+          <button className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`} onClick={() => { setActiveTab("estudiantes"); setSidebarOpen(false); }}>
             <Users size={20} /><span>Estudiantes</span>
           </button>
-          <button className={`menu-item ${activeTab === "acudientes" ? "active" : ""}`} onClick={() => setActiveTab("acudientes")}>
+          <button className={`menu-item ${activeTab === "acudientes" ? "active" : ""}`} onClick={() => { setActiveTab("acudientes"); setSidebarOpen(false); }}>
             <Contact size={20} /><span>Acudientes</span>
           </button>
-          <button className={`menu-item ${activeTab === "conductores" ? "active" : ""}`} onClick={() => setActiveTab("conductores")}>
+          <button className={`menu-item ${activeTab === "conductores" ? "active" : ""}`} onClick={() => { setActiveTab("conductores"); setSidebarOpen(false); }}>
             <UserSquare2 size={20} /><span>Conductores</span>
           </button>
         </nav>

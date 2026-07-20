@@ -1,7 +1,15 @@
+/* Reset universal y box-sizing responsive */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Raíz y cuerpo adaptables a todo tipo de pantalla */
+html {
+  font-size: 100%; /* 16px base */
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 html,
@@ -9,15 +17,46 @@ body,
 #root {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh; /* Soporte para viewport dinámico en navegadores móviles */
   overflow-x: hidden;
   background: #081120;
-  font-family: "Segoe UI", sans-serif;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  color: #f8fafc;
+  line-height: 1.5;
+}
+
+/* Regla para garantizar imágenes, SVGs y elementos multimedia responsive */
+img, svg, canvas, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 a {
   text-decoration: none;
+  color: inherit;
 }
 
-button {
+button, input, select, textarea {
   font-family: inherit;
+  font-size: inherit;
 }
+
+/* Personalización de barra de desplazamiento (Scrollbar) para una estética moderna */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #040c18;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.6);
+}

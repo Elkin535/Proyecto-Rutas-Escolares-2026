@@ -15,7 +15,7 @@
 .acudiente-header {
   background: #0f172a;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: clamp(12px, 2.5vw, 18px) clamp(16px, 4vw, 40px);
+  padding: 16px clamp(16px, 4vw, 40px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -25,6 +25,7 @@
   top: 0;
   z-index: 100;
   backdrop-filter: blur(10px);
+  width: 100%;
 }
 
 .acudiente-header .header-brand {
@@ -57,16 +58,17 @@
   border-color: #ef4444;
 }
 
-/* MAIN FLUIDO Y ADAPTATIVO A TODO ANCHO */
+/* MAIN FLUIDO A ANCHO COMPLETO */
 .acudiente-main {
   flex-grow: 1;
-  padding: clamp(16px, 4vw, 32px) clamp(16px, 4vw, 32px);
-  max-width: 1350px;
+  padding: clamp(16px, 3vw, 30px) clamp(16px, 4vw, 40px);
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 3.5vw, 28px);
+  box-sizing: border-box;
 }
 
 /* WELCOME BANNER */
@@ -78,6 +80,8 @@
   border: 1px solid rgba(236, 72, 153, 0.18);
   border-radius: 20px;
   padding: clamp(16px, 3vw, 22px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .heart-icon-wrapper {
@@ -105,7 +109,7 @@
 
 /* HIJO CARD */
 .hijo-card {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 24px;
   padding: clamp(18px, 4vw, 28px);
@@ -113,6 +117,8 @@
   flex-direction: column;
   gap: 20px;
   backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hijo-header {
@@ -169,7 +175,7 @@
 
 .hijo-details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 100%, 240px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 100%, 220px), 1fr));
   gap: 12px;
 }
 
@@ -253,13 +259,15 @@
 
 /* SECCIÓN Y CONTENEDOR MAPA LEAFLET */
 .realtime-map-card {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 24px;
   padding: clamp(16px, 3.5vw, 24px);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .map-card-header {
@@ -317,39 +325,36 @@
   color: #cbd5e1;
 }
 
-/* LAYOUT EN 2 COLUMNAS PARA PANTALLAS GRANDES Y LAPTOPS (ELIMINA ESPACIO MUERTO LATERAL) */
-@media (min-width: 900px) {
+/* ESCRITORIO Y LAPTOPS (>= 768PX): DISTRIBUCIÓN EN 2 COLUMNAS AMPLIAS */
+@media (min-width: 768px) {
   .acudiente-main {
     display: grid;
     grid-template-columns: 1fr 1.15fr;
-    grid-template-areas:
-      "banner banner"
-      "hijo map";
     gap: 24px;
     align-items: start;
   }
 
   .welcome-banner {
-    grid-area: banner;
+    grid-column: 1 / span 2;
   }
 
   .hijo-card {
-    grid-area: hijo;
+    grid-column: 1;
   }
 
   .realtime-map-card {
-    grid-area: map;
+    grid-column: 2;
     position: sticky;
     top: 90px;
   }
 
-  /* Ampliar altura del mapa Leaflet en PC */
-  .realtime-map-card > div {
-    height: 480px !important;
+  .realtime-map-card > div[ref],
+  .realtime-map-card .leaflet-container {
+    height: 500px !important;
   }
 }
 
-/* MEDIA QUERIES PARA MÓVILES */
+/* MÓVILES */
 @media (max-width: 576px) {
   .welcome-banner {
     flex-direction: column;

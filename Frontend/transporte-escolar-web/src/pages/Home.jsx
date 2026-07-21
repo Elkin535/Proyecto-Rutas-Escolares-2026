@@ -1,5 +1,6 @@
 // src/pages/Home.jsx
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bus,
@@ -8,12 +9,15 @@ import {
   Users,
   Route,
   Bell,
+  Menu,
+  X,
 } from "lucide-react";
 
 import "./Home.css";
 
 function Home() {
   const navigate = useNavigate();
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const integrantes = [
     {
@@ -47,12 +51,30 @@ function Home() {
           <span>SchoolTrack</span>
         </div>
 
+        {/* Botón menú hamburguesa para dispositivos móviles */}
         <button
-          className="login-btn"
-          onClick={() => navigate("/login")}
+          className="menu-toggle-btn"
+          onClick={() => setMenuAbierto(!menuAbierto)}
+          aria-label="Toggle navigation menu"
         >
-          Ingresar
+          {menuAbierto ? <X size={26} /> : <Menu size={26} />}
         </button>
+
+        {/* Enlaces y acciones del menú adaptables */}
+        <div className={`nav-links ${menuAbierto ? "open" : ""}`}>
+          <a href="#about" onClick={() => setMenuAbierto(false)}>¿Qué es?</a>
+          <a href="#features" onClick={() => setMenuAbierto(false)}>Funcionalidades</a>
+          <a href="#team" onClick={() => setMenuAbierto(false)}>Equipo</a>
+          <button
+            className="login-btn"
+            onClick={() => {
+              setMenuAbierto(false);
+              navigate("/login");
+            }}
+          >
+            Ingresar
+          </button>
+        </div>
       </nav>
 
       {/* HERO */}
@@ -84,7 +106,7 @@ function Home() {
       </section>
 
       {/* SOBRE */}
-      <section className="about-section">
+      <section className="about-section" id="about">
         <h2>¿Qué es SchoolTrack?</h2>
 
         <p>
@@ -95,7 +117,7 @@ function Home() {
       </section>
 
       {/* FUNCIONALIDADES */}
-      <section className="features-section">
+      <section className="features-section" id="features">
         <h2>Funcionalidades</h2>
 
         <div className="features-grid">
@@ -132,7 +154,7 @@ function Home() {
       </section>
 
       {/* INTEGRANTES */}
-      <section className="team-section">
+      <section className="team-section" id="team">
         <h2>Integrantes del Proyecto</h2>
 
         <div className="team-grid">

@@ -46,6 +46,9 @@ function Admin() {
   const [cargandoConductores, setCargandoConductores] = useState(false);
   const [conductorEditando, setConductorEditando] = useState(null);
 
+  // Modal de crear ruta
+  const [showModalRuta, setShowModalRuta] = useState(false);
+
   // Variables para agregar ruta
   const [nuevaRutaNombre, setNuevaRutaNombre] = useState("");
   const [nuevaRutaConductor, setNuevaRutaConductor] = useState("");
@@ -157,8 +160,13 @@ function Admin() {
       });
       if (response.ok) {
         await cargarRutas();
-        setNuevaRutaNombre(""); setNuevaRutaConductor(""); setNuevaRutaPlaca("");
-      } else alert("Error al guardar la ruta en el servidor.");
+        setNuevaRutaNombre("");
+        setNuevaRutaConductor("");
+        setNuevaRutaPlaca("");
+        setShowModalRuta(false);
+      } else {
+        alert("Error al guardar la ruta en el servidor.");
+      }
     } catch (err) {
       alert("No se pudo conectar con el servidor.");
     }
@@ -580,21 +588,96 @@ function Admin() {
 
           {/* TAB 2: GESTIONAR RUTAS */}
           {activeTab === "rutas" && (
-             <div className="tab-pane">
-              <div className="section-header"><h3>Registro de Rutas Escolares</h3></div>
-              <div className="crud-container">
-                <form className="crud-form card-form" onSubmit={agregarRuta}>
-                  <h4>Crear Nueva Ruta</h4>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevaRutaNombre} onChange={(e) => setNuevaRutaNombre(e.target.value)} required/></div>
-                  <div className="form-group"><label>Conductor</label><input type="text" value={nuevaRutaConductor} onChange={(e) => setNuevaRutaConductor(e.target.value)} required/></div>
-                  <div className="form-group"><label>Placa</label><input type="text" value={nuevaRutaPlaca} onChange={(e) => setNuevaRutaPlaca(e.target.value)}/></div>
-                  <button type="submit" className="add-btn"><Plus size={16} /><span>Guardar Ruta</span></button>
-                </form>
-                <div className="crud-list flex-grow"><div className="table-responsive"><table className="admin-table">
-                  <thead><tr><th>Ruta</th><th>Conductor</th><th>Vehículo</th><th>Paradas</th><th>Acción</th></tr></thead>
-                  <tbody>{rutas.map(r => (<tr key={r.id}><td><strong>{r.nombre}</strong></td><td>{r.conductor}</td><td><span className="badge-plate">{r.vehiculo}</span></td><td>{r.paradas} paradas</td><td><button className="delete-row-btn" onClick={() => eliminarRuta(r.id)}><Trash2 size={16} /></button></td></tr>))}</tbody>
-                </table></div></div>
+            <div className="tab-pane">
+              <div className="section-header rutas-header">
+                <h3>Registro de Rutas Escolares</h3>
+                <button className="btn-crear-ruta" onClick={() => setShowModalRuta(true)}>
+                  <Plus size={18} />
+                  <span>Crear Nueva Ruta</span>
+                </button>
               </div>
+
+              {/* Listado de Rutas */}
+              <div className="crud-list">
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Ruta</th>
+                        <th>Conductor</th>
+                        <th>Vehículo</th>
+                        <th>Paradas</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rutas.map(r => (
+                        <tr key={r.id}>
+                          <td><strong>{r.nombre}</strong></td>
+                          <td>{r.conductor}</td>
+                          <td><span className="badge-plate">{r.vehiculo}</span></td>
+                          <td>{r.paradas} paradas</td>
+                          <td>
+                            <button className="delete-row-btn" onClick={() => eliminarRuta(r.id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* MODAL: Crear Nueva Ruta */}
+              {showModalRuta && (
+                <div className="modal-overlay" onClick={() => setShowModalRuta(false)}>
+                  <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>Crear Nueva Ruta</h4>
+                      <button className="modal-close-btn" onClick={() => setShowModalRuta(false)}>✕</button>
+                    </div>
+                    <form onSubmit={agregarRuta}>
+                      <div className="form-group">
+                        <label>Nombre de la Ruta</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Ruta 04 - Occidente"
+                          value={nuevaRutaNombre}
+                          onChange={(e) => setNuevaRutaNombre(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Conductor Asignado</label>
+                        <input
+                          type="text"
+                          placeholder="Nombre del conductor"
+                          value={nuevaRutaConductor}
+                          onChange={(e) => setNuevaRutaConductor(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Placa del Vehículo</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. ABC-123"
+                          value={nuevaRutaPlaca}
+                          onChange={(e) => setNuevaRutaPlaca(e.target.value)}
+                        />
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => setShowModalRuta(false)}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          <Plus size={16} />
+                          <span>Guardar Ruta</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

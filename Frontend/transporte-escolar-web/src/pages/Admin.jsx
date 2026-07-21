@@ -56,6 +56,9 @@ function Admin() {
   const [editRutaConductor, setEditRutaConductor] = useState("");
   const [editRutaPlaca, setEditRutaPlaca] = useState("");
 
+  // Modal de estudiante (crear / editar)
+  const [showModalEstudiante, setShowModalEstudiante] = useState(false);
+
   // Variables para agregar ruta
   const [nuevaRutaNombre, setNuevaRutaNombre] = useState("");
   const [nuevaRutaConductor, setNuevaRutaConductor] = useState("");
@@ -252,6 +255,7 @@ function Admin() {
       if (response.ok) {
         await cargarEstudiantes();
         limpiarFormularioEstudiante();
+        setShowModalEstudiante(false);
       } else {
         const errorData = await response.json().catch(() => null);
         alert(errorData?.mensaje || "Error al guardar el estudiante.");
@@ -281,6 +285,7 @@ function Admin() {
       if (response.ok) {
         await cargarEstudiantes();
         limpiarFormularioEstudiante();
+        setShowModalEstudiante(false);
       } else alert("Error al actualizar el estudiante.");
     } catch (err) {
       alert("Error de red.");
@@ -776,40 +781,113 @@ function Admin() {
           {/* TAB 3: ESTUDIANTES */}
           {activeTab === "estudiantes" && (
             <div className="tab-pane">
-              <div className="section-header"><h3>Base de Alumnos Registrados</h3></div>
-              <div className="crud-container">
-                <form className={`crud-form card-form ${estudianteEditando ? "edit-mode" : ""}`} onSubmit={estudianteEditando ? actualizarEstudiante : agregarEstudiante}>
-                  <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoEstudianteNombre} onChange={(e) => setNuevoEstudianteNombre(e.target.value)} required/></div>
-                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoEstudianteApellido} onChange={(e) => setNuevoEstudianteApellido(e.target.value)} required/></div>
-                  <div className="form-group"><label>Acudiente</label><select value={nuevoEstudianteAcudiente} onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)} required><option value="">Seleccionar...</option>{acudientes.map(a => { const uInfo = obtenerInfoUsuario(a.idUsuario); return <option key={a.idAcudiente} value={a.idAcudiente}>#{a.idAcudiente} - {uInfo.nombre} {uInfo.apellido}</option>;})}</select></div>
-                  <div className="form-group"><label>Colegio</label><input type="text" value={nuevoEstudianteColegio} onChange={(e) => setNuevoEstudianteColegio(e.target.value)}/></div>
-                  <div className="form-group"><label>Grado</label><input type="text" value={nuevoEstudianteCurso} onChange={(e) => setNuevoEstudianteCurso(e.target.value)}/></div>
-                  <div className="form-group"><label>Ruta Asignada</label><select value={nuevoEstudianteRuta} onChange={(e) => setNuevoEstudianteRuta(e.target.value)}><option value="">Sin ruta asignada</option>{rutas.map(r => (<option key={r.id} value={r.id}>{r.nombre}</option>))}</select></div>
-                  <button type="submit" className="add-btn"><Plus size={16} /><span>{estudianteEditando ? "Actualizar" : "Guardar"}</span></button>
-                  {estudianteEditando && <button type="button" className="cancel-btn" onClick={limpiarFormularioEstudiante}><X size={16} /><span>Cancelar</span></button>}
-                </form>
+              <div className="section-header rutas-header">
+                <h3>Base de Alumnos Registrados</h3>
+                <button className="btn-crear-ruta" onClick={() => { setEstudianteEditando(null); limpiarFormularioEstudiante(); setShowModalEstudiante(true); }}>
+                  <Plus size={18} />
+                  <span>Crear Nuevo Estudiante</span>
+                </button>
+              </div>
 
-                <div className="crud-list flex-grow">
-                  {cargandoEstudiantes ? (<div className="loading-state"><div className="loading-spinner"></div></div>) : estudiantes.length === 0 ? (<div className="empty-state"><Users size={40} /><p>No hay estudiantes registrados</p></div>) : (
-                    <div className="table-responsive"><table className="admin-table">
-                      <thead><tr><th>Estudiante</th><th>Acudiente</th><th>Colegio</th><th>Ruta Asignada</th><th>Acciones</th></tr></thead>
-                      <tbody>{estudiantes.map(est => {
+              {/* Listado de Estudiantes */}
+              <div className="crud-list">
+                {cargandoEstudiantes ? (
+                  <div className="loading-state"><div className="loading-spinner"></div></div>
+                ) : estudiantes.length === 0 ? (
+                  <div className="empty-state"><Users size={40} /><p>No hay estudiantes registrados</p></div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Estudiante</th>
+                          <th>Acudiente</th>
+                          <th>Colegio</th>
+                          <th>Ruta Asignada</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {estudiantes.map(est => {
                           const acu = acudientes.find(a => a.idAcudiente === est.idAcudiente);
                           const acNombre = acu ? `${obtenerInfoUsuario(acu.idUsuario).nombre} ${obtenerInfoUsuario(acu.idUsuario).apellido}` : "Sin asignar";
                           return (
-                        <tr key={est.idEstudiante}>
-                          <td><strong>{est.nombre} {est.apellido}</strong></td>
-                          <td>{acNombre}</td>
-                          <td>{est.colegio || "-"}</td>
-                          <td><span className="route-tag">{est.idRuta ? obtenerNombreRuta(est.idRuta) : "-"}</span></td>
-                          <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionEstudiante(est)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarEstudiante(est.idEstudiante)}><Trash2 size={16} /></button></div></td>
-                        </tr>
-                      )})}</tbody>
-                    </table></div>
-                  )}
-                </div>
+                            <tr key={est.idEstudiante}>
+                              <td><strong>{est.nombre} {est.apellido}</strong></td>
+                              <td>{acNombre}</td>
+                              <td>{est.colegio || "-"}</td>
+                              <td><span className="route-tag">{est.idRuta ? obtenerNombreRuta(est.idRuta) : "-"}</span></td>
+                              <td>
+                                <div className="action-btns">
+                                  <button className="edit-row-btn" title="Editar estudiante" onClick={() => { iniciarEdicionEstudiante(est); setShowModalEstudiante(true); }}>
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button className="delete-row-btn" title="Eliminar estudiante" onClick={() => eliminarEstudiante(est.idEstudiante)}>
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
+
+              {/* MODAL: Crear / Editar Estudiante */}
+              {showModalEstudiante && (
+                <div className="modal-overlay" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                  <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
+                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>&#x2715;</button>
+                    </div>
+                    <form onSubmit={estudianteEditando ? actualizarEstudiante : agregarEstudiante}>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Nombre</label>
+                          <input type="text" placeholder="Ej. Carlos" value={nuevoEstudianteNombre} onChange={(e) => setNuevoEstudianteNombre(e.target.value)} required />
+                        </div>
+                        <div className="form-group">
+                          <label>Apellido</label>
+                          <input type="text" placeholder="Ej. Gómez" value={nuevoEstudianteApellido} onChange={(e) => setNuevoEstudianteApellido(e.target.value)} required />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Acudiente</label>
+                        <select value={nuevoEstudianteAcudiente} onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)} required>
+                          <option value="">Seleccionar...</option>
+                          {acudientes.map(a => { const uInfo = obtenerInfoUsuario(a.idUsuario); return <option key={a.idAcudiente} value={a.idAcudiente}>#{a.idAcudiente} - {uInfo.nombre} {uInfo.apellido}</option>; })}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Colegio</label>
+                        <input type="text" placeholder="Ej. Colegio Central" value={nuevoEstudianteColegio} onChange={(e) => setNuevoEstudianteColegio(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label>Grado</label>
+                        <input type="text" placeholder="Ej. 5° Primaria" value={nuevoEstudianteCurso} onChange={(e) => setNuevoEstudianteCurso(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label>Ruta Asignada</label>
+                        <select value={nuevoEstudianteRuta} onChange={(e) => setNuevoEstudianteRuta(e.target.value)}>
+                          <option value="">Sin ruta asignada</option>
+                          {rutas.map(r => (<option key={r.id} value={r.id}>{r.nombre}</option>))}
+                        </select>
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          {estudianteEditando ? <Pencil size={16} /> : <Plus size={16} />}
+                          <span>{estudianteEditando ? "Guardar Cambios" : "Guardar Estudiante"}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

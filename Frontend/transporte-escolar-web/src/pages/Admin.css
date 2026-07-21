@@ -789,3 +789,25 @@
     padding: 12px;
   }
 }
+
+/* Modal más ancho para formularios con muchos campos */
+.modal-card-lg {
+  max-width: 560px;
+}
+
+/* Grid de 2 columnas dentro del modal */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+
+@media (max-width: 600px) {
+  .modal-card-lg {
+    max-width: 98vw;
+    padding: 20px;
+  }
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

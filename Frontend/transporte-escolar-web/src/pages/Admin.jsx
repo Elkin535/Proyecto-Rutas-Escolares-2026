@@ -49,6 +49,13 @@ function Admin() {
   // Modal de crear ruta
   const [showModalRuta, setShowModalRuta] = useState(false);
 
+  // Modal de editar ruta
+  const [showModalEditarRuta, setShowModalEditarRuta] = useState(false);
+  const [rutaEditando, setRutaEditando] = useState(null);
+  const [editRutaNombre, setEditRutaNombre] = useState("");
+  const [editRutaConductor, setEditRutaConductor] = useState("");
+  const [editRutaPlaca, setEditRutaPlaca] = useState("");
+
   // Variables para agregar ruta
   const [nuevaRutaNombre, setNuevaRutaNombre] = useState("");
   const [nuevaRutaConductor, setNuevaRutaConductor] = useState("");
@@ -178,6 +185,36 @@ function Admin() {
       if (response.ok) setRutas(rutas.filter(r => r.id !== id));
     } catch (err) {
       alert("No se pudo conectar con el servidor para eliminar.");
+    }
+  };
+
+  const abrirModalEditar = (ruta) => {
+    setRutaEditando(ruta);
+    setEditRutaNombre(ruta.nombre);
+    setEditRutaConductor(ruta.conductor);
+    setEditRutaPlaca(ruta.vehiculo === "Sin placa" ? "" : ruta.vehiculo);
+    setShowModalEditarRuta(true);
+  };
+
+  const actualizarRuta = async (e) => {
+    e.preventDefault();
+    if (!editRutaNombre || !editRutaConductor) return;
+    const descripcion = `Conductor: ${editRutaConductor} | Veh\u00edculo: ${editRutaPlaca || "SIN PLACA"}`;
+    try {
+      const response = await fetch(`${API_BASE}/Ruta/${rutaEditando.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idRuta: rutaEditando.id, nombreRuta: editRutaNombre, descripcion: descripcion })
+      });
+      if (response.ok) {
+        await cargarRutas();
+        setShowModalEditarRuta(false);
+        setRutaEditando(null);
+      } else {
+        alert("Error al actualizar la ruta en el servidor.");
+      }
+    } catch (err) {
+      alert("No se pudo conectar con el servidor para actualizar.");
     }
   };
 
@@ -618,9 +655,14 @@ function Admin() {
                           <td><span className="badge-plate">{r.vehiculo}</span></td>
                           <td>{r.paradas} paradas</td>
                           <td>
-                            <button className="delete-row-btn" onClick={() => eliminarRuta(r.id)}>
-                              <Trash2 size={16} />
-                            </button>
+                            <div className="action-btns">
+                              <button className="edit-row-btn" onClick={() => abrirModalEditar(r)} title="Editar ruta">
+                                <Pencil size={16} />
+                              </button>
+                              <button className="delete-row-btn" onClick={() => eliminarRuta(r.id)} title="Eliminar ruta">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -672,6 +714,56 @@ function Admin() {
                         <button type="submit" className="add-btn modal-submit-btn">
                           <Plus size={16} />
                           <span>Guardar Ruta</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL: Editar Ruta */}
+              {showModalEditarRuta && (
+                <div className="modal-overlay" onClick={() => setShowModalEditarRuta(false)}>
+                  <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>Editar Ruta</h4>
+                      <button className="modal-close-btn" onClick={() => setShowModalEditarRuta(false)}>\u2715</button>
+                    </div>
+                    <form onSubmit={actualizarRuta}>
+                      <div className="form-group">
+                        <label>Nombre de la Ruta</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Ruta 04 - Occidente"
+                          value={editRutaNombre}
+                          onChange={(e) => setEditRutaNombre(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Conductor Asignado</label>
+                        <input
+                          type="text"
+                          placeholder="Nombre del conductor"
+                          value={editRutaConductor}
+                          onChange={(e) => setEditRutaConductor(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Placa del Veh\u00edculo</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. ABC-123"
+                          value={editRutaPlaca}
+                          onChange={(e) => setEditRutaPlaca(e.target.value)}
+                        />
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => setShowModalEditarRuta(false)}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          <Pencil size={16} />
+                          <span>Guardar Cambios</span>
                         </button>
                       </div>
                     </form>

@@ -112,7 +112,7 @@ Al finalizar los cuatro Sprints el sistema permitirá:
 
 | Servicio | URL |
 |-----------|-----|
-| Frontend | (https://schooltrack.seminario1.eleueleo.com/) |
+| Frontend | https://schooltrack.seminario1.eleueleo.com/ |
 | Backend API | https://schooltrack.seminario1.eleueleo.com/api |
 
 ## Estado Actual

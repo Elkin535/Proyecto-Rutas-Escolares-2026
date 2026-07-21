@@ -202,7 +202,7 @@ function Admin() {
   const actualizarRuta = async (e) => {
     e.preventDefault();
     if (!editRutaNombre || !editRutaConductor) return;
-    const descripcion = `Conductor: ${editRutaConductor} | Veh\u00edculo: ${editRutaPlaca || "SIN PLACA"}`;
+    const descripcion = `Conductor: ${editRutaConductor} | Vehículo: ${editRutaPlaca || "SIN PLACA"}`;
     try {
       const response = await fetch(`${API_BASE}/Ruta/${rutaEditando.id}`, {
         method: "PUT",
@@ -682,7 +682,9 @@ function Admin() {
                   <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>Crear Nueva Ruta</h4>
-                      <button className="modal-close-btn" onClick={() => setShowModalRuta(false)}>✕</button>
+                      <button className="modal-close-btn" onClick={() => setShowModalRuta(false)}>
+                        <X size={18} />
+                      </button>
                     </div>
                     <form onSubmit={agregarRuta}>
                       <div className="form-group">
@@ -732,7 +734,9 @@ function Admin() {
                   <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>Editar Ruta</h4>
-                      <button className="modal-close-btn" onClick={() => setShowModalEditarRuta(false)}>\u2715</button>
+                      <button className="modal-close-btn" onClick={() => setShowModalEditarRuta(false)}>
+                        <X size={18} />
+                      </button>
                     </div>
                     <form onSubmit={actualizarRuta}>
                       <div className="form-group">
@@ -756,7 +760,7 @@ function Admin() {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Placa del Veh\u00edculo</label>
+                        <label>Placa del Vehículo</label>
                         <input
                           type="text"
                           placeholder="Ej. ABC-123"
@@ -842,7 +846,9 @@ function Admin() {
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>&#x2715;</button>
+                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                        <X size={18} />
+                      </button>
                     </div>
                     <form onSubmit={estudianteEditando ? actualizarEstudiante : agregarEstudiante}>
                       <div className="form-grid-2">

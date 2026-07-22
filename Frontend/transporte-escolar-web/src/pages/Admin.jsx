@@ -1023,24 +1023,62 @@ function Admin() {
               </div>
 
               {showModalConductor && (
-                <div className="modal-overlay" onClick={() => setShowModalConductor(false)}>
-                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-overlay" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>
+                  <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
-                      <h3>{conductorEditando ? "Editar Conductor" : "Crear Nuevo Conductor"}</h3>
-                      <button className="modal-close" onClick={() => setShowModalConductor(false)}><X size={20} /></button>
+                      <h4>{conductorEditando ? "Editar Conductor" : "Crear Nuevo Conductor"}</h4>
+                      <button className="modal-close-btn" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>
+                        <X size={18} />
+                      </button>
                     </div>
-                    <form className="modal-form" onSubmit={conductorEditando ? actualizarConductor : agregarConductor}>
-                      <div className="form-group"><label>Nombre</label><input type="text" value={nuevoConductorNombre} onChange={(e) => setNuevoConductorNombre(e.target.value)} required /></div>
-                      <div className="form-group"><label>Apellido</label><input type="text" value={nuevoConductorApellido} onChange={(e) => setNuevoConductorApellido(e.target.value)} required /></div>
-                      <div className="form-group"><label>Correo Electrónico</label><input type="email" value={nuevoConductorCorreo} onChange={(e) => setNuevoConductorCorreo(e.target.value)} required /></div>
-                      <div className="form-group"><label>Contraseña {conductorEditando && "(Opcional)"}</label><input type="password" value={nuevoConductorContrasena} onChange={(e) => setNuevoConductorContrasena(e.target.value)} required={!conductorEditando} /></div>
-                      <div className="form-group"><label>Teléfono</label><input type="tel" value={nuevoConductorTelefono} onChange={(e) => setNuevoConductorTelefono(e.target.value)} /></div>
-                      <div className="form-group"><label>Licencia</label><input type="text" value={nuevoConductorLicencia} onChange={(e) => setNuevoConductorLicencia(e.target.value)} required /></div>
-                      <div className="form-group"><label>Categoría (Ej. C1)</label><input type="text" value={nuevoConductorCategoria} onChange={(e) => setNuevoConductorCategoria(e.target.value)} /></div>
-                      <div className="form-group"><label>Vehículo Asignado</label><select value={nuevoConductorVehiculo} onChange={(e) => setNuevoConductorVehiculo(e.target.value)}><option value="">Sin asignar</option>{vehiculos.map(v => (<option key={v.idVehiculo} value={v.idVehiculo}>{v.placa}</option>))}</select></div>
+                    <form onSubmit={conductorEditando ? actualizarConductor : agregarConductor}>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Nombre</label>
+                          <input type="text" placeholder="Ej. Luis" value={nuevoConductorNombre} onChange={(e) => setNuevoConductorNombre(e.target.value)} required />
+                        </div>
+                        <div className="form-group">
+                          <label>Apellido</label>
+                          <input type="text" placeholder="Ej. Rodríguez" value={nuevoConductorApellido} onChange={(e) => setNuevoConductorApellido(e.target.value)} required />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" placeholder="Ej. luis@email.com" value={nuevoConductorCorreo} onChange={(e) => setNuevoConductorCorreo(e.target.value)} required />
+                      </div>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Contraseña {conductorEditando && "(Opcional)"}</label>
+                          <input type="password" placeholder="Contraseña segura" value={nuevoConductorContrasena} onChange={(e) => setNuevoConductorContrasena(e.target.value)} required={!conductorEditando} />
+                        </div>
+                        <div className="form-group">
+                          <label>Teléfono</label>
+                          <input type="tel" placeholder="Ej. 3001234567" value={nuevoConductorTelefono} onChange={(e) => setNuevoConductorTelefono(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Licencia</label>
+                          <input type="text" placeholder="Ej. 123456789" value={nuevoConductorLicencia} onChange={(e) => setNuevoConductorLicencia(e.target.value)} required />
+                        </div>
+                        <div className="form-group">
+                          <label>Categoría (Ej. C1)</label>
+                          <input type="text" placeholder="Ej. C1" value={nuevoConductorCategoria} onChange={(e) => setNuevoConductorCategoria(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Vehículo Asignado</label>
+                        <select value={nuevoConductorVehiculo} onChange={(e) => setNuevoConductorVehiculo(e.target.value)}>
+                          <option value="">Sin asignar</option>
+                          {vehiculos.map(v => (<option key={v.idVehiculo} value={v.idVehiculo}>{v.placa}</option>))}
+                        </select>
+                      </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => setShowModalConductor(false)}>Cancelar</button>
-                        <button type="submit" className="add-btn"><Plus size={16} /><span>{conductorEditando ? "Actualizar" : "Guardar"}</span></button>
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          {conductorEditando ? <Pencil size={16} /> : <Plus size={16} />}
+                          <span>{conductorEditando ? "Guardar Cambios" : "Guardar Conductor"}</span>
+                        </button>
                       </div>
                     </form>
                   </div>

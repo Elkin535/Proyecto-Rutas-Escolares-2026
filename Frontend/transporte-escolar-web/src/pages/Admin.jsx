@@ -355,18 +355,17 @@ function Admin() {
   const agregarVehiculo = async (e) => {
     e.preventDefault();
     if (!nuevoVehiculoPlaca || !nuevoVehiculoCapacidad) return;
+    const body = {
+      placa: nuevoVehiculoPlaca,
+      modelo: nuevoVehiculoModelo || null,
+      capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
+      estado: true,
+      soatVencimiento: nuevoVehiculoSoat ? new Date(`${nuevoVehiculoSoat}T00:00:00`).toISOString() : null,
+      tecnomecanicaVencimiento: nuevoVehiculoTecno ? new Date(`${nuevoVehiculoTecno}T00:00:00`).toISOString() : null
+    };
     try {
-      const body = {
-        placa: nuevoVehiculoPlaca,
-        modelo: nuevoVehiculoModelo || null,
-        capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
-        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat : null,
-        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno : null
-      };
       const response = await fetch(`${API_BASE}/Vehiculo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
         await cargarVehiculos();
@@ -374,7 +373,7 @@ function Admin() {
         setShowModalVehiculo(false);
       } else {
         const errorData = await response.json().catch(() => null);
-        alert(errorData?.mensaje || errorData?.title || "Error al crear vehículo.");
+        alert(errorData?.mensaje || "Error al guardar el vehículo.");
       }
     } catch (err) {
       alert("Error de red.");
@@ -383,29 +382,25 @@ function Admin() {
 
   const actualizarVehiculo = async (e) => {
     e.preventDefault();
-    if (!nuevoVehiculoPlaca || !nuevoVehiculoCapacidad) return;
+    if (!vehiculoEditando || !nuevoVehiculoPlaca || !nuevoVehiculoCapacidad) return;
+    const body = {
+      idVehiculo: vehiculoEditando.idVehiculo,
+      placa: nuevoVehiculoPlaca,
+      modelo: nuevoVehiculoModelo || null,
+      capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
+      estado: true,
+      soatVencimiento: nuevoVehiculoSoat ? new Date(`${nuevoVehiculoSoat}T00:00:00`).toISOString() : null,
+      tecnomecanicaVencimiento: nuevoVehiculoTecno ? new Date(`${nuevoVehiculoTecno}T00:00:00`).toISOString() : null
+    };
     try {
-      const body = {
-        idVehiculo: vehiculoEditando.idVehiculo,
-        placa: nuevoVehiculoPlaca,
-        modelo: nuevoVehiculoModelo || null,
-        capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
-        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat : null,
-        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno : null
-      };
       const response = await fetch(`${API_BASE}/Vehiculo/${vehiculoEditando.idVehiculo}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
         await cargarVehiculos();
         limpiarFormularioVehiculo();
         setShowModalVehiculo(false);
-      } else {
-        const errorData = await response.json().catch(() => null);
-        alert(errorData?.mensaje || errorData?.title || "Error al actualizar vehículo.");
-      }
+      } else alert("Error al actualizar el vehículo.");
     } catch (err) {
       alert("Error de red.");
     }

@@ -358,10 +358,10 @@ function Admin() {
     try {
       const body = {
         placa: nuevoVehiculoPlaca,
-        modelo: nuevoVehiculoModelo,
+        modelo: nuevoVehiculoModelo || null,
         capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
-        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat + "T00:00:00" : null,
-        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno + "T00:00:00" : null
+        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat : null,
+        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno : null
       };
       const response = await fetch(`${API_BASE}/Vehiculo`, {
         method: "POST",
@@ -372,7 +372,10 @@ function Admin() {
         await cargarVehiculos();
         limpiarFormularioVehiculo();
         setShowModalVehiculo(false);
-      } else alert("Error al crear vehículo.");
+      } else {
+        const errorData = await response.json().catch(() => null);
+        alert(errorData?.mensaje || errorData?.title || "Error al crear vehículo.");
+      }
     } catch (err) {
       alert("Error de red.");
     }
@@ -385,10 +388,10 @@ function Admin() {
       const body = {
         idVehiculo: vehiculoEditando.idVehiculo,
         placa: nuevoVehiculoPlaca,
-        modelo: nuevoVehiculoModelo,
+        modelo: nuevoVehiculoModelo || null,
         capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
-        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat + "T00:00:00" : null,
-        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno + "T00:00:00" : null
+        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat : null,
+        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno : null
       };
       const response = await fetch(`${API_BASE}/Vehiculo/${vehiculoEditando.idVehiculo}`, {
         method: "PUT",
@@ -399,7 +402,10 @@ function Admin() {
         await cargarVehiculos();
         limpiarFormularioVehiculo();
         setShowModalVehiculo(false);
-      } else alert("Error al actualizar vehículo.");
+      } else {
+        const errorData = await response.json().catch(() => null);
+        alert(errorData?.mensaje || errorData?.title || "Error al actualizar vehículo.");
+      }
     } catch (err) {
       alert("Error de red.");
     }

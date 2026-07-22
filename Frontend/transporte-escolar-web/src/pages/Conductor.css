@@ -2,6 +2,7 @@
 
 .conductor-container {
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   background: #081120;
   color: #f8fafc;
@@ -10,17 +11,21 @@
   flex-direction: column;
 }
 
-/* HEADER */
+/* HEADER RESPONSIVE */
 .conductor-header {
   background: #0f172a;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 16px 24px;
+  padding: 16px clamp(16px, 4vw, 40px);
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
 }
 
 .header-brand {
@@ -29,7 +34,7 @@
   gap: 10px;
   color: #00d4ff;
   font-weight: 700;
-  font-size: 1.15rem;
+  font-size: clamp(1.05rem, 2.5vw, 1.3rem);
 }
 
 .header-brand svg {
@@ -40,7 +45,7 @@
   background: none;
   border: 1px solid rgba(239, 68, 68, 0.3);
   color: #ef4444;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -49,40 +54,44 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 40px;
 }
 
 .conductor-logout:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
 }
 
-/* MAIN */
-
+/* MAIN FLUIDO A ANCHO COMPLETO */
 .conductor-main {
   flex-grow: 1;
-  padding: 24px;
-  max-width: 600px;
+  padding: clamp(16px, 3vw, 30px) clamp(16px, 4vw, 40px);
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: clamp(18px, 3vw, 24px);
+  box-sizing: border-box;
 }
 
-
-/* PROFILE CARD */
+/* PROFILE CARD RESPONSIVE Y DE ANCHO COMPLETO */
 .conductor-profile-card {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  padding: 20px;
+  padding: clamp(18px, 3.5vw, 26px);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
+  backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .driver-avatar-circle {
-  width: 64px;
-  height: 64px;
+  width: clamp(52px, 8vw, 64px);
+  height: clamp(52px, 8vw, 64px);
   border-radius: 50%;
   background: rgba(0, 212, 255, 0.1);
   border: 2px solid #00d4ff;
@@ -90,10 +99,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .driver-meta h3 {
-  font-size: 1.2rem;
+  font-size: clamp(1.05rem, 2.5vw, 1.3rem);
   font-weight: 700;
   margin-bottom: 4px;
 }
@@ -118,19 +128,63 @@
   font-weight: 600;
 }
 
-/* PANEL CONTROLES */
+/* MAP SECTION RESPONSIVE */
+.map-section {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.55);
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.conductor-map-canvas {
+  height: 380px;
+  width: 100%;
+}
+
+.gps-active-bar {
+  padding: 12px 16px;
+  background-color: rgba(15, 23, 42, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gps-status-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.gps-sim-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+/* PANEL DE CONTROLES DE VIAJE DE ANCHO COMPLETO */
 .route-control-panel {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  padding: 24px;
+  padding: clamp(20px, 4vw, 28px);
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .start-panel p {
-  font-size: 0.95rem;
+  font-size: clamp(0.9rem, 2vw, 1rem);
   color: #94a3b8;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .btn-iniciar-viaje {
@@ -140,33 +194,35 @@
   border: none;
   border-radius: 12px;
   padding: 16px;
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-  transition: all 0.3s;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
+  min-height: 52px;
 }
 
 .btn-iniciar-viaje:hover {
   background: #059669;
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
 }
 
 .success-recorrido-alert {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   color: #34d399;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 18px;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -176,24 +232,26 @@
   flex-direction: column;
   gap: 16px;
   align-items: center;
+  width: 100%;
 }
 
 .active-badge-pulse {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: #00d4ff;
   font-weight: 700;
   font-size: 1rem;
 }
 
 .pulse-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: #00d4ff;
   box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7);
   animation: pulse 1.6s infinite;
+  flex-shrink: 0;
 }
 
 @keyframes pulse {
@@ -218,11 +276,12 @@
   border: none;
   border-radius: 12px;
   padding: 16px;
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-  transition: all 0.3s;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+  transition: all 0.3s ease;
+  min-height: 52px;
 }
 
 .btn-finalizar-viaje:hover {
@@ -230,25 +289,26 @@
   transform: translateY(-2px);
 }
 
-/* LISTADO DE ASISTENCIA */
+/* LISTADO DE ASISTENCIA DE PASAJEROS */
 .students-attendance-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
   animation: fadeIn 0.3s ease-out;
+  width: 100%;
 }
 
 .section-title-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: #00d4ff;
   border-left: 3px solid #00d4ff;
-  padding-left: 8px;
+  padding-left: 10px;
 }
 
 .section-title-wrapper h4 {
-  font-size: 1.05rem;
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
   font-weight: 700;
 }
 
@@ -256,45 +316,51 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
 .student-attendance-card {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
-  padding: 16px;
+  padding: clamp(14px, 3vw, 18px);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   transition: all 0.25s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .student-attendance-card.Abordó {
-  border-color: rgba(245, 158, 11, 0.3);
-  background: rgba(245, 158, 11, 0.04);
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.05);
 }
 
 .student-attendance-card.Entregado {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: rgba(16, 185, 129, 0.04);
-  opacity: 0.75;
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.05);
+  opacity: 0.85;
 }
 
 .student-attendance-card.Ausente {
-  border-color: rgba(239, 68, 68, 0.3);
-  background: rgba(239, 68, 68, 0.04);
-  opacity: 0.75;
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.05);
+  opacity: 0.85;
 }
 
 .student-details {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1 1 180px;
 }
 
 .student-name {
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: clamp(0.95rem, 2vw, 1.05rem);
 }
 
 .student-stop {
@@ -311,24 +377,27 @@
 .attendance-actions {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .action-btn {
-  width: 46px;
-  height: 46px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  min-width: 48px;
+  min-height: 48px;
 }
 
 .action-btn.absent {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
-  border: 1.5px solid rgba(239, 68, 68, 0.2);
+  border: 1.5px solid rgba(239, 68, 68, 0.25);
 }
 
 .action-btn.absent:hover {
@@ -337,9 +406,9 @@
 }
 
 .action-btn.board {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
-  border: 1.5px solid rgba(245, 158, 11, 0.2);
+  border: 1.5px solid rgba(245, 158, 11, 0.25);
 }
 
 .action-btn.board:hover {
@@ -356,7 +425,7 @@
 .badge {
   font-size: 0.75rem;
   font-weight: 700;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   text-transform: uppercase;
 }
@@ -380,13 +449,14 @@
   background: #10b981;
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
+  border-radius: 10px;
+  padding: 8px 16px;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
-  height: auto;
+  transition: all 0.2s ease;
+  height: 44px;
+  width: auto;
 }
 
 .action-btn.deliver:hover {
@@ -407,7 +477,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 4px 6px;
 }
 
 .reset-state-btn:hover {
@@ -415,22 +485,95 @@
   text-decoration: underline;
 }
 
-/* MENSAJE DE ESPERA */
+/* MENSAJE DE ESPERA VACÍO */
 .no-active-trip-msg {
   background: rgba(15, 23, 42, 0.3);
   border: 1px dashed rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  padding: 40px 20px;
+  padding: clamp(30px, 6vw, 45px) 20px;
   text-align: center;
   color: #64748b;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .no-active-trip-msg p {
   font-size: 0.95rem;
   line-height: 1.5;
   max-width: 380px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ESCRITORIO Y LAPTOPS (>= 768PX): DISTRIBUCIÓN EN 2 COLUMNAS AMPLIAS SIN ESPACIO MUERTO */
+@media (min-width: 768px) {
+  .conductor-main {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .conductor-profile-card {
+    grid-column: 1;
+  }
+
+  .route-control-panel {
+    grid-column: 1;
+  }
+
+  .students-attendance-section,
+  .no-active-trip-msg {
+    grid-column: 1;
+  }
+
+  .map-section {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    position: sticky;
+    top: 90px;
+    margin-top: 0 !important;
+  }
+
+  .conductor-map-canvas,
+  .map-section > div {
+    height: 520px !important;
+  }
+}
+
+/* MÓVILES */
+@media (max-width: 576px) {
+  .conductor-profile-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .completed-state {
+    align-items: center;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .student-attendance-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .attendance-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }

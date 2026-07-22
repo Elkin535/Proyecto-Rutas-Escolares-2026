@@ -5,12 +5,10 @@ import {
   Route as RouteIcon,
   Users,
   Bus,
-  ShieldAlert,
   LogOut,
   Plus,
   Trash2,
   ClipboardList,
-  CheckCircle,
   Pencil,
   X,
   UserSquare2,
@@ -46,6 +44,7 @@ function Admin() {
   const [conductores, setConductores] = useState([]);
   const [cargandoConductores, setCargandoConductores] = useState(false);
   const [conductorEditando, setConductorEditando] = useState(null);
+  const [showModalConductor, setShowModalConductor] = useState(false);
 
   // Modal de crear ruta
   const [showModalRuta, setShowModalRuta] = useState(false);
@@ -526,12 +525,14 @@ function Admin() {
     setNuevoConductorCorreo(uInfo.correo || ""); setNuevoConductorContrasena("");
     setNuevoConductorTelefono(uInfo.telefono || ""); setNuevoConductorLicencia(cond.numeroLicencia || "");
     setNuevoConductorCategoria(cond.categoriaLicencia || ""); setNuevoConductorVehiculo(cond.idVehiculo ? String(cond.idVehiculo) : "");
+    setShowModalConductor(true);
   };
 
   const limpiarFormularioConductor = () => {
     setConductorEditando(null); setNuevoConductorNombre(""); setNuevoConductorApellido("");
     setNuevoConductorCorreo(""); setNuevoConductorContrasena(""); setNuevoConductorTelefono("");
     setNuevoConductorLicencia(""); setNuevoConductorCategoria(""); setNuevoConductorVehiculo("");
+    setShowModalConductor(false);
   };
 
   const obtenerNombreRuta = (idRuta) => {
@@ -1093,42 +1094,58 @@ function Admin() {
           {/* TAB 5: CONDUCTORES */}
           {activeTab === "conductores" && (
             <div className="tab-pane">
-              <div className="section-header"><h3>Gestión de Conductores</h3></div>
-              <div className="crud-container">
-                <form className={`crud-form card-form ${conductorEditando ? "edit-mode" : ""}`} onSubmit={conductorEditando ? actualizarConductor : agregarConductor}>
-                  <h4>{conductorEditando ? "Editar Conductor" : "Crear Nuevo Conductor"}</h4>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoConductorNombre} onChange={(e) => setNuevoConductorNombre(e.target.value)} required /></div>
-                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoConductorApellido} onChange={(e) => setNuevoConductorApellido(e.target.value)} required /></div>
-                  <div className="form-group"><label>Correo Electrónico</label><input type="email" value={nuevoConductorCorreo} onChange={(e) => setNuevoConductorCorreo(e.target.value)} required /></div>
-                  <div className="form-group"><label>Contraseña {conductorEditando && "(Opcional)"}</label><input type="password" value={nuevoConductorContrasena} onChange={(e) => setNuevoConductorContrasena(e.target.value)} required={!conductorEditando} /></div>
-                  <div className="form-group"><label>Teléfono</label><input type="tel" value={nuevoConductorTelefono} onChange={(e) => setNuevoConductorTelefono(e.target.value)} /></div>
-                  <div className="form-group"><label>Licencia</label><input type="text" value={nuevoConductorLicencia} onChange={(e) => setNuevoConductorLicencia(e.target.value)} required /></div>
-                  <div className="form-group"><label>Categoría (Ej. C1)</label><input type="text" value={nuevoConductorCategoria} onChange={(e) => setNuevoConductorCategoria(e.target.value)} /></div>
-                  <div className="form-group"><label>Vehículo Asignado</label><select value={nuevoConductorVehiculo} onChange={(e) => setNuevoConductorVehiculo(e.target.value)}><option value="">Sin asignar</option>{vehiculos.map(v => (<option key={v.idVehiculo} value={v.idVehiculo}>{v.placa}</option>))}</select></div>
-                  <button type="submit" className="add-btn"><Plus size={16} /><span>{conductorEditando ? "Actualizar" : "Guardar"}</span></button>
-                  {conductorEditando && <button type="button" className="cancel-btn" onClick={limpiarFormularioConductor}><X size={16} /><span>Cancelar</span></button>}
-                </form>
+              <div className="section-header rutas-header">
+                <h3>Gestión de Conductores</h3>
+                <button className="btn-crear-ruta" onClick={() => { setConductorEditando(null); limpiarFormularioConductor(); setShowModalConductor(true); }}>
+                  <Plus size={18} />
+                  <span>Crear Nuevo Conductor</span>
+                </button>
+              </div>
 
-                <div className="crud-list flex-grow">
-                  {cargandoConductores ? (<div className="loading-state"><div className="loading-spinner"></div></div>) : conductores.length === 0 ? (<div className="empty-state"><UserSquare2 size={40} /><p>No hay conductores registrados</p></div>) : (
-                    <div className="table-responsive"><table className="admin-table">
-                      <thead><tr><th>Conductor</th><th>Correo</th><th>Licencia</th><th>Cat</th><th>Vehículo</th><th>Acciones</th></tr></thead>
-                      <tbody>{conductores.map(cond => {
-                        const uInfo = obtenerInfoUsuario(cond.idUsuario);
-                        return (
-                          <tr key={cond.idConductor}>
-                            <td><strong>{uInfo.nombre} {uInfo.apellido}</strong></td>
-                            <td>{uInfo.correo}</td>
-                            <td>{cond.numeroLicencia}</td>
-                            <td>{cond.categoriaLicencia || "-"}</td>
-                            <td><span className="badge-plate">{cond.idVehiculo ? obtenerPlacaVehiculo(cond.idVehiculo) : "Sin asignar"}</span></td>
-                            <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionConductor(cond)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarConductor(cond.idConductor, cond.idUsuario)}><Trash2 size={16} /></button></div></td>
-                          </tr>
-                        )
-                      })}</tbody>
-                    </table></div>
-                  )}
+              {showModalConductor && (
+                <div className="modal-overlay" onClick={() => setShowModalConductor(false)}>
+                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h3>{conductorEditando ? "Editar Conductor" : "Crear Nuevo Conductor"}</h3>
+                      <button className="modal-close" onClick={() => setShowModalConductor(false)}><X size={20} /></button>
+                    </div>
+                    <form className="modal-form" onSubmit={conductorEditando ? actualizarConductor : agregarConductor}>
+                      <div className="form-group"><label>Nombre</label><input type="text" value={nuevoConductorNombre} onChange={(e) => setNuevoConductorNombre(e.target.value)} required /></div>
+                      <div className="form-group"><label>Apellido</label><input type="text" value={nuevoConductorApellido} onChange={(e) => setNuevoConductorApellido(e.target.value)} required /></div>
+                      <div className="form-group"><label>Correo Electrónico</label><input type="email" value={nuevoConductorCorreo} onChange={(e) => setNuevoConductorCorreo(e.target.value)} required /></div>
+                      <div className="form-group"><label>Contraseña {conductorEditando && "(Opcional)"}</label><input type="password" value={nuevoConductorContrasena} onChange={(e) => setNuevoConductorContrasena(e.target.value)} required={!conductorEditando} /></div>
+                      <div className="form-group"><label>Teléfono</label><input type="tel" value={nuevoConductorTelefono} onChange={(e) => setNuevoConductorTelefono(e.target.value)} /></div>
+                      <div className="form-group"><label>Licencia</label><input type="text" value={nuevoConductorLicencia} onChange={(e) => setNuevoConductorLicencia(e.target.value)} required /></div>
+                      <div className="form-group"><label>Categoría (Ej. C1)</label><input type="text" value={nuevoConductorCategoria} onChange={(e) => setNuevoConductorCategoria(e.target.value)} /></div>
+                      <div className="form-group"><label>Vehículo Asignado</label><select value={nuevoConductorVehiculo} onChange={(e) => setNuevoConductorVehiculo(e.target.value)}><option value="">Sin asignar</option>{vehiculos.map(v => (<option key={v.idVehiculo} value={v.idVehiculo}>{v.placa}</option>))}</select></div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => setShowModalConductor(false)}>Cancelar</button>
+                        <button type="submit" className="add-btn"><Plus size={16} /><span>{conductorEditando ? "Actualizar" : "Guardar"}</span></button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
+              )}
+
+              <div className="crud-list" style={{ width: "100%", maxWidth: "100%" }}>
+                {cargandoConductores ? (<div className="loading-state"><div className="loading-spinner"></div></div>) : conductores.length === 0 ? (<div className="empty-state"><UserSquare2 size={40} /><p>No hay conductores registrados</p></div>) : (
+                  <div className="table-responsive"><table className="admin-table">
+                    <thead><tr><th>Conductor</th><th>Correo</th><th>Licencia</th><th>Cat</th><th>Vehículo</th><th>Acciones</th></tr></thead>
+                    <tbody>{conductores.map(cond => {
+                      const uInfo = obtenerInfoUsuario(cond.idUsuario);
+                      return (
+                        <tr key={cond.idConductor}>
+                          <td><strong>{uInfo.nombre} {uInfo.apellido}</strong></td>
+                          <td>{uInfo.correo}</td>
+                          <td>{cond.numeroLicencia}</td>
+                          <td>{cond.categoriaLicencia || "-"}</td>
+                          <td><span className="badge-plate">{cond.idVehiculo ? obtenerPlacaVehiculo(cond.idVehiculo) : "Sin asignar"}</span></td>
+                          <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionConductor(cond)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarConductor(cond.idConductor, cond.idUsuario)}><Trash2 size={16} /></button></div></td>
+                        </tr>
+                      )
+                    })}</tbody>
+                  </table></div>
+                )}
               </div>
             </div>
           )}

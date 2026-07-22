@@ -196,12 +196,12 @@ function Conductor() {
         </section>
 
         {/* MAPA DE RUTAS */}
-        <section className="map-section" style={{ marginTop: '20px', borderRadius: '10px', overflow: 'hidden' }}>
-            <div ref={mapRef} style={{ height: '300px', width: '100%' }}></div>
+        <section className="map-section">
+            <div ref={mapRef} className="conductor-map-canvas"></div>
             {viajeActivo && (
-                <div style={{ padding: '10px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Transmisión GPS Activa</span>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                <div className="gps-active-bar">
+                    <span className="gps-status-label">Transmisión GPS Activa</span>
+                    <label className="gps-sim-toggle">
                         <input type="checkbox" checked={simulacionActiva} onChange={alternarSimulacion} />
                         Simular Movimiento (Para pruebas en PC)
                     </label>

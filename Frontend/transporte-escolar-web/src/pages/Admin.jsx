@@ -14,7 +14,8 @@ import {
   Pencil,
   X,
   UserSquare2,
-  Contact
+  Contact,
+  Menu
 } from "lucide-react";
 import "./Admin.css";
 
@@ -23,6 +24,7 @@ const API_BASE = "https://schooltrack.seminario1.eleueleo.com/api";
 function Admin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("resumen");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rutas, setRutas] = useState([]);
 
   // ── Estados generales ──
@@ -38,11 +40,25 @@ function Admin() {
   const [acudientes, setAcudientes] = useState([]);
   const [cargandoAcudientes, setCargandoAcudientes] = useState(false);
   const [acudienteEditando, setAcudienteEditando] = useState(null);
+  const [showModalAcudiente, setShowModalAcudiente] = useState(false);
 
   // ── Conductores state ──
   const [conductores, setConductores] = useState([]);
   const [cargandoConductores, setCargandoConductores] = useState(false);
   const [conductorEditando, setConductorEditando] = useState(null);
+
+  // Modal de crear ruta
+  const [showModalRuta, setShowModalRuta] = useState(false);
+
+  // Modal de editar ruta
+  const [showModalEditarRuta, setShowModalEditarRuta] = useState(false);
+  const [rutaEditando, setRutaEditando] = useState(null);
+  const [editRutaNombre, setEditRutaNombre] = useState("");
+  const [editRutaConductor, setEditRutaConductor] = useState("");
+  const [editRutaPlaca, setEditRutaPlaca] = useState("");
+
+  // Modal de estudiante (crear / editar)
+  const [showModalEstudiante, setShowModalEstudiante] = useState(false);
 
   // Variables para agregar ruta
   const [nuevaRutaNombre, setNuevaRutaNombre] = useState("");
@@ -155,8 +171,13 @@ function Admin() {
       });
       if (response.ok) {
         await cargarRutas();
-        setNuevaRutaNombre(""); setNuevaRutaConductor(""); setNuevaRutaPlaca("");
-      } else alert("Error al guardar la ruta en el servidor.");
+        setNuevaRutaNombre("");
+        setNuevaRutaConductor("");
+        setNuevaRutaPlaca("");
+        setShowModalRuta(false);
+      } else {
+        alert("Error al guardar la ruta en el servidor.");
+      }
     } catch (err) {
       alert("No se pudo conectar con el servidor.");
     }
@@ -168,6 +189,36 @@ function Admin() {
       if (response.ok) setRutas(rutas.filter(r => r.id !== id));
     } catch (err) {
       alert("No se pudo conectar con el servidor para eliminar.");
+    }
+  };
+
+  const abrirModalEditar = (ruta) => {
+    setRutaEditando(ruta);
+    setEditRutaNombre(ruta.nombre);
+    setEditRutaConductor(ruta.conductor);
+    setEditRutaPlaca(ruta.vehiculo === "Sin placa" ? "" : ruta.vehiculo);
+    setShowModalEditarRuta(true);
+  };
+
+  const actualizarRuta = async (e) => {
+    e.preventDefault();
+    if (!editRutaNombre || !editRutaConductor) return;
+    const descripcion = `Conductor: ${editRutaConductor} | Vehículo: ${editRutaPlaca || "SIN PLACA"}`;
+    try {
+      const response = await fetch(`${API_BASE}/Ruta/${rutaEditando.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idRuta: rutaEditando.id, nombreRuta: editRutaNombre, descripcion: descripcion })
+      });
+      if (response.ok) {
+        await cargarRutas();
+        setShowModalEditarRuta(false);
+        setRutaEditando(null);
+      } else {
+        alert("Error al actualizar la ruta en el servidor.");
+      }
+    } catch (err) {
+      alert("No se pudo conectar con el servidor para actualizar.");
     }
   };
 
@@ -205,6 +256,7 @@ function Admin() {
       if (response.ok) {
         await cargarEstudiantes();
         limpiarFormularioEstudiante();
+        setShowModalEstudiante(false);
       } else {
         const errorData = await response.json().catch(() => null);
         alert(errorData?.mensaje || "Error al guardar el estudiante.");
@@ -234,6 +286,7 @@ function Admin() {
       if (response.ok) {
         await cargarEstudiantes();
         limpiarFormularioEstudiante();
+        setShowModalEstudiante(false);
       } else alert("Error al actualizar el estudiante.");
     } catch (err) {
       alert("Error de red.");
@@ -307,6 +360,7 @@ function Admin() {
         await cargarUsuarios();
         await cargarAcudientes();
         limpiarFormularioAcudiente();
+        setShowModalAcudiente(false);
       } else throw new Error("Error al crear acudiente.");
     } catch (err) {
       alert(err.message);
@@ -335,6 +389,7 @@ function Admin() {
         await cargarUsuarios();
         await cargarAcudientes();
         limpiarFormularioAcudiente();
+        setShowModalAcudiente(false);
       } else throw new Error("Error al actualizar acudiente.");
     } catch (err) {
       alert(err.message);
@@ -496,8 +551,28 @@ function Admin() {
 
   return (
     <div className="admin-container">
+      {/* BARRA MÓVIL (VISIBLE SOLO EN MÓVILES Y TABLETS PEOUEÑAS) */}
+      <div className="mobile-admin-bar">
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Abrir menú de navegación"
+        >
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        <div className="mobile-brand">
+          <Bus size={24} />
+          <span>SchoolTrack</span>
+        </div>
+      </div>
+
+      {/* OVERLAY PARA CERRAR MENÚ AL HACER CLIC FUERA */}
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* SIDEBAR */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-brand">
           <Bus size={28} />
           <span>SchoolTrack</span>
@@ -511,19 +586,19 @@ function Admin() {
         </div>
 
         <nav className="sidebar-menu">
-          <button className={`menu-item ${activeTab === "resumen" ? "active" : ""}`} onClick={() => setActiveTab("resumen")}>
+          <button className={`menu-item ${activeTab === "resumen" ? "active" : ""}`} onClick={() => { setActiveTab("resumen"); setSidebarOpen(false); }}>
             <LayoutDashboard size={20} /><span>Resumen</span>
           </button>
-          <button className={`menu-item ${activeTab === "rutas" ? "active" : ""}`} onClick={() => setActiveTab("rutas")}>
+          <button className={`menu-item ${activeTab === "rutas" ? "active" : ""}`} onClick={() => { setActiveTab("rutas"); setSidebarOpen(false); }}>
             <RouteIcon size={20} /><span>Gestionar Rutas</span>
           </button>
-          <button className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`} onClick={() => setActiveTab("estudiantes")}>
+          <button className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`} onClick={() => { setActiveTab("estudiantes"); setSidebarOpen(false); }}>
             <Users size={20} /><span>Estudiantes</span>
           </button>
-          <button className={`menu-item ${activeTab === "acudientes" ? "active" : ""}`} onClick={() => setActiveTab("acudientes")}>
+          <button className={`menu-item ${activeTab === "acudientes" ? "active" : ""}`} onClick={() => { setActiveTab("acudientes"); setSidebarOpen(false); }}>
             <Contact size={20} /><span>Acudientes</span>
           </button>
-          <button className={`menu-item ${activeTab === "conductores" ? "active" : ""}`} onClick={() => setActiveTab("conductores")}>
+          <button className={`menu-item ${activeTab === "conductores" ? "active" : ""}`} onClick={() => { setActiveTab("conductores"); setSidebarOpen(false); }}>
             <UserSquare2 size={20} /><span>Conductores</span>
           </button>
         </nav>
@@ -572,7 +647,154 @@ function Admin() {
                   <thead><tr><th>Ruta</th><th>Conductor</th><th>Vehículo</th><th>Paradas</th><th>Acción</th></tr></thead>
                   <tbody>{rutas.map(r => (<tr key={r.id}><td><strong>{r.nombre}</strong></td><td>{r.conductor}</td><td><span className="badge-plate">{r.vehiculo}</span></td><td>{r.paradas} paradas</td><td><button className="delete-row-btn" onClick={() => eliminarRuta(r.id)}><Trash2 size={16} /></button></td></tr>))}</tbody>
                 </table></div></div>
+              <div className="section-header rutas-header">
+                <h3>Registro de Rutas Escolares</h3>
+                <button className="btn-crear-ruta" onClick={() => setShowModalRuta(true)}>
+                  <Plus size={18} />
+                  <span>Crear Nueva Ruta</span>
+                </button>
               </div>
+
+              {/* Listado de Rutas */}
+              <div className="crud-list">
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Ruta</th>
+                        <th>Conductor</th>
+                        <th>Vehículo</th>
+                        <th>Paradas</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rutas.map(r => (
+                        <tr key={r.id}>
+                          <td><strong>{r.nombre}</strong></td>
+                          <td>{r.conductor}</td>
+                          <td><span className="badge-plate">{r.vehiculo}</span></td>
+                          <td>{r.paradas} paradas</td>
+                          <td>
+                            <div className="action-btns">
+                              <button className="edit-row-btn" onClick={() => abrirModalEditar(r)} title="Editar ruta">
+                                <Pencil size={16} />
+                              </button>
+                              <button className="delete-row-btn" onClick={() => eliminarRuta(r.id)} title="Eliminar ruta">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* MODAL: Crear Nueva Ruta */}
+              {showModalRuta && (
+                <div className="modal-overlay" onClick={() => setShowModalRuta(false)}>
+                  <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>Crear Nueva Ruta</h4>
+                      <button className="modal-close-btn" onClick={() => setShowModalRuta(false)}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <form onSubmit={agregarRuta}>
+                      <div className="form-group">
+                        <label>Nombre de la Ruta</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Ruta 04 - Occidente"
+                          value={nuevaRutaNombre}
+                          onChange={(e) => setNuevaRutaNombre(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Conductor Asignado</label>
+                        <input
+                          type="text"
+                          placeholder="Nombre del conductor"
+                          value={nuevaRutaConductor}
+                          onChange={(e) => setNuevaRutaConductor(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Placa del Vehículo</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. ABC-123"
+                          value={nuevaRutaPlaca}
+                          onChange={(e) => setNuevaRutaPlaca(e.target.value)}
+                        />
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => setShowModalRuta(false)}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          <Plus size={16} />
+                          <span>Guardar Ruta</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL: Editar Ruta */}
+              {showModalEditarRuta && (
+                <div className="modal-overlay" onClick={() => setShowModalEditarRuta(false)}>
+                  <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>Editar Ruta</h4>
+                      <button className="modal-close-btn" onClick={() => setShowModalEditarRuta(false)}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <form onSubmit={actualizarRuta}>
+                      <div className="form-group">
+                        <label>Nombre de la Ruta</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Ruta 04 - Occidente"
+                          value={editRutaNombre}
+                          onChange={(e) => setEditRutaNombre(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Conductor Asignado</label>
+                        <input
+                          type="text"
+                          placeholder="Nombre del conductor"
+                          value={editRutaConductor}
+                          onChange={(e) => setEditRutaConductor(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Placa del Vehículo</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. ABC-123"
+                          value={editRutaPlaca}
+                          onChange={(e) => setEditRutaPlaca(e.target.value)}
+                        />
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => setShowModalEditarRuta(false)}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          <Pencil size={16} />
+                          <span>Guardar Cambios</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -613,7 +835,115 @@ function Admin() {
                     </table></div>
                   )}
                 </div>
+              <div className="section-header rutas-header">
+                <h3>Base de Alumnos Registrados</h3>
+                <button className="btn-crear-ruta" onClick={() => { setEstudianteEditando(null); limpiarFormularioEstudiante(); setShowModalEstudiante(true); }}>
+                  <Plus size={18} />
+                  <span>Crear Nuevo Estudiante</span>
+                </button>
               </div>
+
+              {/* Listado de Estudiantes */}
+              <div className="crud-list">
+                {cargandoEstudiantes ? (
+                  <div className="loading-state"><div className="loading-spinner"></div></div>
+                ) : estudiantes.length === 0 ? (
+                  <div className="empty-state"><Users size={40} /><p>No hay estudiantes registrados</p></div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Estudiante</th>
+                          <th>Acudiente</th>
+                          <th>Colegio</th>
+                          <th>Ruta Asignada</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {estudiantes.map(est => {
+                          const acu = acudientes.find(a => a.idAcudiente === est.idAcudiente);
+                          const acNombre = acu ? `${obtenerInfoUsuario(acu.idUsuario).nombre} ${obtenerInfoUsuario(acu.idUsuario).apellido}` : "Sin asignar";
+                          return (
+                            <tr key={est.idEstudiante}>
+                              <td><strong>{est.nombre} {est.apellido}</strong></td>
+                              <td>{acNombre}</td>
+                              <td>{est.colegio || "-"}</td>
+                              <td><span className="route-tag">{est.idRuta ? obtenerNombreRuta(est.idRuta) : "-"}</span></td>
+                              <td>
+                                <div className="action-btns">
+                                  <button className="edit-row-btn" title="Editar estudiante" onClick={() => { iniciarEdicionEstudiante(est); setShowModalEstudiante(true); }}>
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button className="delete-row-btn" title="Eliminar estudiante" onClick={() => eliminarEstudiante(est.idEstudiante)}>
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* MODAL: Crear / Editar Estudiante */}
+              {showModalEstudiante && (
+                <div className="modal-overlay" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                  <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
+                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <form onSubmit={estudianteEditando ? actualizarEstudiante : agregarEstudiante}>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Nombre</label>
+                          <input type="text" placeholder="Ej. Carlos" value={nuevoEstudianteNombre} onChange={(e) => setNuevoEstudianteNombre(e.target.value)} required />
+                        </div>
+                        <div className="form-group">
+                          <label>Apellido</label>
+                          <input type="text" placeholder="Ej. Gómez" value={nuevoEstudianteApellido} onChange={(e) => setNuevoEstudianteApellido(e.target.value)} required />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Acudiente</label>
+                        <select value={nuevoEstudianteAcudiente} onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)} required>
+                          <option value="">Seleccionar...</option>
+                          {acudientes.map(a => { const uInfo = obtenerInfoUsuario(a.idUsuario); return <option key={a.idAcudiente} value={a.idAcudiente}>#{a.idAcudiente} - {uInfo.nombre} {uInfo.apellido}</option>; })}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Colegio</label>
+                        <input type="text" placeholder="Ej. Colegio Central" value={nuevoEstudianteColegio} onChange={(e) => setNuevoEstudianteColegio(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label>Grado</label>
+                        <input type="text" placeholder="Ej. 5° Primaria" value={nuevoEstudianteCurso} onChange={(e) => setNuevoEstudianteCurso(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label>Ruta Asignada</label>
+                        <select value={nuevoEstudianteRuta} onChange={(e) => setNuevoEstudianteRuta(e.target.value)}>
+                          <option value="">Sin ruta asignada</option>
+                          {rutas.map(r => (<option key={r.id} value={r.id}>{r.nombre}</option>))}
+                        </select>
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          {estudianteEditando ? <Pencil size={16} /> : <Plus size={16} />}
+                          <span>{estudianteEditando ? "Guardar Cambios" : "Guardar Estudiante"}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -653,7 +983,110 @@ function Admin() {
                     </table></div>
                   )}
                 </div>
+              <div className="section-header rutas-header">
+                <h3>Base de Acudientes Registrados</h3>
+                <button className="btn-crear-ruta" onClick={() => { setAcudienteEditando(null); limpiarFormularioAcudiente(); setShowModalAcudiente(true); }}>
+                  <Plus size={18} />
+                  <span>Crear Nuevo Acudiente</span>
+                </button>
               </div>
+
+              {/* Listado de Acudientes */}
+              <div className="crud-list">
+                {cargandoAcudientes ? (
+                  <div className="loading-state"><div className="loading-spinner"></div></div>
+                ) : acudientes.length === 0 ? (
+                  <div className="empty-state"><Contact size={40} /><p>No hay acudientes registrados</p></div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Acudiente</th>
+                          <th>Correo</th>
+                          <th>Teléfono</th>
+                          <th>Dirección</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {acudientes.map(acu => {
+                          const uInfo = obtenerInfoUsuario(acu.idUsuario);
+                          return (
+                            <tr key={acu.idAcudiente}>
+                              <td><strong>{uInfo.nombre} {uInfo.apellido}</strong></td>
+                              <td>{uInfo.correo}</td>
+                              <td>{uInfo.telefono || "-"}</td>
+                              <td>{acu.direccionResidencia || "-"}</td>
+                              <td>
+                                <div className="action-btns">
+                                  <button className="edit-row-btn" title="Editar acudiente" onClick={() => { iniciarEdicionAcudiente(acu); setShowModalAcudiente(true); }}>
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button className="delete-row-btn" title="Eliminar acudiente" onClick={() => eliminarAcudiente(acu.idAcudiente, acu.idUsuario)}>
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* MODAL: Crear / Editar Acudiente */}
+              {showModalAcudiente && (
+                <div className="modal-overlay" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
+                  <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>{acudienteEditando ? "Editar Acudiente" : "Crear Nuevo Acudiente"}</h4>
+                      <button className="modal-close-btn" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <form onSubmit={acudienteEditando ? actualizarAcudiente : agregarAcudiente}>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Nombre</label>
+                          <input type="text" placeholder="Ej. Juan" value={nuevoAcudienteNombre} onChange={(e) => setNuevoAcudienteNombre(e.target.value)} required />
+                        </div>
+                        <div className="form-group">
+                          <label>Apellido</label>
+                          <input type="text" placeholder="Ej. Pérez" value={nuevoAcudienteApellido} onChange={(e) => setNuevoAcudienteApellido(e.target.value)} required />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" placeholder="Ej. juan.perez@email.com" value={nuevoAcudienteCorreo} onChange={(e) => setNuevoAcudienteCorreo(e.target.value)} required />
+                      </div>
+                      <div className="form-group">
+                        <label>Contraseña {acudienteEditando && "(Opcional)"}</label>
+                        <input type="password" placeholder="Contraseña segura" value={nuevoAcudienteContrasena} onChange={(e) => setNuevoAcudienteContrasena(e.target.value)} required={!acudienteEditando} />
+                      </div>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Teléfono</label>
+                          <input type="tel" placeholder="Ej. 3001234567" value={nuevoAcudienteTelefono} onChange={(e) => setNuevoAcudienteTelefono(e.target.value)} />
+                        </div>
+                        <div className="form-group">
+                          <label>Dirección Residencia</label>
+                          <input type="text" placeholder="Ej. Calle 123 #45-67" value={nuevoAcudienteDireccion} onChange={(e) => setNuevoAcudienteDireccion(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          {acudienteEditando ? <Pencil size={16} /> : <Plus size={16} />}
+                          <span>{acudienteEditando ? "Guardar Cambios" : "Guardar Acudiente"}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

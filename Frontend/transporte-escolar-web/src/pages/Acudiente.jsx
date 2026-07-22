@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bus, LogOut, CheckCircle, Navigation, Clock, User, Heart, ToggleLeft, ToggleRight, MapPin } from "lucide-react";
+import { 
+  Bus, LogOut, CheckCircle, Navigation, Clock, User, Heart, 
+  ToggleLeft, ToggleRight, MapPin, Phone, MessageSquare, 
+  ShieldCheck, AlertTriangle, RefreshCw, Calendar, Info, ChevronRight, Award
+} from "lucide-react";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as signalR from "@microsoft/signalr";
@@ -59,21 +63,39 @@ function Acudiente() {
   // Inicializar Mapa
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([4.7000, -74.0700], 13);
+      mapInstanceRef.current = L.map(mapRef.current).setView([4.7110, -74.0721], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstanceRef.current);
       
       // Parada y Colegio Markers
-      L.circleMarker([miParada.lat, miParada.lng], { color: 'orange', radius: 8 }).addTo(mapInstanceRef.current).bindPopup("Tu Parada");
-      L.circleMarker([colegio.lat, colegio.lng], { color: 'purple', radius: 8 }).addTo(mapInstanceRef.current).bindPopup("Colegio");
+      L.circleMarker([miParada.lat, miParada.lng], { color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.8, radius: 9 })
+        .addTo(mapInstanceRef.current)
+        .bindPopup("<strong>Tu Parada</strong><br/>Recogida: ~07:10 AM");
+
+      L.circleMarker([colegio.lat, colegio.lng], { color: '#8b5cf6', fillColor: '#a78bfa', fillOpacity: 0.8, radius: 9 })
+        .addTo(mapInstanceRef.current)
+        .bindPopup("<strong>Colegio Destino</strong><br/>Llegada aprox: 07:40 AM");
 
       const busIcon = L.icon({
         iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
       markerBusRef.current = L.marker([4.7000, -74.0700], { icon: busIcon }).addTo(mapInstanceRef.current);
+      
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 250);
     }
   }, []);
+
+  // Forzar invalidateSize cuando cambia el estado o pestaña para evitar huecos en blanco del mapa
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 250);
+    }
+  }, [hijoEstado, noViajaHoy]);
 
   // Haversine Distance Calculator
   const calcularDistancia = (lat1, lon1, lat2, lon2) => {
@@ -149,13 +171,39 @@ function Acudiente() {
     }
   };
 
+  const centrarEnBus = () => {
+    if (mapInstanceRef.current && markerBusRef.current) {
+      mapInstanceRef.current.flyTo(markerBusRef.current.getLatLng(), 15);
+    }
+  };
+
+  const centrarEnParada = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([miParada.lat, miParada.lng], 15);
+    }
+  };
+
+  const centrarEnColegio = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([colegio.lat, colegio.lng], 15);
+    }
+  };
+
   const cerrarSesion = () => {
     localStorage.removeItem("usuario");
     navigate("/login", { replace: true });
   };
 
+  const getNombreAcudiente = () => {
+    if (usuarioData?.nombre) return usuarioData.nombre;
+    if (usuarioData?.Nombre) return usuarioData.Nombre;
+    if (usuarioData?.correo) return usuarioData.correo.split('@')[0];
+    return "Acudiente";
+  };
+
   return (
     <div className="acudiente-container">
+      {/* HEADER NAVBAR */}
       <header className="acudiente-header">
         <div className="header-brand">
           <Bus size={24} />
@@ -167,99 +215,291 @@ function Acudiente() {
         </button>
       </header>
 
+      {/* MAIN CONTAINER */}
       <main className="acudiente-main">
+        {/* BANNER BIENVENIDA */}
         <section className="welcome-banner">
           <div className="heart-icon-wrapper">
             <Heart size={24} fill="#ec4899" color="#ec4899" />
           </div>
-          <div>
-            <h2>Hola, {
-              usuarioData?.nombre 
-              ? usuarioData.nombre 
-              : usuarioData?.Nombre 
-                ? usuarioData.Nombre 
-                : usuarioData?.correo 
-                  ? usuarioData.correo.split('@')[0] 
-                  : "Acudiente"
-            }</h2>
-            <p>Monitorea la seguridad del transporte escolar de tus hijos hoy.</p>
+          <div className="welcome-text-content">
+            <h2>Hola, {getNombreAcudiente()}</h2>
+            <p>Monitorea la seguridad y ubicación en tiempo real del transporte de tu familiar hoy.</p>
+          </div>
+          <div className="welcome-badge-date">
+            <Calendar size={14} />
+            <span>{new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
           </div>
         </section>
 
-        {/* Alertas dinámicas */}
+        {/* ALERTAS DINÁMICAS */}
         {alertaParada && hijoEstado === "Pendiente" && (
-          <div style={{ backgroundColor: '#fef3c7', padding: '15px', borderRadius: '8px', marginBottom: '15px', borderLeft: '4px solid #f59e0b', color: '#92400e', fontWeight: 'bold' }}>
-            ⚠️ ¡El transporte escolar está a menos de 500 metros de tu parada! Sal a esperar a tu hijo(a).
+          <div className="dynamic-alert-banner alert-warning">
+            <AlertTriangle size={20} />
+            <span><strong>¡Atención!</strong> El transporte escolar está a menos de 500m de tu parada. Por favor sal a esperar a tu estudiante.</span>
           </div>
         )}
         {alertaColegio && hijoEstado === "Abordo" && (
-          <div style={{ backgroundColor: '#e0e7ff', padding: '15px', borderRadius: '8px', marginBottom: '15px', borderLeft: '4px solid #4f46e5', color: '#3730a3', fontWeight: 'bold' }}>
-            🏫 ¡El bus está a punto de llegar al colegio!
+          <div className="dynamic-alert-banner alert-info">
+            <Navigation size={20} />
+            <span><strong>¡Excelente!</strong> El bus se aproxima a la puerta del colegio destino.</span>
           </div>
         )}
 
-        <section className="hijo-card">
-          <div className="hijo-header">
-            <div className="hijo-profile">
-              <div className="hijo-avatar">
-                {estudianteData ? `${estudianteData.nombre.charAt(0)}${estudianteData.apellido.charAt(0)}`.toUpperCase() : <User size={24} />}
+        {/* DASHBOARD GRID 2 COLUMNAS */}
+        <div className="acudiente-dashboard-grid">
+          
+          {/* COLUMNA IZQUIERDA: TARJETA ESTUDIANTE + TIMELINE + NOVEDADES + CONDUCTOR + HISTORIAL */}
+          <div className="acudiente-left-column">
+            
+            {/* TARJETA PRINCIPAL DEL ESTUDIANTE */}
+            <section className="hijo-card">
+              <div className="hijo-header">
+                <div className="hijo-profile">
+                  <div className="hijo-avatar">
+                    {estudianteData ? `${estudianteData.nombre.charAt(0)}${estudianteData.apellido.charAt(0)}`.toUpperCase() : <User size={24} />}
+                  </div>
+                  <div>
+                    <h4>{estudianteData ? `${estudianteData.nombre} ${estudianteData.apellido}` : "Estudiante Asignado"}</h4>
+                    <p>{estudianteData?.cursoGrado ? `Grado: ${estudianteData.cursoGrado}` : "Grado Asignado"} • {estudianteData?.colegio || "Colegio Destino"}</p>
+                  </div>
+                </div>
+                <span className={`status-badge-parent ${hijoEstado}`}>
+                  {hijoEstado === "Pendiente" && "🟡 Esperando bus"}
+                  {hijoEstado === "Abordo" && "🟠 En el bus"}
+                  {hijoEstado === "Entregado" && "🟢 Entregado"}
+                  {hijoEstado === "NoViaja" && "⚪ No viaja hoy"}
+                </span>
               </div>
-              <div>
-                <h4>{estudianteData ? `${estudianteData.nombre} ${estudianteData.apellido}` : "Estudiante Asignado"}</h4>
-                <p>{estudianteData?.cursoGrado ? `Grado: ${estudianteData.cursoGrado}` : "Grado Asignado"} - {estudianteData?.colegio || "Colegio Destino"}</p>
+
+              <div className="hijo-details-grid">
+                <div className="detail-item">
+                  <Clock size={16} />
+                  <span>Hora Recogida: <strong>07:10 AM</strong></span>
+                </div>
+                <div className="detail-item">
+                  <Bus size={16} />
+                  <span>Ruta: <strong>Ruta 01 - Norte</strong></span>
+                </div>
+                <div className="detail-item">
+                  <User size={16} />
+                  <span>Conductor: <strong>Carlos Gómez</strong></span>
+                </div>
               </div>
-            </div>
-            <span className={`status-badge-parent ${hijoEstado}`}>
-              {hijoEstado === "Pendiente" && "🟡 Esperando bus"}
-              {hijoEstado === "Abordo" && "🟠 En el bus"}
-              {hijoEstado === "Entregado" && "🟢 Entregado"}
-              {hijoEstado === "NoViaja" && "⚪ No viaja hoy"}
-            </span>
+            </section>
+
+            {/* TIMELINE DE PROGRESO DEL RECORRIDO */}
+            {hijoEstado !== "NoViaja" && (
+              <section className="journey-timeline-card">
+                <div className="card-subtitle-wrapper">
+                  <Navigation size={18} />
+                  <h4>Progreso del Recorrido Hoy</h4>
+                </div>
+                <div className="timeline-steps-container">
+                  <div className={`timeline-step ${hijoEstado === "Pendiente" ? "active" : "completed"}`}>
+                    <div className="step-icon-circle">1</div>
+                    <div className="step-info">
+                      <span className="step-title">Esperando en Parada</span>
+                      <span className="step-time">07:10 AM (Programado)</span>
+                    </div>
+                  </div>
+
+                  <div className={`timeline-line ${(hijoEstado === "Abordo" || hijoEstado === "Entregado") ? "filled" : ""}`}></div>
+
+                  <div className={`timeline-step ${hijoEstado === "Abordo" ? "active" : hijoEstado === "Entregado" ? "completed" : "pending"}`}>
+                    <div className="step-icon-circle">2</div>
+                    <div className="step-info">
+                      <span className="step-title">Abordó la Ruta Escolar</span>
+                      <span className="step-time">{hijoEstado === "Abordo" || hijoEstado === "Entregado" ? "07:14 AM" : "Pendiente"}</span>
+                    </div>
+                  </div>
+
+                  <div className={`timeline-line ${hijoEstado === "Entregado" ? "filled" : ""}`}></div>
+
+                  <div className={`timeline-step ${hijoEstado === "Entregado" ? "completed" : "pending"}`}>
+                    <div className="step-icon-circle">3</div>
+                    <div className="step-info">
+                      <span className="step-title">Entregado en Colegio</span>
+                      <span className="step-time">{hijoEstado === "Entregado" ? "07:38 AM" : "Pendiente"}</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* REPORTE DE INASISTENCIA NOVEDAD */}
+            <section className="report-novedad-wrapper">
+              <div className="novedad-text">
+                <h5>¿Tu familiar no asistirá al colegio hoy?</h5>
+                <p>Notifícale al conductor en un clic para optimizar la parada y la ruta.</p>
+              </div>
+              <button className={`toggle-novedad-btn ${noViajaHoy ? "active" : ""}`} onClick={toggleNoViaja}>
+                {noViajaHoy ? <ToggleRight size={44} /> : <ToggleLeft size={44} />}
+                <span>{noViajaHoy ? "Inasistencia Reportada" : "Viajará Normal"}</span>
+              </button>
+            </section>
+
+            {/* DATOS DEL CONDUCTOR Y VEHÍCULO */}
+            <section className="driver-contact-card">
+              <div className="card-subtitle-wrapper">
+                <Bus size={18} />
+                <h4>Información de Conductor y Vehículo</h4>
+              </div>
+              <div className="driver-body">
+                <div className="driver-avatar-box">
+                  <User size={28} />
+                </div>
+                <div className="driver-details-text">
+                  <h5>Carlos Gómez</h5>
+                  <p>Licencia: <strong>C2 Vigente</strong> • Tel: <strong>+57 300 987 6543</strong></p>
+                  <p>Vehículo: <strong>Mercedes-Benz Sprinter</strong> (Placa: <span className="plate-tag">TOW-345</span>)</p>
+                </div>
+              </div>
+              <div className="driver-actions-row">
+                <a href="tel:+573009876543" className="contact-action-btn phone">
+                  <Phone size={15} />
+                  <span>Llamar Conductor</span>
+                </a>
+                <a href="https://wa.me/573009876543?text=Hola,%20soy%20el%20acudiente%20de%20la%20ruta" target="_blank" rel="noreferrer" className="contact-action-btn whatsapp">
+                  <MessageSquare size={15} />
+                  <span>Escribir Mensaje</span>
+                </a>
+              </div>
+            </section>
+
+            {/* HISTORIAL RECIENTE DE RECORRIDOS */}
+            <section className="activity-history-card">
+              <div className="card-subtitle-wrapper">
+                <Clock size={18} />
+                <h4>Registro Reciente de Rutas</h4>
+              </div>
+              <div className="history-list">
+                <div className="history-item">
+                  <div className="history-dot green"></div>
+                  <div className="history-text">
+                    <span className="history-event">Llegada al colegio confirmada</span>
+                    <span className="history-date">Ayer • 07:36 AM</span>
+                  </div>
+                  <span className="history-status green">Completado</span>
+                </div>
+                <div className="history-item">
+                  <div className="history-dot green"></div>
+                  <div className="history-text">
+                    <span className="history-event">Recogido en parada habitual</span>
+                    <span className="history-date">Ayer • 07:12 AM</span>
+                  </div>
+                  <span className="history-status green">Abordó</span>
+                </div>
+                <div className="history-item">
+                  <div className="history-dot blue"></div>
+                  <div className="history-text">
+                    <span className="history-event">Entrega en casa finalizada</span>
+                    <span className="history-date">18 Jul • 03:45 PM</span>
+                  </div>
+                  <span className="history-status blue">Entregado</span>
+                </div>
+              </div>
+            </section>
+
           </div>
 
-          <div className="hijo-details-grid">
-            <div className="detail-item">
-              <Clock size={16} />
-              <span>Hora Recogida Aprox: <strong>07:10 AM</strong></span>
-            </div>
-            <div className="detail-item">
-              <Bus size={16} />
-              <span>Ruta Asignada: <strong>Ruta Asignada</strong></span>
-            </div>
-            <div className="detail-item">
-              <User size={16} />
-              <span>Conductor: <strong>Conductor Asignado</strong></span>
-            </div>
-          </div>
+          {/* COLUMNA DERECHA: MAPA EN TIEMPO REAL + BOTONES DE ACCIÓN + AVISOS */}
+          <div className="acudiente-right-column">
+            
+            {/* MAPA RECORRIDO EN TIEMPO REAL */}
+            {hijoEstado !== "NoViaja" ? (
+              <section className="realtime-map-card">
+                <div className="map-card-header">
+                  <div className="map-title-pulse">
+                    <span className="pulse-dot"></span>
+                    <h4>Ubicación de la Ruta en Tiempo Real</h4>
+                  </div>
+                  <span className="map-route-name">Bus TOW-345</span>
+                </div>
 
-          <div className="report-novedad-wrapper">
-            <div className="novedad-text">
-              <h5>¿Tu hija no asistirá al colegio hoy?</h5>
-              <p>Avísale al conductor para que no espere en tu parada.</p>
-            </div>
-            <button className={`toggle-novedad-btn ${noViajaHoy ? "active" : ""}`} onClick={toggleNoViaja}>
-              {noViajaHoy ? <ToggleRight size={44} /> : <ToggleLeft size={44} />}
-              <span>{noViajaHoy ? "Reportado" : "Viajará Normal"}</span>
-            </button>
-          </div>
-        </section>
+                <div className="map-quick-actions">
+                  <button className="map-btn" onClick={centrarEnParada}>
+                    <MapPin size={14} color="#f59e0b" />
+                    <span>Mi Parada</span>
+                  </button>
+                  <button className="map-btn primary" onClick={centrarEnBus}>
+                    <Bus size={14} />
+                    <span>Centrar Bus</span>
+                  </button>
+                  <button className="map-btn" onClick={centrarEnColegio}>
+                    <Navigation size={14} color="#8b5cf6" />
+                    <span>Colegio</span>
+                  </button>
+                </div>
 
-        {hijoEstado !== "NoViaja" && (
-          <section className="realtime-map-card">
-            <div className="map-card-header">
-              <div className="map-title-pulse">
-                <span className="pulse-dot"></span>
-                <h4>Ubicación de la Ruta en Tiempo Real</h4>
+                <div ref={mapRef} className="acudiente-map-canvas"></div>
+
+                <div className="map-footer-stats">
+                  <div className="stat-pill">
+                    <span className="stat-label">Distancia Aprox:</span>
+                    <span className="stat-val">1.2 km</span>
+                  </div>
+                  <div className="stat-pill">
+                    <span className="stat-label">Tiempo Estimado:</span>
+                    <span className="stat-val">5 - 8 mins</span>
+                  </div>
+                  <div className="stat-pill live">
+                    <span className="live-dot"></span>
+                    <span>Señal GPS Activa</span>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <section className="no-travel-card">
+                <div className="no-travel-content">
+                  <Info size={40} color="#94a3b8" />
+                  <h4>Inasistencia Registrada Para Hoy</h4>
+                  <p>Has marcado que tu familiar no utilizará la ruta escolar el día de hoy. El monitoreo en vivo se mantendrá desactivado hasta el próximo ciclo.</p>
+                  <button className="reactivate-btn" onClick={toggleNoViaja}>
+                    <RefreshCw size={16} />
+                    <span>Reactivar Recorrido Hoy</span>
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* AVISOS Y SEGURIDAD */}
+            <section className="safety-info-card">
+              <div className="card-subtitle-wrapper">
+                <ShieldCheck size={18} color="#10b981" />
+                <h4>Garantía de Seguridad SchoolTrack</h4>
               </div>
-              <span className="map-route-name">Bus Asignado</span>
-            </div>
+              <div className="safety-body">
+                <p>Todas las unidades cuentan con rastreo Satelital GPS continuo, velocidad monitoreada por la central del colegio y validación de abordaje digital.</p>
+                <div className="safety-bullets">
+                  <div className="bullet-item">
+                    <CheckCircle size={14} color="#10b981" />
+                    <span>Notificaciones automáticas al teléfono</span>
+                  </div>
+                  <div className="bullet-item">
+                    <CheckCircle size={14} color="#10b981" />
+                    <span>Conductor con licencia y certificación vigente</span>
+                  </div>
+                  <div className="bullet-item">
+                    <CheckCircle size={14} color="#10b981" />
+                    <span>Monitoreo 24/7 de paradas autorizadas</span>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-            <div ref={mapRef} style={{ height: '400px', width: '100%', borderRadius: '0 0 10px 10px' }}></div>
-          </section>
-        )}
+          </div>
+
+        </div>
       </main>
+
+      {/* FOOTER ELEGANTE */}
+      <footer className="acudiente-footer">
+        <p>© 2026 SchoolTrack — Plataforma Integrada de Transporte Escolar Seguro</p>
+      </footer>
     </div>
   );
 }
 
 export default Acudiente;
+

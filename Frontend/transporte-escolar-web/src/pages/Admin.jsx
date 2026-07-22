@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Route as RouteIcon, 
-  Users, 
-  Bus, 
-  ShieldAlert, 
-  LogOut, 
-  Plus, 
-  Trash2, 
-  ClipboardList, 
+import {
+  LayoutDashboard,
+  Route as RouteIcon,
+  Users,
+  Bus,
+  ShieldAlert,
+  LogOut,
+  Plus,
+  Trash2,
+  ClipboardList,
   CheckCircle,
   Pencil,
   X,
@@ -293,8 +293,8 @@ function Admin() {
         })
       });
       if (!userRes.ok) {
-         const data = await userRes.json();
-         throw new Error(data.mensaje || "Error al crear usuario.");
+        const data = await userRes.json();
+        throw new Error(data.mensaje || "Error al crear usuario.");
       }
       const userData = await userRes.json();
 
@@ -411,8 +411,8 @@ function Admin() {
       if (conductorRes.ok) {
         await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor();
       } else {
-         const data = await conductorRes.json();
-         throw new Error(data.mensaje || "Error al crear conductor.");
+        const data = await conductorRes.json();
+        throw new Error(data.mensaje || "Error al crear conductor.");
       }
     } catch (err) {
       alert(err.message);
@@ -443,8 +443,8 @@ function Admin() {
       if (conductorRes.ok) {
         await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor();
       } else {
-         const data = await conductorRes.json();
-         throw new Error(data.mensaje || "Error al actualizar conductor.");
+        const data = await conductorRes.json();
+        throw new Error(data.mensaje || "Error al actualizar conductor.");
       }
     } catch (err) {
       alert(err.message);
@@ -468,7 +468,7 @@ function Admin() {
     setConductorEditando(cond);
     const uInfo = obtenerInfoUsuario(cond.idUsuario);
     setNuevoConductorNombre(uInfo.nombre || ""); setNuevoConductorApellido(uInfo.apellido || "");
-    setNuevoConductorCorreo(uInfo.correo || ""); setNuevoConductorContrasena(""); 
+    setNuevoConductorCorreo(uInfo.correo || ""); setNuevoConductorContrasena("");
     setNuevoConductorTelefono(uInfo.telefono || ""); setNuevoConductorLicencia(cond.numeroLicencia || "");
     setNuevoConductorCategoria(cond.categoriaLicencia || ""); setNuevoConductorVehiculo(cond.idVehiculo ? String(cond.idVehiculo) : "");
   };
@@ -483,7 +483,7 @@ function Admin() {
     const ruta = rutas.find(r => r.id === idRuta);
     return ruta ? ruta.nombre : "Sin asignar";
   };
-  
+
   const obtenerPlacaVehiculo = (idVehiculo) => {
     const veh = vehiculos.find(v => v.idVehiculo === idVehiculo);
     return veh ? veh.placa : "Sin asignar";
@@ -558,14 +558,14 @@ function Admin() {
 
           {/* TAB 2: GESTIONAR RUTAS */}
           {activeTab === "rutas" && (
-             <div className="tab-pane">
+            <div className="tab-pane">
               <div className="section-header"><h3>Registro de Rutas Escolares</h3></div>
               <div className="crud-container">
                 <form className="crud-form card-form" onSubmit={agregarRuta}>
                   <h4>Crear Nueva Ruta</h4>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevaRutaNombre} onChange={(e) => setNuevaRutaNombre(e.target.value)} required/></div>
-                  <div className="form-group"><label>Conductor</label><input type="text" value={nuevaRutaConductor} onChange={(e) => setNuevaRutaConductor(e.target.value)} required/></div>
-                  <div className="form-group"><label>Placa</label><input type="text" value={nuevaRutaPlaca} onChange={(e) => setNuevaRutaPlaca(e.target.value)}/></div>
+                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevaRutaNombre} onChange={(e) => setNuevaRutaNombre(e.target.value)} required /></div>
+                  <div className="form-group"><label>Conductor</label><input type="text" value={nuevaRutaConductor} onChange={(e) => setNuevaRutaConductor(e.target.value)} required /></div>
+                  <div className="form-group"><label>Placa</label><input type="text" value={nuevaRutaPlaca} onChange={(e) => setNuevaRutaPlaca(e.target.value)} /></div>
                   <button type="submit" className="add-btn"><Plus size={16} /><span>Guardar Ruta</span></button>
                 </form>
                 <div className="crud-list flex-grow"><div className="table-responsive"><table className="admin-table">
@@ -583,11 +583,11 @@ function Admin() {
               <div className="crud-container">
                 <form className={`crud-form card-form ${estudianteEditando ? "edit-mode" : ""}`} onSubmit={estudianteEditando ? actualizarEstudiante : agregarEstudiante}>
                   <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoEstudianteNombre} onChange={(e) => setNuevoEstudianteNombre(e.target.value)} required/></div>
-                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoEstudianteApellido} onChange={(e) => setNuevoEstudianteApellido(e.target.value)} required/></div>
-                  <div className="form-group"><label>Acudiente</label><select value={nuevoEstudianteAcudiente} onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)} required><option value="">Seleccionar...</option>{acudientes.map(a => { const uInfo = obtenerInfoUsuario(a.idUsuario); return <option key={a.idAcudiente} value={a.idAcudiente}>#{a.idAcudiente} - {uInfo.nombre} {uInfo.apellido}</option>;})}</select></div>
-                  <div className="form-group"><label>Colegio</label><input type="text" value={nuevoEstudianteColegio} onChange={(e) => setNuevoEstudianteColegio(e.target.value)}/></div>
-                  <div className="form-group"><label>Grado</label><input type="text" value={nuevoEstudianteCurso} onChange={(e) => setNuevoEstudianteCurso(e.target.value)}/></div>
+                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoEstudianteNombre} onChange={(e) => setNuevoEstudianteNombre(e.target.value)} required /></div>
+                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoEstudianteApellido} onChange={(e) => setNuevoEstudianteApellido(e.target.value)} required /></div>
+                  <div className="form-group"><label>Acudiente</label><select value={nuevoEstudianteAcudiente} onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)} required><option value="">Seleccionar...</option>{acudientes.map(a => { const uInfo = obtenerInfoUsuario(a.idUsuario); return <option key={a.idAcudiente} value={a.idAcudiente}>#{a.idAcudiente} - {uInfo.nombre} {uInfo.apellido}</option>; })}</select></div>
+                  <div className="form-group"><label>Colegio</label><input type="text" value={nuevoEstudianteColegio} onChange={(e) => setNuevoEstudianteColegio(e.target.value)} /></div>
+                  <div className="form-group"><label>Grado</label><input type="text" value={nuevoEstudianteCurso} onChange={(e) => setNuevoEstudianteCurso(e.target.value)} /></div>
                   <div className="form-group"><label>Ruta Asignada</label><select value={nuevoEstudianteRuta} onChange={(e) => setNuevoEstudianteRuta(e.target.value)}><option value="">Sin ruta asignada</option>{rutas.map(r => (<option key={r.id} value={r.id}>{r.nombre}</option>))}</select></div>
                   <button type="submit" className="add-btn"><Plus size={16} /><span>{estudianteEditando ? "Actualizar" : "Guardar"}</span></button>
                   {estudianteEditando && <button type="button" className="cancel-btn" onClick={limpiarFormularioEstudiante}><X size={16} /><span>Cancelar</span></button>}
@@ -598,17 +598,18 @@ function Admin() {
                     <div className="table-responsive"><table className="admin-table">
                       <thead><tr><th>Estudiante</th><th>Acudiente</th><th>Colegio</th><th>Ruta Asignada</th><th>Acciones</th></tr></thead>
                       <tbody>{estudiantes.map(est => {
-                          const acu = acudientes.find(a => a.idAcudiente === est.idAcudiente);
-                          const acNombre = acu ? `${obtenerInfoUsuario(acu.idUsuario).nombre} ${obtenerInfoUsuario(acu.idUsuario).apellido}` : "Sin asignar";
-                          return (
-                        <tr key={est.idEstudiante}>
-                          <td><strong>{est.nombre} {est.apellido}</strong></td>
-                          <td>{acNombre}</td>
-                          <td>{est.colegio || "-"}</td>
-                          <td><span className="route-tag">{est.idRuta ? obtenerNombreRuta(est.idRuta) : "-"}</span></td>
-                          <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionEstudiante(est)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarEstudiante(est.idEstudiante)}><Trash2 size={16} /></button></div></td>
-                        </tr>
-                      )})}</tbody>
+                        const acu = acudientes.find(a => a.idAcudiente === est.idAcudiente);
+                        const acNombre = acu ? `${obtenerInfoUsuario(acu.idUsuario).nombre} ${obtenerInfoUsuario(acu.idUsuario).apellido}` : "Sin asignar";
+                        return (
+                          <tr key={est.idEstudiante}>
+                            <td><strong>{est.nombre} {est.apellido}</strong></td>
+                            <td>{acNombre}</td>
+                            <td>{est.colegio || "-"}</td>
+                            <td><span className="route-tag">{est.idRuta ? obtenerNombreRuta(est.idRuta) : "-"}</span></td>
+                            <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionEstudiante(est)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarEstudiante(est.idEstudiante)}><Trash2 size={16} /></button></div></td>
+                          </tr>
+                        )
+                      })}</tbody>
                     </table></div>
                   )}
                 </div>
@@ -623,12 +624,12 @@ function Admin() {
               <div className="crud-container">
                 <form className={`crud-form card-form ${acudienteEditando ? "edit-mode" : ""}`} onSubmit={acudienteEditando ? actualizarAcudiente : agregarAcudiente}>
                   <h4>{acudienteEditando ? "Editar Acudiente" : "Crear Nuevo Acudiente"}</h4>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoAcudienteNombre} onChange={(e) => setNuevoAcudienteNombre(e.target.value)} required/></div>
-                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoAcudienteApellido} onChange={(e) => setNuevoAcudienteApellido(e.target.value)} required/></div>
-                  <div className="form-group"><label>Correo Electrónico</label><input type="email" value={nuevoAcudienteCorreo} onChange={(e) => setNuevoAcudienteCorreo(e.target.value)} required/></div>
-                  <div className="form-group"><label>Contraseña {acudienteEditando && "(Opcional)"}</label><input type="password" value={nuevoAcudienteContrasena} onChange={(e) => setNuevoAcudienteContrasena(e.target.value)} required={!acudienteEditando}/></div>
-                  <div className="form-group"><label>Teléfono</label><input type="tel" value={nuevoAcudienteTelefono} onChange={(e) => setNuevoAcudienteTelefono(e.target.value)}/></div>
-                  <div className="form-group"><label>Dirección Residencia</label><input type="text" value={nuevoAcudienteDireccion} onChange={(e) => setNuevoAcudienteDireccion(e.target.value)}/></div>
+                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoAcudienteNombre} onChange={(e) => setNuevoAcudienteNombre(e.target.value)} required /></div>
+                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoAcudienteApellido} onChange={(e) => setNuevoAcudienteApellido(e.target.value)} required /></div>
+                  <div className="form-group"><label>Correo Electrónico</label><input type="email" value={nuevoAcudienteCorreo} onChange={(e) => setNuevoAcudienteCorreo(e.target.value)} required /></div>
+                  <div className="form-group"><label>Contraseña {acudienteEditando && "(Opcional)"}</label><input type="password" value={nuevoAcudienteContrasena} onChange={(e) => setNuevoAcudienteContrasena(e.target.value)} required={!acudienteEditando} /></div>
+                  <div className="form-group"><label>Teléfono</label><input type="tel" value={nuevoAcudienteTelefono} onChange={(e) => setNuevoAcudienteTelefono(e.target.value)} /></div>
+                  <div className="form-group"><label>Dirección Residencia</label><input type="text" value={nuevoAcudienteDireccion} onChange={(e) => setNuevoAcudienteDireccion(e.target.value)} /></div>
                   <button type="submit" className="add-btn"><Plus size={16} /><span>{acudienteEditando ? "Actualizar" : "Guardar"}</span></button>
                   {acudienteEditando && <button type="button" className="cancel-btn" onClick={limpiarFormularioAcudiente}><X size={16} /><span>Cancelar</span></button>}
                 </form>
@@ -638,16 +639,17 @@ function Admin() {
                     <div className="table-responsive"><table className="admin-table">
                       <thead><tr><th>Acudiente</th><th>Correo</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr></thead>
                       <tbody>{acudientes.map(acu => {
-                          const uInfo = obtenerInfoUsuario(acu.idUsuario);
-                          return (
-                        <tr key={acu.idAcudiente}>
-                          <td><strong>{uInfo.nombre} {uInfo.apellido}</strong></td>
-                          <td>{uInfo.correo}</td>
-                          <td>{uInfo.telefono || "-"}</td>
-                          <td>{acu.direccionResidencia || "-"}</td>
-                          <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionAcudiente(acu)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarAcudiente(acu.idAcudiente, acu.idUsuario)}><Trash2 size={16} /></button></div></td>
-                        </tr>
-                      )})}</tbody>
+                        const uInfo = obtenerInfoUsuario(acu.idUsuario);
+                        return (
+                          <tr key={acu.idAcudiente}>
+                            <td><strong>{uInfo.nombre} {uInfo.apellido}</strong></td>
+                            <td>{uInfo.correo}</td>
+                            <td>{uInfo.telefono || "-"}</td>
+                            <td>{acu.direccionResidencia || "-"}</td>
+                            <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionAcudiente(acu)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarAcudiente(acu.idAcudiente, acu.idUsuario)}><Trash2 size={16} /></button></div></td>
+                          </tr>
+                        )
+                      })}</tbody>
                     </table></div>
                   )}
                 </div>
@@ -657,18 +659,18 @@ function Admin() {
 
           {/* TAB 5: CONDUCTORES */}
           {activeTab === "conductores" && (
-             <div className="tab-pane">
+            <div className="tab-pane">
               <div className="section-header"><h3>Gestión de Conductores</h3></div>
               <div className="crud-container">
                 <form className={`crud-form card-form ${conductorEditando ? "edit-mode" : ""}`} onSubmit={conductorEditando ? actualizarConductor : agregarConductor}>
                   <h4>{conductorEditando ? "Editar Conductor" : "Crear Nuevo Conductor"}</h4>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoConductorNombre} onChange={(e) => setNuevoConductorNombre(e.target.value)} required/></div>
-                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoConductorApellido} onChange={(e) => setNuevoConductorApellido(e.target.value)} required/></div>
-                  <div className="form-group"><label>Correo Electrónico</label><input type="email" value={nuevoConductorCorreo} onChange={(e) => setNuevoConductorCorreo(e.target.value)} required/></div>
-                  <div className="form-group"><label>Contraseña {conductorEditando && "(Opcional)"}</label><input type="password" value={nuevoConductorContrasena} onChange={(e) => setNuevoConductorContrasena(e.target.value)} required={!conductorEditando}/></div>
-                  <div className="form-group"><label>Teléfono</label><input type="tel" value={nuevoConductorTelefono} onChange={(e) => setNuevoConductorTelefono(e.target.value)}/></div>
-                  <div className="form-group"><label>Licencia</label><input type="text" value={nuevoConductorLicencia} onChange={(e) => setNuevoConductorLicencia(e.target.value)} required/></div>
-                  <div className="form-group"><label>Categoría (Ej. C1)</label><input type="text" value={nuevoConductorCategoria} onChange={(e) => setNuevoConductorCategoria(e.target.value)}/></div>
+                  <div className="form-group"><label>Nombre</label><input type="text" value={nuevoConductorNombre} onChange={(e) => setNuevoConductorNombre(e.target.value)} required /></div>
+                  <div className="form-group"><label>Apellido</label><input type="text" value={nuevoConductorApellido} onChange={(e) => setNuevoConductorApellido(e.target.value)} required /></div>
+                  <div className="form-group"><label>Correo Electrónico</label><input type="email" value={nuevoConductorCorreo} onChange={(e) => setNuevoConductorCorreo(e.target.value)} required /></div>
+                  <div className="form-group"><label>Contraseña {conductorEditando && "(Opcional)"}</label><input type="password" value={nuevoConductorContrasena} onChange={(e) => setNuevoConductorContrasena(e.target.value)} required={!conductorEditando} /></div>
+                  <div className="form-group"><label>Teléfono</label><input type="tel" value={nuevoConductorTelefono} onChange={(e) => setNuevoConductorTelefono(e.target.value)} /></div>
+                  <div className="form-group"><label>Licencia</label><input type="text" value={nuevoConductorLicencia} onChange={(e) => setNuevoConductorLicencia(e.target.value)} required /></div>
+                  <div className="form-group"><label>Categoría (Ej. C1)</label><input type="text" value={nuevoConductorCategoria} onChange={(e) => setNuevoConductorCategoria(e.target.value)} /></div>
                   <div className="form-group"><label>Vehículo Asignado</label><select value={nuevoConductorVehiculo} onChange={(e) => setNuevoConductorVehiculo(e.target.value)}><option value="">Sin asignar</option>{vehiculos.map(v => (<option key={v.idVehiculo} value={v.idVehiculo}>{v.placa}</option>))}</select></div>
                   <button type="submit" className="add-btn"><Plus size={16} /><span>{conductorEditando ? "Actualizar" : "Guardar"}</span></button>
                   {conductorEditando && <button type="button" className="cancel-btn" onClick={limpiarFormularioConductor}><X size={16} /><span>Cancelar</span></button>}
@@ -679,17 +681,18 @@ function Admin() {
                     <div className="table-responsive"><table className="admin-table">
                       <thead><tr><th>Conductor</th><th>Correo</th><th>Licencia</th><th>Cat</th><th>Vehículo</th><th>Acciones</th></tr></thead>
                       <tbody>{conductores.map(cond => {
-                          const uInfo = obtenerInfoUsuario(cond.idUsuario);
-                          return (
-                        <tr key={cond.idConductor}>
-                          <td><strong>{uInfo.nombre} {uInfo.apellido}</strong></td>
-                          <td>{uInfo.correo}</td>
-                          <td>{cond.numeroLicencia}</td>
-                          <td>{cond.categoriaLicencia || "-"}</td>
-                          <td><span className="badge-plate">{cond.idVehiculo ? obtenerPlacaVehiculo(cond.idVehiculo) : "Sin asignar"}</span></td>
-                          <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionConductor(cond)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarConductor(cond.idConductor, cond.idUsuario)}><Trash2 size={16} /></button></div></td>
-                        </tr>
-                      )})}</tbody>
+                        const uInfo = obtenerInfoUsuario(cond.idUsuario);
+                        return (
+                          <tr key={cond.idConductor}>
+                            <td><strong>{uInfo.nombre} {uInfo.apellido}</strong></td>
+                            <td>{uInfo.correo}</td>
+                            <td>{cond.numeroLicencia}</td>
+                            <td>{cond.categoriaLicencia || "-"}</td>
+                            <td><span className="badge-plate">{cond.idVehiculo ? obtenerPlacaVehiculo(cond.idVehiculo) : "Sin asignar"}</span></td>
+                            <td><div className="action-buttons"><button className="edit-row-btn" onClick={() => iniciarEdicionConductor(cond)}><Pencil size={16} /></button><button className="delete-row-btn" onClick={() => eliminarConductor(cond.idConductor, cond.idUsuario)}><Trash2 size={16} /></button></div></td>
+                          </tr>
+                        )
+                      })}</tbody>
                     </table></div>
                   )}
                 </div>

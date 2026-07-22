@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Bus, LogOut, CheckCircle, Navigation, Clock, User, Heart, 
-  ToggleLeft, ToggleRight, MapPin, Phone, MessageSquare, 
+import {
+  Bus, LogOut, CheckCircle, Navigation, Clock, User, Heart,
+  ToggleLeft, ToggleRight, MapPin, Phone, MessageSquare,
   ShieldCheck, AlertTriangle, RefreshCw, Calendar, Info, ChevronRight, Award
 } from "lucide-react";
 import L from 'leaflet';
@@ -21,7 +21,7 @@ function Acudiente() {
         const resAcu = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Acudiente");
         const acudientes = await resAcu.json();
         const miAcudiente = acudientes.find(a => a.idUsuario === userId);
-        
+
         if (miAcudiente) {
           const resEst = await fetch(`https://schooltrack.seminario1.eleueleo.com/api/Estudiante/acudiente/${miAcudiente.idAcudiente}`);
           const estudiantes = await resEst.json();
@@ -42,13 +42,13 @@ function Acudiente() {
         if (userObj.idUsuario) {
           fetchEstudiante(userObj.idUsuario);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   }, []);
-  
-  const [hijoEstado, setHijoEstado] = useState("Pendiente"); 
+
+  const [hijoEstado, setHijoEstado] = useState("Pendiente");
   const [noViajaHoy, setNoViajaHoy] = useState(false);
-  const [ubicacionBus, setUbicacionBus] = useState(null); 
+  const [ubicacionBus, setUbicacionBus] = useState(null);
   const [alertaParada, setAlertaParada] = useState(false);
   const [alertaColegio, setAlertaColegio] = useState(false);
 
@@ -65,7 +65,7 @@ function Acudiente() {
     if (mapRef.current && !mapInstanceRef.current) {
       mapInstanceRef.current = L.map(mapRef.current).setView([4.7110, -74.0721], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstanceRef.current);
-      
+
       // Parada y Colegio Markers
       L.circleMarker([miParada.lat, miParada.lng], { color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.8, radius: 9 })
         .addTo(mapInstanceRef.current)
@@ -81,7 +81,7 @@ function Acudiente() {
         iconAnchor: [18, 18]
       });
       markerBusRef.current = L.marker([4.7000, -74.0700], { icon: busIcon }).addTo(mapInstanceRef.current);
-      
+
       setTimeout(() => {
         mapInstanceRef.current?.invalidateSize();
       }, 250);
@@ -99,7 +99,7 @@ function Acudiente() {
 
   // Haversine Distance Calculator
   const calcularDistancia = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; 
+    const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a =
@@ -107,7 +107,7 @@ function Acudiente() {
       Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; 
+    return R * c;
   };
 
   useEffect(() => {
@@ -133,7 +133,7 @@ function Acudiente() {
       setUbicacionBus({ lat: latitud, lng: longitud });
 
       if (markerBusRef.current && mapInstanceRef.current) {
-         markerBusRef.current.setLatLng([latitud, longitud]);
+        markerBusRef.current.setLatLng([latitud, longitud]);
       }
 
       // Alerta Parada
@@ -248,10 +248,10 @@ function Acudiente() {
 
         {/* DASHBOARD GRID 2 COLUMNAS */}
         <div className="acudiente-dashboard-grid">
-          
+
           {/* COLUMNA IZQUIERDA: TARJETA ESTUDIANTE + TIMELINE + NOVEDADES + CONDUCTOR + HISTORIAL */}
           <div className="acudiente-left-column">
-            
+
             {/* TARJETA PRINCIPAL DEL ESTUDIANTE */}
             <section className="hijo-card">
               <div className="hijo-header">
@@ -405,7 +405,7 @@ function Acudiente() {
 
           {/* COLUMNA DERECHA: MAPA EN TIEMPO REAL + BOTONES DE ACCIÓN + AVISOS */}
           <div className="acudiente-right-column">
-            
+
             {/* MAPA RECORRIDO EN TIEMPO REAL */}
             {hijoEstado !== "NoViaja" ? (
               <section className="realtime-map-card">

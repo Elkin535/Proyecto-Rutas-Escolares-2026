@@ -46,6 +46,11 @@ function Admin() {
   const [conductorEditando, setConductorEditando] = useState(null);
   const [showModalConductor, setShowModalConductor] = useState(false);
 
+  // ── Vehículos state ──
+  const [cargandoVehiculos, setCargandoVehiculos] = useState(false);
+  const [vehiculoEditando, setVehiculoEditando] = useState(null);
+  const [showModalVehiculo, setShowModalVehiculo] = useState(false);
+
   // Modal de crear ruta
   const [showModalRuta, setShowModalRuta] = useState(false);
 
@@ -89,6 +94,13 @@ function Admin() {
   const [nuevoConductorLicencia, setNuevoConductorLicencia] = useState("");
   const [nuevoConductorCategoria, setNuevoConductorCategoria] = useState("");
   const [nuevoConductorVehiculo, setNuevoConductorVehiculo] = useState("");
+
+  // Variables para vehículo
+  const [nuevoVehiculoPlaca, setNuevoVehiculoPlaca] = useState("");
+  const [nuevoVehiculoModelo, setNuevoVehiculoModelo] = useState("");
+  const [nuevoVehiculoCapacidad, setNuevoVehiculoCapacidad] = useState("");
+  const [nuevoVehiculoSoat, setNuevoVehiculoSoat] = useState("");
+  const [nuevoVehiculoTecno, setNuevoVehiculoTecno] = useState("");
 
   useEffect(() => {
     cargarUsuarios();
@@ -316,6 +328,93 @@ function Admin() {
   const limpiarFormularioEstudiante = () => {
     setEstudianteEditando(null); setNuevoEstudianteNombre(""); setNuevoEstudianteApellido("");
     setNuevoEstudianteAcudiente(""); setNuevoEstudianteColegio(""); setNuevoEstudianteCurso(""); setNuevoEstudianteRuta("");
+  };
+
+  // ════════════════════════════════════════
+  //  VEHICULOS
+  // ════════════════════════════════════════
+
+  const limpiarFormularioVehiculo = () => {
+    setNuevoVehiculoPlaca("");
+    setNuevoVehiculoModelo("");
+    setNuevoVehiculoCapacidad("");
+    setNuevoVehiculoSoat("");
+    setNuevoVehiculoTecno("");
+  };
+
+  const iniciarEdicionVehiculo = (veh) => {
+    setVehiculoEditando(veh);
+    setNuevoVehiculoPlaca(veh.placa || "");
+    setNuevoVehiculoModelo(veh.modelo || "");
+    setNuevoVehiculoCapacidad(veh.capacidadPasajeros ? veh.capacidadPasajeros.toString() : "");
+    setNuevoVehiculoSoat(veh.soatVencimiento ? veh.soatVencimiento.split('T')[0] : "");
+    setNuevoVehiculoTecno(veh.tecnomecanicaVencimiento ? veh.tecnomecanicaVencimiento.split('T')[0] : "");
+    setShowModalVehiculo(true);
+  };
+
+  const agregarVehiculo = async (e) => {
+    e.preventDefault();
+    if (!nuevoVehiculoPlaca || !nuevoVehiculoCapacidad) return;
+    try {
+      const body = {
+        placa: nuevoVehiculoPlaca,
+        modelo: nuevoVehiculoModelo,
+        capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
+        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat + "T00:00:00" : null,
+        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno + "T00:00:00" : null
+      };
+      const response = await fetch(`${API_BASE}/Vehiculo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (response.ok) {
+        await cargarVehiculos();
+        limpiarFormularioVehiculo();
+        setShowModalVehiculo(false);
+      } else alert("Error al crear vehículo.");
+    } catch (err) {
+      alert("Error de red.");
+    }
+  };
+
+  const actualizarVehiculo = async (e) => {
+    e.preventDefault();
+    if (!nuevoVehiculoPlaca || !nuevoVehiculoCapacidad) return;
+    try {
+      const body = {
+        idVehiculo: vehiculoEditando.idVehiculo,
+        placa: nuevoVehiculoPlaca,
+        modelo: nuevoVehiculoModelo,
+        capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
+        soatVencimiento: nuevoVehiculoSoat ? nuevoVehiculoSoat + "T00:00:00" : null,
+        tecnomecanicaVencimiento: nuevoVehiculoTecno ? nuevoVehiculoTecno + "T00:00:00" : null
+      };
+      const response = await fetch(`${API_BASE}/Vehiculo/${vehiculoEditando.idVehiculo}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (response.ok) {
+        await cargarVehiculos();
+        limpiarFormularioVehiculo();
+        setShowModalVehiculo(false);
+      } else alert("Error al actualizar vehículo.");
+    } catch (err) {
+      alert("Error de red.");
+    }
+  };
+
+  const eliminarVehiculo = async (idVehiculo) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este vehículo?")) return;
+    try {
+      const response = await fetch(`${API_BASE}/Vehiculo/${idVehiculo}`, { method: "DELETE" });
+      if (response.ok) {
+        await cargarVehiculos();
+      } else alert("Error al eliminar vehículo. Verifica que no esté en uso.");
+    } catch (err) {
+      alert("Error de red.");
+    }
   };
 
   // ════════════════════════════════════════
@@ -601,6 +700,9 @@ function Admin() {
           </button>
           <button className={`menu-item ${activeTab === "conductores" ? "active" : ""}`} onClick={() => { setActiveTab("conductores"); setSidebarOpen(false); }}>
             <UserSquare2 size={20} /><span>Conductores</span>
+          </button>
+          <button className={`menu-item ${activeTab === "vehiculos" ? "active" : ""}`} onClick={() => { setActiveTab("vehiculos"); setSidebarOpen(false); }}>
+            <Bus size={20} /><span>Vehículos</span>
           </button>
         </nav>
 
@@ -1102,6 +1204,88 @@ function Admin() {
                         </tr>
                       )
                     })}</tbody>
+                  </table></div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: VEHICULOS */}
+          {activeTab === "vehiculos" && (
+            <div className="tab-pane">
+              <div className="section-header rutas-header">
+                <h3>Base de Vehículos</h3>
+                <button className="btn-crear-ruta" onClick={() => { setVehiculoEditando(null); limpiarFormularioVehiculo(); setShowModalVehiculo(true); }}>
+                  <Plus size={18} />
+                  <span>Añadir Vehículo</span>
+                </button>
+              </div>
+
+              {showModalVehiculo && (
+                <div className="modal-overlay" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
+                  <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h4>{vehiculoEditando ? "Editar Vehículo" : "Añadir Nuevo Vehículo"}</h4>
+                      <button className="modal-close-btn" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <form onSubmit={vehiculoEditando ? actualizarVehiculo : agregarVehiculo}>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Placa</label>
+                          <input type="text" placeholder="Ej. ABC-123" value={nuevoVehiculoPlaca} onChange={(e) => setNuevoVehiculoPlaca(e.target.value.toUpperCase())} required maxLength={15} />
+                        </div>
+                        <div className="form-group">
+                          <label>Capacidad Pasajeros</label>
+                          <input type="number" placeholder="Ej. 19" value={nuevoVehiculoCapacidad} onChange={(e) => setNuevoVehiculoCapacidad(e.target.value)} required min={1} />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Marca / Modelo</label>
+                        <input type="text" placeholder="Ej. Chevrolet 2020" value={nuevoVehiculoModelo} onChange={(e) => setNuevoVehiculoModelo(e.target.value)} />
+                      </div>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label>Vencimiento SOAT</label>
+                          <input type="date" value={nuevoVehiculoSoat} onChange={(e) => setNuevoVehiculoSoat(e.target.value)} />
+                        </div>
+                        <div className="form-group">
+                          <label>Vencimiento Tecnomecánica</label>
+                          <input type="date" value={nuevoVehiculoTecno} onChange={(e) => setNuevoVehiculoTecno(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn">
+                          {vehiculoEditando ? <Pencil size={16} /> : <Plus size={16} />}
+                          <span>{vehiculoEditando ? "Guardar Cambios" : "Guardar Vehículo"}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              <div className="crud-list" style={{ width: "100%", maxWidth: "100%" }}>
+                {cargandoVehiculos ? (<div className="loading-state"><div className="loading-spinner"></div></div>) : vehiculos.length === 0 ? (<div className="empty-state"><Bus size={40} /><p>No hay vehículos registrados</p></div>) : (
+                  <div className="table-responsive"><table className="admin-table">
+                    <thead><tr><th>Placa</th><th>Modelo</th><th>Capacidad</th><th>SOAT Venc.</th><th>Tecno Venc.</th><th>Acciones</th></tr></thead>
+                    <tbody>{vehiculos.map(veh => (
+                      <tr key={veh.idVehiculo}>
+                        <td><span className="badge-plate">{veh.placa}</span></td>
+                        <td>{veh.modelo || "-"}</td>
+                        <td>{veh.capacidadPasajeros} pas.</td>
+                        <td>{veh.soatVencimiento ? new Date(veh.soatVencimiento).toLocaleDateString() : "-"}</td>
+                        <td>{veh.tecnomecanicaVencimiento ? new Date(veh.tecnomecanicaVencimiento).toLocaleDateString() : "-"}</td>
+                        <td>
+                          <div className="action-buttons">
+                            <button className="edit-row-btn" onClick={() => iniciarEdicionVehiculo(veh)}><Pencil size={16} /></button>
+                            <button className="delete-row-btn" onClick={() => eliminarVehiculo(veh.idVehiculo)}><Trash2 size={16} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}</tbody>
                   </table></div>
                 )}
               </div>

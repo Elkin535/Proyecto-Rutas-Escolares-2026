@@ -39,16 +39,16 @@ function Conductor() {
     if (mapRef.current && !mapInstanceRef.current) {
       mapInstanceRef.current = L.map(mapRef.current).setView([4.7000, -74.0700], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstanceRef.current);
-      
+
       // Draw path
       const latlngs = paradasDemo.map(p => [p.lat, p.lng]);
-      L.polyline(latlngs, {color: 'blue'}).addTo(mapInstanceRef.current);
+      L.polyline(latlngs, { color: 'blue' }).addTo(mapInstanceRef.current);
 
       // Add stops
       paradasDemo.forEach(p => {
         L.circleMarker([p.lat, p.lng], { color: 'green', radius: 5 }).addTo(mapInstanceRef.current).bindPopup(p.nombre);
       });
-      
+
       // Add bus marker
       const busIcon = L.icon({
         iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', // Simple bus icon
@@ -64,9 +64,9 @@ function Conductor() {
       markerRef.current.setLatLng([lat, lng]);
       mapInstanceRef.current.panTo([lat, lng]);
     }
-    
+
     // In a real scenario, this would use the real idViaje created via POST /api/Historial/iniciar
-    const currentIdViaje = 123; 
+    const currentIdViaje = 123;
 
     try {
       await fetch(`http://localhost:5150/api/Historial/${currentIdViaje}/gps`, {
@@ -102,28 +102,28 @@ function Conductor() {
   const alternarSimulacion = () => {
     const nuevoEstado = !simulacionActiva;
     setSimulacionActiva(nuevoEstado);
-    
+
     if (nuevoEstado && viajeActivo) {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
-      
+
       let index = 0;
       let step = 0;
       const numSteps = 20; // steps between stops
-      
+
       simIntervalRef.current = setInterval(() => {
         if (index >= paradasDemo.length - 1) {
           clearInterval(simIntervalRef.current);
           return;
         }
-        
+
         const currentStop = paradasDemo[index];
         const nextStop = paradasDemo[index + 1];
-        
+
         const lat = currentStop.lat + (nextStop.lat - currentStop.lat) * (step / numSteps);
         const lng = currentStop.lng + (nextStop.lng - currentStop.lng) * (step / numSteps);
-        
+
         enviarUbicacionGPS(lat, lng);
-        
+
         step++;
         if (step > numSteps) {
           step = 0;
@@ -133,11 +133,11 @@ function Conductor() {
     } else {
       clearInterval(simIntervalRef.current);
       if (viajeActivo && navigator.geolocation) {
-         watchIdRef.current = navigator.geolocation.watchPosition(
-            (pos) => enviarUbicacionGPS(pos.coords.latitude, pos.coords.longitude),
-            (err) => console.error(err),
-            { enableHighAccuracy: true }
-         );
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          (pos) => enviarUbicacionGPS(pos.coords.latitude, pos.coords.longitude),
+          (err) => console.error(err),
+          { enableHighAccuracy: true }
+        );
       }
     }
   };
@@ -197,16 +197,16 @@ function Conductor() {
 
         {/* MAPA DE RUTAS */}
         <section className="map-section">
-            <div ref={mapRef} className="conductor-map-canvas"></div>
-            {viajeActivo && (
-                <div className="gps-active-bar">
-                    <span className="gps-status-label">Transmisión GPS Activa</span>
-                    <label className="gps-sim-toggle">
-                        <input type="checkbox" checked={simulacionActiva} onChange={alternarSimulacion} />
-                        Simular Movimiento (Para pruebas en PC)
-                    </label>
-                </div>
-            )}
+          <div ref={mapRef} className="conductor-map-canvas"></div>
+          {viajeActivo && (
+            <div className="gps-active-bar">
+              <span className="gps-status-label">Transmisión GPS Activa</span>
+              <label className="gps-sim-toggle">
+                <input type="checkbox" checked={simulacionActiva} onChange={alternarSimulacion} />
+                Simular Movimiento (Para pruebas en PC)
+              </label>
+            </div>
+          )}
         </section>
 
         {/* Controles de Viaje */}
@@ -258,15 +258,15 @@ function Conductor() {
                   <div className="attendance-actions">
                     {est.estado === "Pendiente" ? (
                       <>
-                        <button 
-                          className="action-btn absent" 
+                        <button
+                          className="action-btn absent"
                           onClick={() => marcarAsistencia(est.id, "Ausente")}
                           title="Reportar Ausente"
                         >
                           <X size={18} />
                         </button>
-                        <button 
-                          className="action-btn board" 
+                        <button
+                          className="action-btn board"
                           onClick={() => marcarAsistencia(est.id, "Abordó")}
                           title="Marcar Abordó"
                         >
@@ -276,7 +276,7 @@ function Conductor() {
                     ) : est.estado === "Abordó" ? (
                       <div className="boarded-actions">
                         <span className="badge onboard">A Bordo</span>
-                        <button 
+                        <button
                           className="action-btn deliver"
                           onClick={() => marcarAsistencia(est.id, "Entregado")}
                         >

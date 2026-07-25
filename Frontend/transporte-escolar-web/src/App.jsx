@@ -16,7 +16,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/403" element={<Error403 />} />
         <Route
-          path="/admin"
+          path="/admin/:tab?"
           element={
             <ProtectedRoute allowedRoles={["admin", "administrador"]}>
               <Admin />

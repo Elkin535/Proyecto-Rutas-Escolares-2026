@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   LayoutDashboard,
   Route as RouteIcon,
@@ -21,7 +21,8 @@ const API_BASE = "https://schooltrack.seminario1.eleueleo.com/api";
 
 function Admin() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("resumen");
+  const { tab } = useParams();
+  const activeTab = tab || "resumen";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rutas, setRutas] = useState([]);
 
@@ -103,13 +104,36 @@ function Admin() {
   const [nuevoVehiculoTecno, setNuevoVehiculoTecno] = useState("");
 
   useEffect(() => {
-    cargarUsuarios();
-    cargarVehiculos();
-    cargarRutas();
-    cargarEstudiantes();
-    cargarAcudientes();
-    cargarConductores();
-  }, []);
+    switch (activeTab) {
+      case "resumen":
+        cargarUsuarios();
+        cargarVehiculos();
+        cargarRutas();
+        cargarEstudiantes();
+        cargarAcudientes();
+        cargarConductores();
+        break;
+      case "rutas":
+        cargarRutas();
+        break;
+      case "estudiantes":
+        cargarEstudiantes();
+        break;
+      case "acudientes":
+        cargarUsuarios(); // A veces necesitan usuarios
+        cargarAcudientes();
+        break;
+      case "conductores":
+        cargarUsuarios(); // Necesitan usuarios
+        cargarConductores();
+        break;
+      case "vehiculos":
+        cargarVehiculos();
+        break;
+      default:
+        break;
+    }
+  }, [activeTab]);
 
   // ════════════════════════════════════════
   //  CARGAS GENERALES
@@ -687,22 +711,22 @@ function Admin() {
         </div>
 
         <nav className="sidebar-menu">
-          <button className={`menu-item ${activeTab === "resumen" ? "active" : ""}`} onClick={() => { setActiveTab("resumen"); setSidebarOpen(false); }}>
+          <button className={`menu-item ${activeTab === "resumen" ? "active" : ""}`} onClick={() => { navigate("/admin/resumen"); setSidebarOpen(false); }}>
             <LayoutDashboard size={20} /><span>Resumen</span>
           </button>
-          <button className={`menu-item ${activeTab === "rutas" ? "active" : ""}`} onClick={() => { setActiveTab("rutas"); setSidebarOpen(false); }}>
+          <button className={`menu-item ${activeTab === "rutas" ? "active" : ""}`} onClick={() => { navigate("/admin/rutas"); setSidebarOpen(false); }}>
             <RouteIcon size={20} /><span>Gestionar Rutas</span>
           </button>
-          <button className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`} onClick={() => { setActiveTab("estudiantes"); setSidebarOpen(false); }}>
+          <button className={`menu-item ${activeTab === "estudiantes" ? "active" : ""}`} onClick={() => { navigate("/admin/estudiantes"); setSidebarOpen(false); }}>
             <Users size={20} /><span>Estudiantes</span>
           </button>
-          <button className={`menu-item ${activeTab === "acudientes" ? "active" : ""}`} onClick={() => { setActiveTab("acudientes"); setSidebarOpen(false); }}>
+          <button className={`menu-item ${activeTab === "acudientes" ? "active" : ""}`} onClick={() => { navigate("/admin/acudientes"); setSidebarOpen(false); }}>
             <Contact size={20} /><span>Acudientes</span>
           </button>
-          <button className={`menu-item ${activeTab === "conductores" ? "active" : ""}`} onClick={() => { setActiveTab("conductores"); setSidebarOpen(false); }}>
+          <button className={`menu-item ${activeTab === "conductores" ? "active" : ""}`} onClick={() => { navigate("/admin/conductores"); setSidebarOpen(false); }}>
             <UserSquare2 size={20} /><span>Conductores</span>
           </button>
-          <button className={`menu-item ${activeTab === "vehiculos" ? "active" : ""}`} onClick={() => { setActiveTab("vehiculos"); setSidebarOpen(false); }}>
+          <button className={`menu-item ${activeTab === "vehiculos" ? "active" : ""}`} onClick={() => { navigate("/admin/vehiculos"); setSidebarOpen(false); }}>
             <Bus size={20} /><span>Vehículos</span>
           </button>
         </nav>

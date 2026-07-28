@@ -22,8 +22,37 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RutaDTO>>> GetRutas()
+        public async Task<IActionResult> GetRutas(
+            [FromQuery] int? pagina,
+            [FromQuery] int? limite,
+            [FromQuery] string? busqueda)
         {
+            if (pagina.HasValue || limite.HasValue || !string.IsNullOrWhiteSpace(busqueda))
+            {
+                int pageNum = pagina.HasValue && pagina.Value > 0 ? pagina.Value : 1;
+                int pageSize = limite.HasValue && limite.Value > 0 ? limite.Value : 10;
+
+                var (items, totalCount) = await _rutaRepository.ObtenerPaginadoAsync(pageNum, pageSize, busqueda);
+
+                var itemsDTO = items.Select(r => new RutaDTO
+                {
+                    IdRuta = r.IdRuta,
+                    NombreRuta = r.NombreRuta,
+                    Descripcion = r.Descripcion,
+                    Estado = r.Estado
+                });
+
+                var resultado = new ResultadoPaginadoDTO<RutaDTO>
+                {
+                    Datos = itemsDTO,
+                    TotalRegistros = totalCount,
+                    PaginaActual = pageNum,
+                    LimitePorPagina = pageSize
+                };
+
+                return Ok(resultado);
+            }
+
             var rutas = await _rutaRepository.ObtenerTodasAsync();
             var rutasDTO = rutas.Select(r => new RutaDTO
             {

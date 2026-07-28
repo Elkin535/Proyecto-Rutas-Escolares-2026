@@ -22,8 +22,36 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AcudienteDTO>>> GetAcudientes()
+        public async Task<IActionResult> GetAcudientes(
+            [FromQuery] int? pagina,
+            [FromQuery] int? limite,
+            [FromQuery] string? busqueda)
         {
+            if (pagina.HasValue || limite.HasValue || !string.IsNullOrWhiteSpace(busqueda))
+            {
+                int pageNum = pagina.HasValue && pagina.Value > 0 ? pagina.Value : 1;
+                int pageSize = limite.HasValue && limite.Value > 0 ? limite.Value : 10;
+
+                var (items, totalCount) = await _acudienteRepository.ObtenerPaginadoAsync(pageNum, pageSize, busqueda);
+
+                var itemsDTO = items.Select(a => new AcudienteDTO
+                {
+                    IdAcudiente = a.IdAcudiente,
+                    IdUsuario = a.IdUsuario,
+                    DireccionResidencia = a.DireccionResidencia
+                });
+
+                var resultado = new ResultadoPaginadoDTO<AcudienteDTO>
+                {
+                    Datos = itemsDTO,
+                    TotalRegistros = totalCount,
+                    PaginaActual = pageNum,
+                    LimitePorPagina = pageSize
+                };
+
+                return Ok(resultado);
+            }
+
             var acudientes = await _acudienteRepository.ObtenerTodosAsync();
             var acudientesDTO = acudientes.Select(a => new AcudienteDTO
             {

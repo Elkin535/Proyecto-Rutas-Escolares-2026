@@ -18,5 +18,10 @@ namespace TransporteEscolarAPI.Service
         /// Determina si una cadena dada ya representa un hash BCrypt válido.
         /// </summary>
         bool IsPasswordHashed(string storedPassword);
+
+        /// <summary>
+        /// Genera un Token JWT firmado conteniendo los claims del usuario (ID, Correo, Nombre, Rol).
+        /// </summary>
+        string GenerateJwtToken(Usuario usuario, string roleName);
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
@@ -11,6 +12,7 @@ namespace TransporteEscolarAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioRepository _usuarioRepository;
@@ -25,6 +27,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<IEnumerable<UsuarioDTO>>> GetUsuarios()
         {
             var usuarios = await _usuarioRepository.ObtenerTodosAsync();
@@ -63,6 +66,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<UsuarioDTO>> PostUsuario(UsuarioCreateDTO usuarioCreateDTO)
         {
             var usuario = new Usuario
@@ -93,6 +97,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<ActionResult<LoginResponseDTO>> Login(LoginRequestDTO loginRequest)
         {
             var usuario = await _usuarioRepository.ObtenerPorCorreoAsync(loginRequest.Correo);
@@ -126,6 +131,8 @@ namespace TransporteEscolarAPI.Controllers
             var rol = await _rolRepository.ObtenerPorIdAsync(usuario.IdRol);
             var nombreRol = rol?.NombreRol ?? "Usuario";
 
+            var token = _authService.GenerateJwtToken(usuario, nombreRol);
+
             var response = new LoginResponseDTO
             {
                 IdUsuario = usuario.IdUsuario,
@@ -133,13 +140,15 @@ namespace TransporteEscolarAPI.Controllers
                 Nombre = usuario.Nombre,
                 Apellido = usuario.Apellido,
                 Correo = usuario.Correo,
-                NombreRol = nombreRol
+                NombreRol = nombreRol,
+                Token = token
             };
 
             return Ok(response);
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<UsuarioDTO>> PutUsuario(int id, UsuarioUpdateDTO usuarioUpdateDTO)
         {
             var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
@@ -172,6 +181,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
             var eliminado = await _usuarioRepository.EliminarAsync(id);

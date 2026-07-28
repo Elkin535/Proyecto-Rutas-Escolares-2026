@@ -1,20 +1,22 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using TransporteEscolarAPI.Data;        // Asegura que apunte a tu carpeta Data
-using TransporteEscolarAPI.Interfaces;  // Asegura que apunte a tus Interfaces
-using TransporteEscolarAPI.Repositories;// Asegura que apunte a tus Repositorios
+using Microsoft.IdentityModel.Tokens;
+using TransporteEscolarAPI.Data;
+using TransporteEscolarAPI.Interfaces;
+using TransporteEscolarAPI.Repositories;
+using TransporteEscolarAPI.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 // =========================================================================
-// 1. CONEXIÓN A POSTGRESQL (Añadido aquí)
+// 1. CONEXIÓN A POSTGRESQL
 // =========================================================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQLConnection")));
 
 // =========================================================================
-// 2. REGISTRO DE REPOSITORIOS (Añadido aquí)
+// 2. REGISTRO DE REPOSITORIOS Y SERVICIOS
 // =========================================================================
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IRolRepository, RolRepository>();
@@ -27,22 +29,49 @@ builder.Services.AddScoped<IRutaRepository, RutaRepository>();
 builder.Services.AddScoped<IParadaRepository, ParadaRepository>();
 builder.Services.AddScoped<IAsistenciaViajeRepository, AsistenciaViajeRepository>();
 
-builder.Services.AddScoped<TransporteEscolarAPI.Service.IAuthService, TransporteEscolarAPI.Service.AuthService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// =========================================================================
+// 3. AUTENTICACIÓN JWT
+// =========================================================================
+var jwtKey = builder.Configuration["JwtSettings:Key"] 
+    ?? throw new InvalidOperationException("JwtSettings:Key no está configurada en appsettings.json");
+var jwtIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "SchoolTrackAPI";
+var jwtAudience = builder.Configuration["JwtSettings:Audience"] ?? "SchoolTrackWeb";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+});
 
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // URLs de Vite y CRA típicos
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://schooltrack.seminario1.eleueleo.com")
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Requerido para SignalR WebSockets
+              .AllowCredentials();
     });
 });
 
@@ -68,17 +97,15 @@ if (args.Contains("--ef-database-update"))
     }
 }
 
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-    app.MapOpenApi();
-    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "v1")); // <-- AÑADE ESTA LÍNEA
-//}
+app.MapOpenApi();
+app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
 
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
+// ⚠️ Usar Autenticación ANTES de Autorización
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

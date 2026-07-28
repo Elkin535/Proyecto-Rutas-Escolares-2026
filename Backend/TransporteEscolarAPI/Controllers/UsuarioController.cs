@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
 using TransporteEscolarAPI.Models;
+using TransporteEscolarAPI.Service;
 
 namespace TransporteEscolarAPI.Controllers
 {
@@ -14,11 +15,13 @@ namespace TransporteEscolarAPI.Controllers
     {
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IRolRepository _rolRepository;
+        private readonly IAuthService _authService;
 
-        public UsuarioController(IUsuarioRepository usuarioRepository, IRolRepository rolRepository)
+        public UsuarioController(IUsuarioRepository usuarioRepository, IRolRepository rolRepository, IAuthService authService)
         {
             _usuarioRepository = usuarioRepository;
             _rolRepository = rolRepository;
+            _authService = authService;
         }
 
         [HttpGet]
@@ -68,7 +71,7 @@ namespace TransporteEscolarAPI.Controllers
                 Nombre = usuarioCreateDTO.Nombre,
                 Apellido = usuarioCreateDTO.Apellido,
                 Correo = usuarioCreateDTO.Correo,
-                Contrasena = usuarioCreateDTO.Contrasena, // Nota: Idealmente aplicar Hash aquí en el futuro
+                Contrasena = _authService.HashPassword(usuarioCreateDTO.Contrasena),
                 Telefono = usuarioCreateDTO.Telefono,
                 FechaCreacion = DateTime.UtcNow
             };
@@ -93,7 +96,29 @@ namespace TransporteEscolarAPI.Controllers
         public async Task<ActionResult<LoginResponseDTO>> Login(LoginRequestDTO loginRequest)
         {
             var usuario = await _usuarioRepository.ObtenerPorCorreoAsync(loginRequest.Correo);
-            if (usuario == null || usuario.Contrasena != loginRequest.Contrasena)
+            if (usuario == null)
+            {
+                return Unauthorized(new { mensaje = "Correo o contraseña incorrectos" });
+            }
+
+            bool esValido = false;
+
+            if (_authService.IsPasswordHashed(usuario.Contrasena))
+            {
+                esValido = _authService.VerifyPassword(loginRequest.Contrasena, usuario.Contrasena);
+            }
+            else
+            {
+                // Migración transparente si la contraseña antigua estaba en texto plano
+                if (usuario.Contrasena == loginRequest.Contrasena)
+                {
+                    esValido = true;
+                    usuario.Contrasena = _authService.HashPassword(loginRequest.Contrasena);
+                    await _usuarioRepository.ActualizarAsync(usuario);
+                }
+            }
+
+            if (!esValido)
             {
                 return Unauthorized(new { mensaje = "Correo o contraseña incorrectos" });
             }
@@ -125,7 +150,7 @@ namespace TransporteEscolarAPI.Controllers
             usuario.Correo = usuarioUpdateDTO.Correo;
             if (!string.IsNullOrEmpty(usuarioUpdateDTO.Contrasena))
             {
-                usuario.Contrasena = usuarioUpdateDTO.Contrasena;
+                usuario.Contrasena = _authService.HashPassword(usuarioUpdateDTO.Contrasena);
             }
             usuario.Telefono = usuarioUpdateDTO.Telefono;
 

@@ -27,6 +27,8 @@ builder.Services.AddScoped<IRutaRepository, RutaRepository>();
 builder.Services.AddScoped<IParadaRepository, ParadaRepository>();
 builder.Services.AddScoped<IAsistenciaViajeRepository, AsistenciaViajeRepository>();
 
+builder.Services.AddScoped<TransporteEscolarAPI.Service.IAuthService, TransporteEscolarAPI.Service.AuthService>();
+
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers();

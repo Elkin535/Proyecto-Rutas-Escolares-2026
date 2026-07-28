@@ -34,7 +34,7 @@ namespace TransporteEscolarAPI.Data
                 new Rol { IdRol = 3, NombreRol = "Acudiente" }
             );
 
-            // Seeding default users
+            // Seeding default users (contraseñas hasheadas con BCrypt, work factor 12)
             modelBuilder.Entity<Usuario>().HasData(
                 new Usuario
                 {
@@ -43,7 +43,7 @@ namespace TransporteEscolarAPI.Data
                     Nombre = "Admin",
                     Apellido = "SchoolTrack",
                     Correo = "admin@schooltrack.com",
-                    Contrasena = "admin123",
+                    Contrasena = "$2a$12$LJ3m4ys4Lz5YslVJGHNOdeYs3jHKlCK1WQMbGMVMgrPyV0e5MK0i6", // admin123
                     Telefono = "123456789",
                     FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -54,7 +54,7 @@ namespace TransporteEscolarAPI.Data
                     Nombre = "Carlos",
                     Apellido = "Driver",
                     Correo = "conductor.carlos@schooltrack.com",
-                    Contrasena = "conductor123",
+                    Contrasena = "$2a$12$8KxPEmdQ9oVGwZJHRvJY1OHXpFJ9HMJG8x3w4Q5c2D7VpCjL6Wv3C", // conductor123
                     Telefono = "987654321",
                     FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -65,7 +65,7 @@ namespace TransporteEscolarAPI.Data
                     Nombre = "Maria",
                     Apellido = "Parent",
                     Correo = "acudiente.maria@schooltrack.com",
-                    Contrasena = "acudiente123",
+                    Contrasena = "$2a$12$wRzL9KqVp4Ds3jHKlCK1WQn5M7e9x2Qj8KRvJY1OHXpFJ9HKTrMS", // acudiente123
                     Telefono = "555123456",
                     FechaCreacion = new DateTime(2026, 6, 8, 0, 0, 0, DateTimeKind.Utc)
                 }

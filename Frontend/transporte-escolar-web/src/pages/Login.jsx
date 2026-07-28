@@ -40,8 +40,9 @@ function Login() {
 
       const data = await response.json();
       localStorage.setItem("usuario", JSON.stringify(data));
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      const jwtToken = data.token || data.Token;
+      if (jwtToken && jwtToken !== "undefined" && jwtToken !== "null") {
+        localStorage.setItem("token", jwtToken);
       }
 
       const roleLower = data.nombreRol.toLowerCase();

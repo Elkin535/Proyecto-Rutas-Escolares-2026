@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
@@ -10,6 +11,7 @@ namespace TransporteEscolarAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class EstudianteController : ControllerBase
     {
         private readonly IEstudianteRepository _estudianteRepository;
@@ -150,6 +152,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteEstudiante(int id)
         {
             var eliminado = await _estudianteRepository.EliminarAsync(id);

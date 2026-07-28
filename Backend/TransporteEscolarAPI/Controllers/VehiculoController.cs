@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
@@ -10,6 +11,7 @@ namespace TransporteEscolarAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class VehiculoController : ControllerBase
     {
         private readonly IVehiculoRepository _vehiculoRepository;
@@ -86,6 +88,16 @@ namespace TransporteEscolarAPI.Controllers
             };
 
             return CreatedAtAction(nameof(GetVehiculo), new { id = vehiculoDTO.IdVehiculo }, vehiculoDTO);
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> DeleteVehiculo(int id)
+        {
+            var eliminado = await _vehiculoRepository.EliminarAsync(id);
+            if (!eliminado) return NotFound(new { mensaje = "Vehículo no encontrado" });
+
+            return Ok(new { mensaje = "Vehículo eliminado con éxito" });
         }
     }
 }

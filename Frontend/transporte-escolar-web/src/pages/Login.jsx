@@ -40,6 +40,9 @@ function Login() {
 
       const data = await response.json();
       localStorage.setItem("usuario", JSON.stringify(data));
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
 
       const roleLower = data.nombreRol.toLowerCase();
       if (roleLower.includes("admin") || roleLower.includes("administrador")) {

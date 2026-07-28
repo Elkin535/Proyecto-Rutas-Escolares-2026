@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bus, User, LogOut, Check, X, Navigation, Award, AlertCircle, ClipboardList } from "lucide-react";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { fetchAuth } from "../services/api";
 import "./Conductor.css";
 
 function Conductor() {
@@ -69,7 +70,7 @@ function Conductor() {
     const currentIdViaje = 123;
 
     try {
-      await fetch(`http://localhost:5150/api/Historial/${currentIdViaje}/gps`, {
+      await fetchAuth(`Historial/${currentIdViaje}/gps`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

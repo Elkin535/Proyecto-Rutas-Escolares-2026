@@ -18,6 +18,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import ChatbotIA from "../components/ChatbotIA";
 import "./Home.css";
 
 function Home() {
@@ -253,6 +254,9 @@ function Home() {
         <p>SchoolTrack © 2026</p>
         <p>Proyecto de Seminario - Ingeniería de Sistemas</p>
       </footer>
+
+      {/* ASISTENTE VIRTUAL DE IA FLOTANTE */}
+      <ChatbotIA />
     </div>
   );
 }

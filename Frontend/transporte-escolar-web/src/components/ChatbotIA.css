@@ -272,36 +272,79 @@
   40% { transform: scale(1); opacity: 1; }
 }
 
-/* CHIPS */
+/* CHIPS CON NAVEGACIÓN Y SCROLLBAR CIAN */
+.chips-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 17, 32, 0.6);
+  padding: 6px 4px;
+}
+
+.btn-scroll-chip {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.btn-scroll-chip:hover {
+  background: #00d4ff;
+  color: #081120;
+}
+
 .chatbot-chips {
-  padding: 8px 16px;
+  padding: 6px 8px;
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  scrollbar-width: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+  scrollbar-color: #00d4ff rgba(15, 23, 42, 0.6);
+  scroll-behavior: smooth;
+  flex: 1;
 }
 
 .chatbot-chips::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+
+.chatbot-chips::-webkit-scrollbar-thumb {
+  background: #00d4ff;
+  border-radius: 4px;
+}
+
+.chatbot-chips::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
 }
 
 .chatbot-chips button {
   white-space: nowrap;
-  background: rgba(0, 212, 255, 0.1);
-  border: 1px solid rgba(0, 212, 255, 0.25);
+  background: rgba(0, 212, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.3);
   color: #00d4ff;
   padding: 6px 12px;
   border-radius: 14px;
   font-size: 0.78rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .chatbot-chips button:hover {
   background: #00d4ff;
   color: #081120;
   font-weight: 600;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
 }
 
 /* INPUT BAR */

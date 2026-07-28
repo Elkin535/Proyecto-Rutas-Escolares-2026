@@ -9,9 +9,16 @@ const API_BASE = import.meta.env.VITE_API_URL || "https://schooltrack.seminario1
 export async function fetchAuth(endpoint, options = {}) {
   const token = localStorage.getItem("token");
 
+  if (!token) {
+    localStorage.removeItem("usuario");
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    throw new Error("No hay token de sesión. Inicia sesión nuevamente.");
+  }
+
   const headers = {
     "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
+    Authorization: `Bearer ${token}`,
     ...options.headers,
   };
 

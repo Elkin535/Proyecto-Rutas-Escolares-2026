@@ -95,6 +95,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteRuta(int id)
         {
             var eliminado = await _rutaRepository.EliminarAsync(id);

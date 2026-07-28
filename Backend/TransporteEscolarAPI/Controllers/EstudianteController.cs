@@ -152,6 +152,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteEstudiante(int id)
         {
             var eliminado = await _estudianteRepository.EliminarAsync(id);

@@ -219,6 +219,7 @@ function Admin() {
   };
 
   const eliminarRuta = async (id) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta ruta escolar?")) return;
     try {
       const response = await fetchAuth(`Ruta/${id}`, { method: "DELETE" });
       if (response.ok) setRutas(rutas.filter(r => r.id !== id));

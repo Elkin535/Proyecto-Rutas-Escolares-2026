@@ -89,5 +89,15 @@ namespace TransporteEscolarAPI.Controllers
 
             return CreatedAtAction(nameof(GetVehiculo), new { id = vehiculoDTO.IdVehiculo }, vehiculoDTO);
         }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> DeleteVehiculo(int id)
+        {
+            var eliminado = await _vehiculoRepository.EliminarAsync(id);
+            if (!eliminado) return NotFound(new { mensaje = "Vehículo no encontrado" });
+
+            return Ok(new { mensaje = "Vehículo eliminado con éxito" });
+        }
     }
 }

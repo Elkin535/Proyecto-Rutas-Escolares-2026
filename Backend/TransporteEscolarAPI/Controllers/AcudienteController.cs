@@ -102,6 +102,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteAcudiente(int id)
         {
             var eliminado = await _acudienteRepository.EliminarAsync(id);

@@ -22,8 +22,39 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<VehiculoDTO>>> GetVehiculos()
+        public async Task<IActionResult> GetVehiculos(
+            [FromQuery] int? pagina,
+            [FromQuery] int? limite,
+            [FromQuery] string? busqueda)
         {
+            if (pagina.HasValue || limite.HasValue || !string.IsNullOrWhiteSpace(busqueda))
+            {
+                int pageNum = pagina.HasValue && pagina.Value > 0 ? pagina.Value : 1;
+                int pageSize = limite.HasValue && limite.Value > 0 ? limite.Value : 10;
+
+                var (items, totalCount) = await _vehiculoRepository.ObtenerPaginadoAsync(pageNum, pageSize, busqueda);
+
+                var itemsDTO = items.Select(v => new VehiculoDTO
+                {
+                    IdVehiculo = v.IdVehiculo,
+                    Placa = v.Placa,
+                    Modelo = v.Modelo,
+                    CapacidadPasajeros = v.CapacidadPasajeros,
+                    SoatVencimiento = v.SoatVencimiento,
+                    TecnomecanicaVencimiento = v.TecnomecanicaVencimiento
+                });
+
+                var resultado = new ResultadoPaginadoDTO<VehiculoDTO>
+                {
+                    Datos = itemsDTO,
+                    TotalRegistros = totalCount,
+                    PaginaActual = pageNum,
+                    LimitePorPagina = pageSize
+                };
+
+                return Ok(resultado);
+            }
+
             var vehiculos = await _vehiculoRepository.ObtenerTodosAsync();
             var vehiculosDTO = vehiculos.Select(v => new VehiculoDTO
             {

@@ -21,6 +21,27 @@ namespace TransporteEscolarAPI.Repositories
             return await _context.Acudientes.ToListAsync();
         }
 
+        public async Task<(IEnumerable<Acudiente> Items, int TotalCount)> ObtenerPaginadoAsync(int pagina, int limite, string? busqueda)
+        {
+            var query = _context.Acudientes.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                var term = busqueda.Trim().ToLower();
+                query = query.Where(a =>
+                    a.DireccionResidencia != null && a.DireccionResidencia.ToLower().Contains(term)
+                );
+            }
+
+            int totalCount = await query.CountAsync();
+            var items = await query.OrderBy(a => a.IdAcudiente)
+                                   .Skip((pagina - 1) * limite)
+                                   .Take(limite)
+                                   .ToListAsync();
+
+            return (items, totalCount);
+        }
+
         public async Task<Acudiente?> ObtenerPorIdAsync(int id)
         {
             return await _context.Acudientes.FindAsync(id);

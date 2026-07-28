@@ -13,7 +13,8 @@ import {
   X,
   UserSquare2,
   Contact,
-  Menu
+  Menu,
+  Search
 } from "lucide-react";
 import { fetchAuth } from "../services/api";
 import "./Admin.css";
@@ -29,6 +30,32 @@ function Admin() {
   // ── Estados generales ──
   const [usuarios, setUsuarios] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
+
+  // ── Paginación y Filtrado state ──
+  const [searchTerm, setSearchTerm] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [limitePorPagina] = useState(10);
+
+  useEffect(() => {
+    setSearchTerm("");
+    setPaginaActual(1);
+  }, [activeTab]);
+
+  const filtrarLista = (lista, campos) => {
+    if (!searchTerm.trim()) return lista;
+    const term = searchTerm.toLowerCase().trim();
+    return lista.filter(item =>
+      campos.some(campo => {
+        const val = item[campo];
+        return val && String(val).toLowerCase().includes(term);
+      })
+    );
+  };
+
+  const paginarLista = (lista) => {
+    const inicio = (paginaActual - 1) * limitePorPagina;
+    return lista.slice(inicio, inicio + limitePorPagina);
+  };
 
   // ── Estudiantes state ──
   const [estudiantes, setEstudiantes] = useState([]);

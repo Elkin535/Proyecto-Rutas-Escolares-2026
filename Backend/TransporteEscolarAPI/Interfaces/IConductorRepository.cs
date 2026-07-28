@@ -7,6 +7,7 @@ namespace TransporteEscolarAPI.Interfaces
     public interface IConductorRepository
     {
         Task<IEnumerable<Conductor>> ObtenerTodosAsync();
+        Task<(IEnumerable<Conductor> Items, int TotalCount)> ObtenerPaginadoAsync(int pagina, int limite, string? busqueda);
         Task<Conductor?> ObtenerPorIdAsync(int id);
         Task<Conductor?> ObtenerPorIdUsuarioAsync(int idUsuario);
         Task<Conductor?> ObtenerPorIdVehiculoAsync(int idVehiculo);

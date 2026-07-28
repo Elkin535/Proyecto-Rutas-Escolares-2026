@@ -8,6 +8,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as signalR from "@microsoft/signalr";
+import { fetchAuth } from "../services/api";
 import "./Acudiente.css";
 
 function Acudiente() {
@@ -18,12 +19,12 @@ function Acudiente() {
   useEffect(() => {
     const fetchEstudiante = async (userId) => {
       try {
-        const resAcu = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Acudiente");
+        const resAcu = await fetchAuth("Acudiente");
         const acudientes = await resAcu.json();
         const miAcudiente = acudientes.find(a => a.idUsuario === userId);
 
         if (miAcudiente) {
-          const resEst = await fetch(`https://schooltrack.seminario1.eleueleo.com/api/Estudiante/acudiente/${miAcudiente.idAcudiente}`);
+          const resEst = await fetchAuth(`Estudiante/acudiente/${miAcudiente.idAcudiente}`);
           const estudiantes = await resEst.json();
           if (estudiantes && estudiantes.length > 0) {
             setEstudianteData(estudiantes[0]); // Por ahora toma el primer hijo

@@ -15,9 +15,9 @@ import {
   Contact,
   Menu
 } from "lucide-react";
+import { fetchAuth } from "../services/api";
 import "./Admin.css";
 
-const API_BASE = "https://schooltrack.seminario1.eleueleo.com/api";
 
 function Admin() {
   const navigate = useNavigate();
@@ -140,7 +140,7 @@ function Admin() {
   // ════════════════════════════════════════
   const cargarUsuarios = async () => {
     try {
-      const response = await fetch(`${API_BASE}/Usuario`);
+      const response = await fetchAuth(`Usuario`);
       if (response.ok) setUsuarios(await response.json());
     } catch (err) {
       console.error("Error al cargar usuarios:", err);
@@ -149,7 +149,7 @@ function Admin() {
 
   const cargarVehiculos = async () => {
     try {
-      const response = await fetch(`${API_BASE}/Vehiculo`);
+      const response = await fetchAuth(`Vehiculo`);
       if (response.ok) setVehiculos(await response.json());
     } catch (err) {
       console.error("Error al cargar vehiculos:", err);
@@ -165,7 +165,7 @@ function Admin() {
   // ════════════════════════════════════════
   const cargarRutas = async () => {
     try {
-      const response = await fetch(`${API_BASE}/Ruta`);
+      const response = await fetchAuth(`Ruta`);
       if (response.ok) {
         const data = await response.json();
         const mappedRutas = data.map(r => {
@@ -199,7 +199,7 @@ function Admin() {
     if (!nuevaRutaNombre || !nuevaRutaConductor) return;
     const descripcion = `Conductor: ${nuevaRutaConductor} | Vehículo: ${nuevaRutaPlaca || "SIN PLACA"}`;
     try {
-      const response = await fetch(`${API_BASE}/Ruta`, {
+      const response = await fetchAuth(`Ruta`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombreRuta: nuevaRutaNombre, descripcion: descripcion })
@@ -220,7 +220,7 @@ function Admin() {
 
   const eliminarRuta = async (id) => {
     try {
-      const response = await fetch(`${API_BASE}/Ruta/${id}`, { method: "DELETE" });
+      const response = await fetchAuth(`Ruta/${id}`, { method: "DELETE" });
       if (response.ok) setRutas(rutas.filter(r => r.id !== id));
     } catch (err) {
       alert("No se pudo conectar con el servidor para eliminar.");
@@ -240,7 +240,7 @@ function Admin() {
     if (!editRutaNombre || !editRutaConductor) return;
     const descripcion = `Conductor: ${editRutaConductor} | Vehículo: ${editRutaPlaca || "SIN PLACA"}`;
     try {
-      const response = await fetch(`${API_BASE}/Ruta/${rutaEditando.id}`, {
+      const response = await fetchAuth(`Ruta/${rutaEditando.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idRuta: rutaEditando.id, nombreRuta: editRutaNombre, descripcion: descripcion })
@@ -263,7 +263,7 @@ function Admin() {
   const cargarEstudiantes = async () => {
     setCargandoEstudiantes(true);
     try {
-      const response = await fetch(`${API_BASE}/Estudiante`);
+      const response = await fetchAuth(`Estudiante`);
       if (response.ok) setEstudiantes(await response.json());
     } catch (err) {
       console.error("Error al cargar estudiantes:", err);
@@ -285,7 +285,7 @@ function Admin() {
       idParada: null
     };
     try {
-      const response = await fetch(`${API_BASE}/Estudiante`, {
+      const response = await fetchAuth(`Estudiante`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -315,7 +315,7 @@ function Admin() {
       idParada: null
     };
     try {
-      const response = await fetch(`${API_BASE}/Estudiante/${estudianteEditando.idEstudiante}`, {
+      const response = await fetchAuth(`Estudiante/${estudianteEditando.idEstudiante}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -331,7 +331,7 @@ function Admin() {
   const eliminarEstudiante = async (id) => {
     if (!window.confirm("¿Estás seguro de eliminar este estudiante?")) return;
     try {
-      const response = await fetch(`${API_BASE}/Estudiante/${id}`, { method: "DELETE" });
+      const response = await fetchAuth(`Estudiante/${id}`, { method: "DELETE" });
       if (response.ok) {
         await cargarEstudiantes();
         if (estudianteEditando && estudianteEditando.idEstudiante === id) limpiarFormularioEstudiante();
@@ -388,7 +388,7 @@ function Admin() {
       tecnomecanicaVencimiento: nuevoVehiculoTecno ? new Date(`${nuevoVehiculoTecno}T00:00:00`).toISOString() : null
     };
     try {
-      const response = await fetch(`${API_BASE}/Vehiculo`, {
+      const response = await fetchAuth(`Vehiculo`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -417,7 +417,7 @@ function Admin() {
       tecnomecanicaVencimiento: nuevoVehiculoTecno ? new Date(`${nuevoVehiculoTecno}T00:00:00`).toISOString() : null
     };
     try {
-      const response = await fetch(`${API_BASE}/Vehiculo/${vehiculoEditando.idVehiculo}`, {
+      const response = await fetchAuth(`Vehiculo/${vehiculoEditando.idVehiculo}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -433,7 +433,7 @@ function Admin() {
   const eliminarVehiculo = async (idVehiculo) => {
     if (!window.confirm("¿Seguro que deseas eliminar este vehículo?")) return;
     try {
-      const response = await fetch(`${API_BASE}/Vehiculo/${idVehiculo}`, { method: "DELETE" });
+      const response = await fetchAuth(`Vehiculo/${idVehiculo}`, { method: "DELETE" });
       if (response.ok) {
         await cargarVehiculos();
       } else alert("Error al eliminar vehículo. Verifica que no esté en uso.");
@@ -448,7 +448,7 @@ function Admin() {
   const cargarAcudientes = async () => {
     setCargandoAcudientes(true);
     try {
-      const response = await fetch(`${API_BASE}/Acudiente`);
+      const response = await fetchAuth(`Acudiente`);
       if (response.ok) setAcudientes(await response.json());
     } catch (err) {
       console.error("Error al cargar acudientes:", err);
@@ -461,7 +461,7 @@ function Admin() {
     e.preventDefault();
     if (!nuevoAcudienteNombre || !nuevoAcudienteApellido || !nuevoAcudienteCorreo || !nuevoAcudienteContrasena) return;
     try {
-      const userRes = await fetch(`${API_BASE}/Usuario`, {
+      const userRes = await fetchAuth(`Usuario`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idRol: 3, nombre: nuevoAcudienteNombre, apellido: nuevoAcudienteApellido,
@@ -474,7 +474,7 @@ function Admin() {
       }
       const userData = await userRes.json();
 
-      const acudienteRes = await fetch(`${API_BASE}/Acudiente`, {
+      const acudienteRes = await fetchAuth(`Acudiente`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idUsuario: userData.idUsuario, direccionResidencia: nuevoAcudienteDireccion || null })
       });
@@ -494,7 +494,7 @@ function Admin() {
     e.preventDefault();
     if (!acudienteEditando || !nuevoAcudienteNombre || !nuevoAcudienteApellido || !nuevoAcudienteCorreo) return;
     try {
-      const userRes = await fetch(`${API_BASE}/Usuario/${acudienteEditando.idUsuario}`, {
+      const userRes = await fetchAuth(`Usuario/${acudienteEditando.idUsuario}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: nuevoAcudienteNombre, apellido: nuevoAcudienteApellido,
@@ -503,7 +503,7 @@ function Admin() {
       });
       if (!userRes.ok) throw new Error("Error al actualizar usuario.");
 
-      const acudienteRes = await fetch(`${API_BASE}/Acudiente/${acudienteEditando.idAcudiente}`, {
+      const acudienteRes = await fetchAuth(`Acudiente/${acudienteEditando.idAcudiente}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idUsuario: acudienteEditando.idUsuario, direccionResidencia: nuevoAcudienteDireccion || null })
       });
@@ -522,9 +522,9 @@ function Admin() {
   const eliminarAcudiente = async (idAcudiente, idUsuario) => {
     if (!window.confirm("¿Estás seguro de eliminar este acudiente? Se eliminará su usuario asociado.")) return;
     try {
-      const res = await fetch(`${API_BASE}/Acudiente/${idAcudiente}`, { method: "DELETE" });
+      const res = await fetchAuth(`Acudiente/${idAcudiente}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar acudiente.");
-      await fetch(`${API_BASE}/Usuario/${idUsuario}`, { method: "DELETE" });
+      await fetchAuth(`Usuario/${idUsuario}`, { method: "DELETE" });
       await cargarUsuarios();
       await cargarAcudientes();
       if (acudienteEditando && acudienteEditando.idAcudiente === idAcudiente) limpiarFormularioAcudiente();
@@ -555,7 +555,7 @@ function Admin() {
   const cargarConductores = async () => {
     setCargandoConductores(true);
     try {
-      const response = await fetch(`${API_BASE}/Conductor`);
+      const response = await fetchAuth(`Conductor`);
       if (response.ok) setConductores(await response.json());
     } catch (err) {
       console.error("Error al cargar conductores:", err);
@@ -568,7 +568,7 @@ function Admin() {
     e.preventDefault();
     if (!nuevoConductorNombre || !nuevoConductorApellido || !nuevoConductorCorreo || !nuevoConductorContrasena || !nuevoConductorLicencia) return;
     try {
-      const userRes = await fetch(`${API_BASE}/Usuario`, {
+      const userRes = await fetchAuth(`Usuario`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idRol: 2, nombre: nuevoConductorNombre, apellido: nuevoConductorApellido,
@@ -578,7 +578,7 @@ function Admin() {
       if (!userRes.ok) throw new Error("Error al crear usuario.");
       const userData = await userRes.json();
 
-      const conductorRes = await fetch(`${API_BASE}/Conductor`, {
+      const conductorRes = await fetchAuth(`Conductor`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idUsuario: userData.idUsuario, idVehiculo: nuevoConductorVehiculo ? parseInt(nuevoConductorVehiculo) : null,
@@ -601,7 +601,7 @@ function Admin() {
     e.preventDefault();
     if (!conductorEditando || !nuevoConductorNombre || !nuevoConductorApellido || !nuevoConductorCorreo || !nuevoConductorLicencia) return;
     try {
-      const userRes = await fetch(`${API_BASE}/Usuario/${conductorEditando.idUsuario}`, {
+      const userRes = await fetchAuth(`Usuario/${conductorEditando.idUsuario}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: nuevoConductorNombre, apellido: nuevoConductorApellido,
@@ -610,7 +610,7 @@ function Admin() {
       });
       if (!userRes.ok) throw new Error("Error al actualizar usuario.");
 
-      const conductorRes = await fetch(`${API_BASE}/Conductor/${conductorEditando.idConductor}`, {
+      const conductorRes = await fetchAuth(`Conductor/${conductorEditando.idConductor}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idUsuario: conductorEditando.idUsuario, idVehiculo: nuevoConductorVehiculo ? parseInt(nuevoConductorVehiculo) : null,
@@ -632,9 +632,9 @@ function Admin() {
   const eliminarConductor = async (idConductor, idUsuario) => {
     if (!window.confirm("¿Estás seguro de eliminar este conductor? Se eliminará su usuario asociado.")) return;
     try {
-      const res = await fetch(`${API_BASE}/Conductor/${idConductor}`, { method: "DELETE" });
+      const res = await fetchAuth(`Conductor/${idConductor}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar conductor.");
-      await fetch(`${API_BASE}/Usuario/${idUsuario}`, { method: "DELETE" });
+      await fetchAuth(`Usuario/${idUsuario}`, { method: "DELETE" });
       await cargarUsuarios(); await cargarConductores();
       if (conductorEditando && conductorEditando.idConductor === idConductor) limpiarFormularioConductor();
     } catch (err) {

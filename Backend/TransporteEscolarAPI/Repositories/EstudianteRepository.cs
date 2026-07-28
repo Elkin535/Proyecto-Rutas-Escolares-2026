@@ -32,7 +32,7 @@ namespace TransporteEscolarAPI.Repositories
                 query = query.Where(e =>
                     e.Nombre.ToLower().Contains(term) ||
                     e.Apellido.ToLower().Contains(term) ||
-                    (e.Grado != null && e.Grado.ToLower().Contains(term)) ||
+                    (e.CursoGrado != null && e.CursoGrado.ToLower().Contains(term)) ||
                     (e.Colegio != null && e.Colegio.ToLower().Contains(term))
                 );
             }

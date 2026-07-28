@@ -8,7 +8,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as signalR from "@microsoft/signalr";
-import { fetchAuth } from "../services/api";
+import { fetchAuth, getApiBaseUrl } from "../services/api";
 import "./Acudiente.css";
 
 function Acudiente() {
@@ -117,8 +117,11 @@ function Acudiente() {
       return;
     }
 
+    const hubUrl = `${getApiBaseUrl().replace(/\/api$/, "")}/trackingHub`;
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5150/trackingHub")
+      .withUrl(hubUrl, {
+        accessTokenFactory: () => localStorage.getItem("token") || ""
+      })
       .withAutomaticReconnect()
       .build();
 

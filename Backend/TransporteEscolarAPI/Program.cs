@@ -13,7 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. CONEXIÓN A POSTGRESQL
 // =========================================================================
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQLConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQLConnection"))
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // =========================================================================
 // 2. REGISTRO DE REPOSITORIOS Y SERVICIOS

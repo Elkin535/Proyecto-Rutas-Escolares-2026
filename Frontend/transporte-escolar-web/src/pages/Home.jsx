@@ -11,6 +11,11 @@ import {
   Bell,
   Menu,
   X,
+  MapPin,
+  Navigation,
+  Clock,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 
 import "./Home.css";
@@ -25,20 +30,20 @@ function Home() {
       rol: "Backend Developer",
     },
     {
-        nombre: "Christian Camilo Tellez",
-        rol: "Frontend Developer",
+      nombre: "Christian Camilo Tellez",
+      rol: "Frontend Developer",
     },
     {
-        nombre: "Daniella Rodríguez Dagua",
-        rol: "Database Manager",
+      nombre: "Daniella Rodríguez Dagua",
+      rol: "Database Manager",
     },
     {
-        nombre: "Karol Yisney Caicedo Moreno",
-        rol: "Frontend Developer",
+      nombre: "Karol Yisney Caicedo Moreno",
+      rol: "Frontend Developer",
     },
     {
-        nombre: "Luisa Fernanda González Delgado",
-        rol: "Database Manager",
+      nombre: "Luisa Fernanda González Delgado",
+      rol: "Database Manager",
     },
   ];
 
@@ -77,30 +82,101 @@ function Home() {
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* HERO SECTION REDISEÑADA CON ANIMACIÓN DE BUS */}
       <section className="hero">
-        <div className="hero-content">
-          <h1>
-            Gestión Inteligente de
-            <span> Rutas Escolares</span>
-          </h1>
+        <div className="hero-container-grid">
+          {/* Columna Izquierda: Mensaje principal */}
+          <div className="hero-content">
+            <div className="hero-badge">
+              <Sparkles size={16} /> Monitoreo GPS 2026 en Tiempo Real
+            </div>
 
-          <p>
-            Plataforma moderna para monitoreo, control y administración
-            segura del transporte escolar.
-          </p>
+            <h1>
+              Gestión Inteligente de
+              <span> Rutas Escolares</span>
+            </h1>
 
-          <div className="hero-buttons">
-            <button
-              className="primary-btn"
-              onClick={() => navigate("/login")}
-            >
-              Iniciar Sesión
-            </button>
+            <p>
+              Plataforma moderna e integral para monitoreo GPS en vivo, control de asistencia y administración segura del transporte escolar.
+            </p>
 
-            <button className="secondary-btn">
-              Conocer Más
-            </button>
+            <div className="hero-buttons">
+              <button
+                className="primary-btn"
+                onClick={() => navigate("/login")}
+              >
+                Iniciar Sesión
+              </button>
+
+              <button 
+                className="secondary-btn"
+                onClick={() => {
+                  const el = document.getElementById("about");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                Conocer Más
+              </button>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Ilustración y animación de Bus Interactivo */}
+          <div className="hero-graphic">
+            <div className="bus-card-glass">
+              {/* Badges Flotantes de Estado */}
+              <div className="floating-badge top-right">
+                <span className="pulse-dot"></span>
+                <span>Ruta 01 • En Vivo</span>
+              </div>
+
+              <div className="floating-badge bottom-left">
+                <Clock size={15} color="#00d4ff" />
+                <span>Llegada estimada: <strong>5 min</strong></span>
+              </div>
+
+              <div className="floating-badge top-left">
+                <ShieldCheck size={15} color="#10b981" />
+                <span>Monitoreo 100% Seguro</span>
+              </div>
+
+              {/* Contenedor de la Animación del Bus */}
+              <div className="bus-illustration-container">
+                <div className="bus-glow-ring"></div>
+                <div className="bus-vector-wrapper">
+                  <Bus size={95} className="animated-bus-icon" />
+                  <div className="bus-headlights"></div>
+                </div>
+
+                {/* Carretera Animada en Movimiento */}
+                <div className="road-path">
+                  <div className="road-line"></div>
+                  <div className="moving-car-shadow"></div>
+                </div>
+              </div>
+
+              {/* Tarjeta de Rastreador de Ruta en Vivo */}
+              <div className="hero-route-tracker">
+                <div className="tracker-item">
+                  <MapPin size={18} color="#ff4d4d" />
+                  <div>
+                    <small>Origen</small>
+                    <p>Colegio Principal</p>
+                  </div>
+                </div>
+
+                <div className="tracker-divider">
+                  <Navigation size={16} className="moving-nav-icon" />
+                </div>
+
+                <div className="tracker-item">
+                  <CheckCircle2 size={18} color="#10b981" />
+                  <div>
+                    <small>Destino</small>
+                    <p>Parada Residencial</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

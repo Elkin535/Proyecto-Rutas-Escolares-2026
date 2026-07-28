@@ -61,6 +61,7 @@ namespace TransporteEscolarAPI.Service
                 new Claim(ClaimTypes.Email, usuario.Correo),
                 new Claim(ClaimTypes.Name, $"{usuario.Nombre} {usuario.Apellido}"),
                 new Claim(ClaimTypes.Role, roleName),
+                new Claim("role", roleName),
                 new Claim("idRol", usuario.IdRol.ToString())
             };
 

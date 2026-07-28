@@ -13,6 +13,11 @@ const normalizarTexto = (str) =>
 
 const CONOCIMIENTO_PROYECTO = [
   {
+    claves: ["quien eres", "nombre", "buzsito", "busito", "como te llamas", "que eres"],
+    respuesta: `¡Hola! Soy Buzsito 🚌, el asistente virtual inteligente de SchoolTrack.
+Estoy aquí para ayudarte con información sobre la plataforma, el equipo de desarrollo, la tecnología de rastreo GPS en vivo y la seguridad del sistema.`
+  },
+  {
     claves: [
       "equipo", "desarrolladores", "creadores", "integrantes", "quienes", "quien",
       "autores", "hizo", "elkin", "christian", "daniella", "karol", "luisa", "seminario"
@@ -73,7 +78,7 @@ function ChatbotIA() {
   const [mensajes, setMensajes] = useState([
     {
       remitente: "bot",
-      texto: "¡Hola! Soy SchoolTrack AI 🤖. ¿En qué te puedo ayudar hoy? Haz clic en las sugerencias abajo o escribe tu consulta.",
+      texto: "¡Hola! Soy Buzsito 🚌, tu asistente virtual en SchoolTrack. ¿En qué te puedo ayudar hoy?",
       hora: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     }
   ]);
@@ -97,7 +102,7 @@ function ChatbotIA() {
       }
     }
 
-    return "SchoolTrack es una plataforma web integral de transporte escolar. Puedo responderte sobre:\n• 👥 Integrantes y creadores del equipo\n• 🛰️ Monitoreo GPS y WebSockets\n• 🛡️ Seguridad JWT y BCrypt\n• 📞 Canales de contacto\n\n¿Sobre qué tema deseas consultar?";
+    return "Soy Buzsito 🚌, el asistente virtual de SchoolTrack. Puedo responderte sobre:\n• 👥 Integrantes y creadores del equipo\n• 🛰️ Monitoreo GPS y WebSockets\n• 🛡️ Seguridad JWT y BCrypt\n• 📞 Canales de contacto\n\n¿Sobre qué tema deseas consultar?";
   };
 
   const enviarMensajeTexto = (textoAEnviar) => {
@@ -144,7 +149,7 @@ function ChatbotIA() {
     setMensajes([
       {
         remitente: "bot",
-        texto: "¡Hola! Soy SchoolTrack AI 🤖. ¿En qué te puedo ayudar hoy?",
+        texto: "¡Hola! Soy Buzsito 🚌. ¿En qué te puedo ayudar hoy?",
         hora: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       }
     ]);
@@ -157,11 +162,11 @@ function ChatbotIA() {
         <button
           className="chatbot-fab"
           onClick={() => setAbierto(true)}
-          title="Consultar Asistente IA SchoolTrack"
+          title="Hablar con Buzsito 🚌 - Asistente IA"
         >
           <div className="fab-glow-pulse"></div>
           <Bot size={28} className="fab-bot-icon" />
-          <span className="fab-badge">AI</span>
+          <span className="fab-badge">BUZ</span>
         </button>
       )}
 
@@ -175,7 +180,7 @@ function ChatbotIA() {
                 <Bot size={22} />
               </div>
               <div>
-                <h4>SchoolTrack AI <Sparkles size={14} className="sparkle-icon" /></h4>
+                <h4>Buzsito 🚌 <Sparkles size={14} className="sparkle-icon" /></h4>
                 <small><span className="online-dot"></span> En línea • Asistente Virtual</small>
               </div>
             </div>
@@ -257,7 +262,7 @@ function ChatbotIA() {
           <form className="chatbot-input-bar" onSubmit={handleSubmit}>
             <input
               type="text"
-              placeholder="Escribe tu duda sobre SchoolTrack..."
+              placeholder="Pregúntale algo a Buzsito 🚌..."
               value={inputTexto}
               onChange={(e) => setInputTexto(e.target.value)}
             />

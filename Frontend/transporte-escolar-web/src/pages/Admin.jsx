@@ -1054,22 +1054,27 @@ function Admin() {
                       </div>
                       <div className="form-group">
                         <label>Acudiente</label>
-                        <input
-                          className="select-like-input"
-                          list="acudientes-list"
-                          placeholder="Escribe para buscar o selecciona..."
-                          value={filtroAcudiente}
-                          onChange={(e) => {
-                            setFiltroAcudiente(e.target.value);
-                            const match = e.target.value.match(/^#(\d+) -/);
-                            if (match) {
-                              setNuevoEstudianteAcudiente(match[1]);
-                            } else {
-                              setNuevoEstudianteAcudiente("");
-                            }
-                          }}
-                          required
-                        />
+                        <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+                          <input
+                            className="select-like-input"
+                            list="acudientes-list"
+                            placeholder="Escribe para buscar o selecciona..."
+                            value={filtroAcudiente}
+                            onChange={(e) => {
+                              setFiltroAcudiente(e.target.value);
+                              const match = e.target.value.match(/^#(\d+) -/);
+                              if (match) {
+                                setNuevoEstudianteAcudiente(match[1]);
+                              } else {
+                                setNuevoEstudianteAcudiente("");
+                              }
+                            }}
+                            required
+                          />
+                          <svg style={{ position: 'absolute', right: '14px', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f8fafc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </div>
                         <datalist id="acudientes-list">
                           {acudientes.map(a => {
                             const uInfo = obtenerInfoUsuario(a.idUsuario);
@@ -1103,21 +1108,26 @@ function Admin() {
                       </div>
                       <div className="form-group">
                         <label>Ruta Asignada</label>
-                        <input
-                          className="select-like-input"
-                          list="rutas-list"
-                          placeholder="Escribe para buscar o selecciona ruta (opcional)..."
-                          value={filtroRuta}
-                          onChange={(e) => {
-                            setFiltroRuta(e.target.value);
-                            const rutaEncontrada = rutas.find(r => r.nombre === e.target.value);
-                            if (rutaEncontrada) {
-                              setNuevoEstudianteRuta(rutaEncontrada.id);
-                            } else {
-                              setNuevoEstudianteRuta("");
-                            }
-                          }}
-                        />
+                        <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+                          <input
+                            className="select-like-input"
+                            list="rutas-list"
+                            placeholder="Escribe para buscar o selecciona ruta (opcional)..."
+                            value={filtroRuta}
+                            onChange={(e) => {
+                              setFiltroRuta(e.target.value);
+                              const rutaEncontrada = rutas.find(r => r.nombre === e.target.value);
+                              if (rutaEncontrada) {
+                                setNuevoEstudianteRuta(rutaEncontrada.id);
+                              } else {
+                                setNuevoEstudianteRuta("");
+                              }
+                            }}
+                          />
+                          <svg style={{ position: 'absolute', right: '14px', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f8fafc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </div>
                         <datalist id="rutas-list">
                           {rutas.map(r => (<option key={r.id} value={r.nombre} />))}
                         </datalist>

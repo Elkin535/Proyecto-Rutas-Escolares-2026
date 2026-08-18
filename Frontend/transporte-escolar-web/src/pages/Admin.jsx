@@ -957,6 +957,7 @@ function Admin() {
                           value={editRutaPlaca}
                           onChange={(e) => setEditRutaPlaca(e.target.value)}
                         />
+
                       </div>
                       <div className="modal-actions">
                         <button type="button" className="btn-cancelar" onClick={() => setShowModalEditarRuta(false)}>Cancelar</button>

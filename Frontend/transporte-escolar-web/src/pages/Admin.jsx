@@ -104,6 +104,8 @@ function Admin() {
   const [nuevoEstudianteColegio, setNuevoEstudianteColegio] = useState("");
   const [nuevoEstudianteCurso, setNuevoEstudianteCurso] = useState("");
   const [nuevoEstudianteRuta, setNuevoEstudianteRuta] = useState("");
+  const [filtroAcudiente, setFiltroAcudiente] = useState("");
+  const [filtroRuta, setFiltroRuta] = useState("");
 
   // Variables para acudiente
   const [nuevoAcudienteNombre, setNuevoAcudienteNombre] = useState("");
@@ -303,6 +305,10 @@ function Admin() {
   const agregarEstudiante = async (e) => {
     e.preventDefault();
     if (!nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
+    if (!nuevoEstudianteAcudiente) {
+      alert("Por favor selecciona un acudiente válido de la lista.");
+      return;
+    }
     const body = {
       idAcudiente: nuevoEstudianteAcudiente ? parseInt(nuevoEstudianteAcudiente) : 0,
       nombre: nuevoEstudianteNombre,
@@ -332,6 +338,10 @@ function Admin() {
   const actualizarEstudiante = async (e) => {
     e.preventDefault();
     if (!estudianteEditando || !nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
+    if (!nuevoEstudianteAcudiente) {
+      alert("Por favor selecciona un acudiente válido de la lista.");
+      return;
+    }
     const body = {
       idAcudiente: nuevoEstudianteAcudiente ? parseInt(nuevoEstudianteAcudiente) : 0,
       nombre: nuevoEstudianteNombre,
@@ -373,13 +383,34 @@ function Admin() {
     setEstudianteEditando(est);
     setNuevoEstudianteNombre(est.nombre); setNuevoEstudianteApellido(est.apellido);
     setNuevoEstudianteAcudiente(est.idAcudiente ? String(est.idAcudiente) : "");
+    
+    if (est.idAcudiente) {
+      const acu = acudientes.find(a => a.idAcudiente === est.idAcudiente);
+      if (acu) {
+        const uInfo = obtenerInfoUsuario(acu.idUsuario);
+        setFiltroAcudiente(`#${acu.idAcudiente} - ${uInfo.nombre} ${uInfo.apellido}`);
+      } else {
+        setFiltroAcudiente("");
+      }
+    } else {
+      setFiltroAcudiente("");
+    }
+
     setNuevoEstudianteColegio(est.colegio || ""); setNuevoEstudianteCurso(est.cursoGrado || "");
+    
     setNuevoEstudianteRuta(est.idRuta ? String(est.idRuta) : "");
+    if (est.idRuta) {
+      const ruta = rutas.find(r => r.id === est.idRuta);
+      setFiltroRuta(ruta ? ruta.nombre : "");
+    } else {
+      setFiltroRuta("");
+    }
   };
 
   const limpiarFormularioEstudiante = () => {
     setEstudianteEditando(null); setNuevoEstudianteNombre(""); setNuevoEstudianteApellido("");
     setNuevoEstudianteAcudiente(""); setNuevoEstudianteColegio(""); setNuevoEstudianteCurso(""); setNuevoEstudianteRuta("");
+    setFiltroAcudiente(""); setFiltroRuta("");
   };
 
   // ════════════════════════════════════════
@@ -1022,10 +1053,27 @@ function Admin() {
                       </div>
                       <div className="form-group">
                         <label>Acudiente</label>
-                        <select value={nuevoEstudianteAcudiente} onChange={(e) => setNuevoEstudianteAcudiente(e.target.value)} required>
-                          <option value="">Seleccionar...</option>
-                          {acudientes.map(a => { const uInfo = obtenerInfoUsuario(a.idUsuario); return <option key={a.idAcudiente} value={a.idAcudiente}>#{a.idAcudiente} - {uInfo.nombre} {uInfo.apellido}</option>; })}
-                        </select>
+                        <input 
+                          list="acudientes-list" 
+                          placeholder="Escribe para buscar o selecciona..."
+                          value={filtroAcudiente}
+                          onChange={(e) => {
+                            setFiltroAcudiente(e.target.value);
+                            const match = e.target.value.match(/^#(\d+) -/);
+                            if (match) {
+                              setNuevoEstudianteAcudiente(match[1]);
+                            } else {
+                              setNuevoEstudianteAcudiente("");
+                            }
+                          }}
+                          required
+                        />
+                        <datalist id="acudientes-list">
+                          {acudientes.map(a => { 
+                            const uInfo = obtenerInfoUsuario(a.idUsuario); 
+                            return <option key={a.idAcudiente} value={`#${a.idAcudiente} - ${uInfo.nombre} ${uInfo.apellido}`} />; 
+                          })}
+                        </datalist>
                       </div>
                       <div className="form-group">
                         <label>Colegio</label>
@@ -1033,14 +1081,43 @@ function Admin() {
                       </div>
                       <div className="form-group">
                         <label>Grado</label>
-                        <input type="text" placeholder="Ej. 5° Primaria" value={nuevoEstudianteCurso} onChange={(e) => setNuevoEstudianteCurso(e.target.value)} />
+                        <select value={nuevoEstudianteCurso} onChange={(e) => setNuevoEstudianteCurso(e.target.value)}>
+                          <option value="">Seleccionar grado...</option>
+                          <option value="Kinder">Kinder</option>
+                          <option value="Transición">Transición</option>
+                          <option value="1° Primaria">1° Primaria</option>
+                          <option value="2° Primaria">2° Primaria</option>
+                          <option value="3° Primaria">3° Primaria</option>
+                          <option value="4° Primaria">4° Primaria</option>
+                          <option value="5° Primaria">5° Primaria</option>
+                          <option value="6° Bachillerato">6° Bachillerato</option>
+                          <option value="7° Bachillerato">7° Bachillerato</option>
+                          <option value="8° Bachillerato">8° Bachillerato</option>
+                          <option value="9° Bachillerato">9° Bachillerato</option>
+                          <option value="10° Bachillerato">10° Bachillerato</option>
+                          <option value="11° Bachillerato">11° Bachillerato</option>
+                          <option value="12° Bachillerato">12° Bachillerato</option>
+                        </select>
                       </div>
                       <div className="form-group">
                         <label>Ruta Asignada</label>
-                        <select value={nuevoEstudianteRuta} onChange={(e) => setNuevoEstudianteRuta(e.target.value)}>
-                          <option value="">Sin ruta asignada</option>
-                          {rutas.map(r => (<option key={r.id} value={r.id}>{r.nombre}</option>))}
-                        </select>
+                        <input 
+                          list="rutas-list"
+                          placeholder="Escribe para buscar o selecciona ruta (opcional)..."
+                          value={filtroRuta}
+                          onChange={(e) => {
+                            setFiltroRuta(e.target.value);
+                            const rutaEncontrada = rutas.find(r => r.nombre === e.target.value);
+                            if (rutaEncontrada) {
+                              setNuevoEstudianteRuta(rutaEncontrada.id);
+                            } else {
+                              setNuevoEstudianteRuta("");
+                            }
+                          }}
+                        />
+                        <datalist id="rutas-list">
+                          {rutas.map(r => (<option key={r.id} value={r.nombre} />))}
+                        </datalist>
                       </div>
                       <div className="modal-actions">
                         <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>

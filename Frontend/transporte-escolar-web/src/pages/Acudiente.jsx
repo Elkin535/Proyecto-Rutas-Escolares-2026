@@ -14,7 +14,7 @@ import "./Acudiente.css";
 function Acudiente() {
   const navigate = useNavigate();
   const [usuarioData, setUsuarioData] = useState({});
-  const [estudianteData, setEstudianteData] = useState(null);
+  const [estudiantesData, setEstudiantesData] = useState([]);
 
   useEffect(() => {
     const fetchEstudiante = async (userId) => {
@@ -27,7 +27,7 @@ function Acudiente() {
           const resEst = await fetchAuth(`Estudiante/acudiente/${miAcudiente.idAcudiente}`);
           const estudiantes = await resEst.json();
           if (estudiantes && estudiantes.length > 0) {
-            setEstudianteData(estudiantes[0]); // Por ahora toma el primer hijo
+            setEstudiantesData(estudiantes);
           }
         }
       } catch (err) {
@@ -257,40 +257,80 @@ function Acudiente() {
           <div className="acudiente-left-column">
 
             {/* TARJETA PRINCIPAL DEL ESTUDIANTE */}
-            <section className="hijo-card">
-              <div className="hijo-header">
-                <div className="hijo-profile">
-                  <div className="hijo-avatar">
-                    {estudianteData ? `${estudianteData.nombre.charAt(0)}${estudianteData.apellido.charAt(0)}`.toUpperCase() : <User size={24} />}
+            {/* TARJETAS DE ESTUDIANTES */}
+            {estudiantesData && estudiantesData.length > 0 ? (
+              estudiantesData.map((estudiante, index) => (
+                <section key={estudiante.idEstudiante || index} className="hijo-card" style={{ marginBottom: '1rem' }}>
+                  <div className="hijo-header">
+                    <div className="hijo-profile">
+                      <div className="hijo-avatar">
+                        {`${estudiante.nombre.charAt(0)}${estudiante.apellido.charAt(0)}`.toUpperCase()}
+                      </div>
+                      <div>
+                        <h4>{`${estudiante.nombre} ${estudiante.apellido}`}</h4>
+                        <p>{estudiante.cursoGrado ? `Grado: ${estudiante.cursoGrado}` : "Grado Asignado"} • {estudiante.colegio || "Colegio Destino"}</p>
+                      </div>
+                    </div>
+                    <span className={`status-badge-parent ${hijoEstado}`}>
+                      {hijoEstado === "Pendiente" && "🟡 Esperando bus"}
+                      {hijoEstado === "Abordo" && "🟠 En el bus"}
+                      {hijoEstado === "Entregado" && "🟢 Entregado"}
+                      {hijoEstado === "NoViaja" && "⚪ No viaja hoy"}
+                    </span>
                   </div>
-                  <div>
-                    <h4>{estudianteData ? `${estudianteData.nombre} ${estudianteData.apellido}` : "Estudiante Asignado"}</h4>
-                    <p>{estudianteData?.cursoGrado ? `Grado: ${estudianteData.cursoGrado}` : "Grado Asignado"} • {estudianteData?.colegio || "Colegio Destino"}</p>
-                  </div>
-                </div>
-                <span className={`status-badge-parent ${hijoEstado}`}>
-                  {hijoEstado === "Pendiente" && "🟡 Esperando bus"}
-                  {hijoEstado === "Abordo" && "🟠 En el bus"}
-                  {hijoEstado === "Entregado" && "🟢 Entregado"}
-                  {hijoEstado === "NoViaja" && "⚪ No viaja hoy"}
-                </span>
-              </div>
 
-              <div className="hijo-details-grid">
-                <div className="detail-item">
-                  <Clock size={16} />
-                  <span>Hora Recogida: <strong>07:10 AM</strong></span>
+                  <div className="hijo-details-grid">
+                    <div className="detail-item">
+                      <Clock size={16} />
+                      <span>Hora Recogida: <strong>07:10 AM</strong></span>
+                    </div>
+                    <div className="detail-item">
+                      <Bus size={16} />
+                      <span>Ruta: <strong>Ruta 01 - Norte</strong></span>
+                    </div>
+                    <div className="detail-item">
+                      <User size={16} />
+                      <span>Conductor: <strong>Carlos Gómez</strong></span>
+                    </div>
+                  </div>
+                </section>
+              ))
+            ) : (
+              <section className="hijo-card" style={{ marginBottom: '1rem' }}>
+                <div className="hijo-header">
+                  <div className="hijo-profile">
+                    <div className="hijo-avatar">
+                      <User size={24} />
+                    </div>
+                    <div>
+                      <h4>Estudiante Asignado</h4>
+                      <p>Grado Asignado • Colegio Destino</p>
+                    </div>
+                  </div>
+                  <span className={`status-badge-parent ${hijoEstado}`}>
+                    {hijoEstado === "Pendiente" && "🟡 Esperando bus"}
+                    {hijoEstado === "Abordo" && "🟠 En el bus"}
+                    {hijoEstado === "Entregado" && "🟢 Entregado"}
+                    {hijoEstado === "NoViaja" && "⚪ No viaja hoy"}
+                  </span>
                 </div>
-                <div className="detail-item">
-                  <Bus size={16} />
-                  <span>Ruta: <strong>Ruta 01 - Norte</strong></span>
+
+                <div className="hijo-details-grid">
+                  <div className="detail-item">
+                    <Clock size={16} />
+                    <span>Hora Recogida: <strong>07:10 AM</strong></span>
+                  </div>
+                  <div className="detail-item">
+                    <Bus size={16} />
+                    <span>Ruta: <strong>Ruta 01 - Norte</strong></span>
+                  </div>
+                  <div className="detail-item">
+                    <User size={16} />
+                    <span>Conductor: <strong>Carlos Gómez</strong></span>
+                  </div>
                 </div>
-                <div className="detail-item">
-                  <User size={16} />
-                  <span>Conductor: <strong>Carlos Gómez</strong></span>
-                </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             {/* TIMELINE DE PROGRESO DEL RECORRIDO */}
             {hijoEstado !== "NoViaja" && (

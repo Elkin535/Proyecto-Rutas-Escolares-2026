@@ -106,8 +106,6 @@ function Admin() {
   const [nuevoEstudianteRuta, setNuevoEstudianteRuta] = useState("");
   const [filtroAcudiente, setFiltroAcudiente] = useState("");
   const [filtroRuta, setFiltroRuta] = useState("");
-  const [showAcudienteDropdown, setShowAcudienteDropdown] = useState(false);
-  const [showRutaDropdown, setShowRutaDropdown] = useState(false);
 
   // Variables para acudiente
   const [nuevoAcudienteNombre, setNuevoAcudienteNombre] = useState("");
@@ -1053,16 +1051,15 @@ function Admin() {
                           <input type="text" placeholder="Ej. Gómez" value={nuevoEstudianteApellido} onChange={(e) => setNuevoEstudianteApellido(e.target.value)} required />
                         </div>
                       </div>
-                      <div className="form-group relative-container">
+                      <div className="form-group">
                         <label>Acudiente</label>
                         <input
                           className="select-like-input"
-                          autoComplete="off"
+                          list="acudientes-list"
                           placeholder="Escribe para buscar o selecciona..."
                           value={filtroAcudiente}
                           onChange={(e) => {
                             setFiltroAcudiente(e.target.value);
-                            setShowAcudienteDropdown(true);
                             const match = e.target.value.match(/^#(\d+) -/);
                             if (match) {
                               setNuevoEstudianteAcudiente(match[1]);
@@ -1070,36 +1067,14 @@ function Admin() {
                               setNuevoEstudianteAcudiente("");
                             }
                           }}
-                          onFocus={() => setShowAcudienteDropdown(true)}
-                          onBlur={() => setTimeout(() => setShowAcudienteDropdown(false), 200)}
                           required
                         />
-                        {showAcudienteDropdown && (
-                          <ul className="custom-dropdown-list">
-                            {acudientes
-                              .filter(a => {
-                                const uInfo = obtenerInfoUsuario(a.idUsuario);
-                                const text = `#${a.idAcudiente} - ${uInfo.nombre} ${uInfo.apellido}`;
-                                return text.toLowerCase().includes(filtroAcudiente.toLowerCase());
-                              })
-                              .map(a => {
-                                const uInfo = obtenerInfoUsuario(a.idUsuario);
-                                const text = `#${a.idAcudiente} - ${uInfo.nombre} ${uInfo.apellido}`;
-                                return (
-                                  <li 
-                                    key={a.idAcudiente} 
-                                    onMouseDown={() => {
-                                      setFiltroAcudiente(text);
-                                      setNuevoEstudianteAcudiente(String(a.idAcudiente));
-                                      setShowAcudienteDropdown(false);
-                                    }}
-                                  >
-                                    {text}
-                                  </li>
-                                );
-                            })}
-                          </ul>
-                        )}
+                        <datalist id="acudientes-list">
+                          {acudientes.map(a => {
+                            const uInfo = obtenerInfoUsuario(a.idUsuario);
+                            return <option key={a.idAcudiente} value={`#${a.idAcudiente} - ${uInfo.nombre} ${uInfo.apellido}`} />;
+                          })}
+                        </datalist>
                       </div>
                       <div className="form-group">
                         <label>Colegio</label>
@@ -1125,44 +1100,26 @@ function Admin() {
                           <option value="12° Bachillerato">12° Bachillerato</option>
                         </select>
                       </div>
-                      <div className="form-group relative-container">
+                      <div className="form-group">
                         <label>Ruta Asignada</label>
                         <input
                           className="select-like-input"
-                          autoComplete="off"
+                          list="rutas-list"
                           placeholder="Escribe para buscar o selecciona ruta (opcional)..."
                           value={filtroRuta}
                           onChange={(e) => {
                             setFiltroRuta(e.target.value);
-                            setShowRutaDropdown(true);
-                            const rutaEncontrada = rutas.find(r => r.nombre.toLowerCase() === e.target.value.toLowerCase());
+                            const rutaEncontrada = rutas.find(r => r.nombre === e.target.value);
                             if (rutaEncontrada) {
                               setNuevoEstudianteRuta(rutaEncontrada.id);
                             } else {
                               setNuevoEstudianteRuta("");
                             }
                           }}
-                          onFocus={() => setShowRutaDropdown(true)}
-                          onBlur={() => setTimeout(() => setShowRutaDropdown(false), 200)}
                         />
-                        {showRutaDropdown && (
-                          <ul className="custom-dropdown-list">
-                            {rutas
-                              .filter(r => r.nombre.toLowerCase().includes(filtroRuta.toLowerCase()))
-                              .map(r => (
-                                <li 
-                                  key={r.id} 
-                                  onMouseDown={() => {
-                                    setFiltroRuta(r.nombre);
-                                    setNuevoEstudianteRuta(r.id);
-                                    setShowRutaDropdown(false);
-                                  }}
-                                >
-                                  {r.nombre}
-                                </li>
-                            ))}
-                          </ul>
-                        )}
+                        <datalist id="rutas-list">
+                          {rutas.map(r => (<option key={r.id} value={r.nombre} />))}
+                        </datalist>
                       </div>
                       <div className="modal-actions">
                         <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>

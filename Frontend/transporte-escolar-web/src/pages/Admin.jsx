@@ -383,7 +383,7 @@ function Admin() {
     setEstudianteEditando(est);
     setNuevoEstudianteNombre(est.nombre); setNuevoEstudianteApellido(est.apellido);
     setNuevoEstudianteAcudiente(est.idAcudiente ? String(est.idAcudiente) : "");
-    
+
     if (est.idAcudiente) {
       const acu = acudientes.find(a => a.idAcudiente === est.idAcudiente);
       if (acu) {
@@ -397,7 +397,7 @@ function Admin() {
     }
 
     setNuevoEstudianteColegio(est.colegio || ""); setNuevoEstudianteCurso(est.cursoGrado || "");
-    
+
     setNuevoEstudianteRuta(est.idRuta ? String(est.idRuta) : "");
     if (est.idRuta) {
       const ruta = rutas.find(r => r.id === est.idRuta);
@@ -957,8 +957,7 @@ function Admin() {
                           value={editRutaPlaca}
                           onChange={(e) => setEditRutaPlaca(e.target.value)}
                         />
-                      </div>
-                      <div className="modal-actions">
+          <div className="modal-actions">
                         <button type="button" className="btn-cancelar" onClick={() => setShowModalEditarRuta(false)}>Cancelar</button>
                         <button type="submit" className="add-btn modal-submit-btn">
                           <Pencil size={16} />
@@ -1053,8 +1052,9 @@ function Admin() {
                       </div>
                       <div className="form-group">
                         <label>Acudiente</label>
-                        <input 
-                          list="acudientes-list" 
+                        <input
+                          className="select-like-input"
+                          list="acudientes-list"
                           placeholder="Escribe para buscar o selecciona..."
                           value={filtroAcudiente}
                           onChange={(e) => {
@@ -1069,9 +1069,9 @@ function Admin() {
                           required
                         />
                         <datalist id="acudientes-list">
-                          {acudientes.map(a => { 
-                            const uInfo = obtenerInfoUsuario(a.idUsuario); 
-                            return <option key={a.idAcudiente} value={`#${a.idAcudiente} - ${uInfo.nombre} ${uInfo.apellido}`} />; 
+                          {acudientes.map(a => {
+                            const uInfo = obtenerInfoUsuario(a.idUsuario);
+                            return <option key={a.idAcudiente} value={`#${a.idAcudiente} - ${uInfo.nombre} ${uInfo.apellido}`} />;
                           })}
                         </datalist>
                       </div>
@@ -1101,7 +1101,8 @@ function Admin() {
                       </div>
                       <div className="form-group">
                         <label>Ruta Asignada</label>
-                        <input 
+                        <input
+                          className="select-like-input"
                           list="rutas-list"
                           placeholder="Escribe para buscar o selecciona ruta (opcional)..."
                           value={filtroRuta}

@@ -942,3 +942,54 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* CUSTOM DROPDOWN (DATALIST REPLACEMENT) */
+.relative-container {
+  position: relative;
+}
+
+.custom-dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background-color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 0;
+  list-style: none;
+  z-index: 1000;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  margin: 0;
+}
+
+.custom-dropdown-list li {
+  padding: 10px 16px;
+  cursor: pointer;
+  color: #f8fafc;
+  font-size: 0.95rem;
+  transition: background-color 0.1s;
+}
+
+.custom-dropdown-list li:hover {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+/* Scrollbar para la lista custom */
+.custom-dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-dropdown-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 4px;
+}
+.custom-dropdown-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+.custom-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

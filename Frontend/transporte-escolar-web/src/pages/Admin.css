@@ -567,9 +567,9 @@
   color: #f8fafc;
 }
 
-.select-like-input {
+.form-group select {
   appearance: none;
-  background-image: url('data:image/svg+xml;utf8,<svg fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   background-size: 16px;
@@ -577,12 +577,23 @@
   cursor: pointer;
 }
 
+.select-like-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px !important;
+  position: relative;
+}
+
 .select-like-input::-webkit-calendar-picker-indicator {
   opacity: 0;
-  width: 100%;
+  width: 40px;
   position: absolute;
-  left: 0;
+  right: 0;
   top: 0;
+  bottom: 0;
   height: 100%;
   cursor: pointer;
 }
@@ -942,54 +953,4 @@
     grid-template-columns: 1fr;
   }
 }
-
-/* CUSTOM DROPDOWN (DATALIST REPLACEMENT) */
-.relative-container {
-  position: relative;
-}
-
-.custom-dropdown-list {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
-  max-height: 220px;
-  overflow-y: auto;
-  background-color: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 8px 0;
-  list-style: none;
-  z-index: 1000;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  margin: 0;
-}
-
-.custom-dropdown-list li {
-  padding: 10px 16px;
-  cursor: pointer;
-  color: #f8fafc;
-  font-size: 0.95rem;
-  transition: background-color 0.1s;
-}
-
-.custom-dropdown-list li:hover {
-  background-color: #3b82f6;
-  color: #ffffff;
-}
-
-/* Scrollbar para la lista custom */
-.custom-dropdown-list::-webkit-scrollbar {
-  width: 8px;
-}
-.custom-dropdown-list::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.4);
-  border-radius: 4px;
-}
-.custom-dropdown-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-.custom-dropdown-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
+

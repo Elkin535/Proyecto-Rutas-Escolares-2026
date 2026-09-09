@@ -20,7 +20,7 @@ namespace TransporteEscolarAPI.Models
         public int IdConductor { get; set; }
 
         [Column("fecha")]
-        public DateTime Fecha { get; set; } = DateTime.Today;
+        public DateTime Fecha { get; set; } = DateTime.UtcNow;
 
         [Column("hora_inicio")]
         [Required]

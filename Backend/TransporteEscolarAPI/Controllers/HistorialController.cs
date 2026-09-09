@@ -48,7 +48,7 @@ namespace TransporteEscolarAPI.Controllers
             {
                 IdVehiculo = dto.IdVehiculo,
                 IdConductor = dto.IdConductor,
-                Fecha = DateTime.Today,
+                Fecha = DateTime.UtcNow,
                 HoraInicio = DateTime.Now.TimeOfDay,
                 EstadoViaje = "En progreso"
             };

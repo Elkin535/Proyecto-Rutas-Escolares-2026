@@ -21,7 +21,7 @@ namespace TransporteEscolarAPI.Controllers
             _paradaRepository = paradaRepository;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todas")]
         public async Task<ActionResult<IEnumerable<ParadaDTO>>> GetParadas()
         {
             var paradas = await _paradaRepository.ObtenerTodasAsync();
@@ -38,8 +38,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(paradasDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ParadaDTO>> GetParada(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<ParadaDTO>> GetParada([FromQuery] int id)
         {
             var parada = await _paradaRepository.ObtenerPorIdAsync(id);
             if (parada == null) return NotFound(new { mensaje = "Parada no encontrada" });
@@ -57,8 +57,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(paradaDTO);
         }
 
-        [HttpGet("ruta/{idRuta}")]
-        public async Task<ActionResult<IEnumerable<ParadaDTO>>> GetParadasPorRuta(int idRuta)
+        [HttpGet("obtener-por-ruta")]
+        public async Task<ActionResult<IEnumerable<ParadaDTO>>> GetParadasPorRuta([FromQuery] int idRuta)
         {
             var paradas = await _paradaRepository.ObtenerPorRutaAsync(idRuta);
             var paradasDTO = paradas.Select(p => new ParadaDTO
@@ -74,8 +74,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(paradasDTO);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<ParadaDTO>> PostParada(ParadaCreateDTO paradaCreateDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<ParadaDTO>> PostParada([FromBody] ParadaCreateDTO paradaCreateDTO)
         {
             var parada = new Parada
             {
@@ -101,8 +101,8 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetParada), new { id = paradaDTO.IdParada }, paradaDTO);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutParada(int id, ParadaDTO paradaDTO)
+        [HttpPut("actualizar")]
+        public async Task<IActionResult> PutParada([FromQuery] int id, [FromBody] ParadaDTO paradaDTO)
         {
             if (id != paradaDTO.IdParada) return BadRequest(new { mensaje = "El ID no coincide" });
 
@@ -121,8 +121,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(new { mensaje = "Parada actualizada con éxito" });
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteParada(int id)
+        [HttpDelete("eliminar")]
+        public async Task<IActionResult> DeleteParada([FromQuery] int id)
         {
             var eliminado = await _paradaRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Parada no encontrada" });

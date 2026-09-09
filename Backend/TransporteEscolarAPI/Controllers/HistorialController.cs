@@ -26,7 +26,7 @@ namespace TransporteEscolarAPI.Controllers
             _hubContext = hubContext;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todos")]
         public async Task<ActionResult<IEnumerable<HistorialDTO>>> GetHistoriales()
         {
             var viajes = await _historialRepository.ObtenerTodosAsync();
@@ -39,7 +39,7 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         [HttpPost("iniciar")]
-        public async Task<ActionResult<HistorialDTO>> IniciarViaje(HistorialCreateDTO dto)
+        public async Task<ActionResult<HistorialDTO>> IniciarViaje([FromBody] HistorialCreateDTO dto)
         {
             var viajeActivo = await _historialRepository.ObtenerViajeActivoPorConductorAsync(dto.IdConductor);
             if (viajeActivo != null) return BadRequest(new { mensaje = "El conductor ya tiene un viaje activo en curso." });
@@ -57,8 +57,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(nuevoViaje);
         }
 
-        [HttpPut("{idViaje}/gps")]
-        public async Task<IActionResult> ActualizarGPS(int idViaje, UbicacionGPSDTO gpsDto)
+        [HttpPut("actualizar-gps")]
+        public async Task<IActionResult> ActualizarGPS([FromQuery] int idViaje, [FromBody] UbicacionGPSDTO gpsDto)
         {
             var viaje = await _historialRepository.ObtenerPorIdAsync(idViaje);
             if (viaje == null || viaje.EstadoViaje != "En progreso") 
@@ -78,8 +78,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(new { mensaje = "Coordenadas GPS actualizadas con éxito" });
         }
 
-        [HttpPut("{idViaje}/finalizar")]
-        public async Task<IActionResult> FinalizarViaje(int idViaje)
+        [HttpPut("finalizar")]
+        public async Task<IActionResult> FinalizarViaje([FromQuery] int idViaje)
         {
             var viaje = await _historialRepository.ObtenerPorIdAsync(idViaje);
             if (viaje == null) return NotFound(new { mensaje = "Viaje no encontrado" });

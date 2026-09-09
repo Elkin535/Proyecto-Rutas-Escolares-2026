@@ -26,7 +26,7 @@ namespace TransporteEscolarAPI.Controllers
             _authService = authService;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todos")]
         [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<IEnumerable<UsuarioDTO>>> GetUsuarios()
         {
@@ -45,8 +45,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(usuariosDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UsuarioDTO>> GetUsuario(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<UsuarioDTO>> GetUsuario([FromQuery] int id)
         {
             var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
             if (usuario == null) return NotFound(new { mensaje = "Usuario no encontrado" });
@@ -65,9 +65,9 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(usuarioDTO);
         }
 
-        [HttpPost]
+        [HttpPost("crear")]
         [Authorize(Roles = "Administrador")]
-        public async Task<ActionResult<UsuarioDTO>> PostUsuario(UsuarioCreateDTO usuarioCreateDTO)
+        public async Task<ActionResult<UsuarioDTO>> PostUsuario([FromBody] UsuarioCreateDTO usuarioCreateDTO)
         {
             var usuario = new Usuario
             {
@@ -147,9 +147,9 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(response);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("actualizar")]
         [Authorize(Roles = "Administrador")]
-        public async Task<ActionResult<UsuarioDTO>> PutUsuario(int id, UsuarioUpdateDTO usuarioUpdateDTO)
+        public async Task<ActionResult<UsuarioDTO>> PutUsuario([FromQuery] int id, [FromBody] UsuarioUpdateDTO usuarioUpdateDTO)
         {
             var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
             if (usuario == null) return NotFound(new { mensaje = "Usuario no encontrado" });
@@ -180,9 +180,9 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(usuarioDTO);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("eliminar")]
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DeleteUsuario(int id)
+        public async Task<IActionResult> DeleteUsuario([FromQuery] int id)
         {
             var eliminado = await _usuarioRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Usuario no encontrado" });

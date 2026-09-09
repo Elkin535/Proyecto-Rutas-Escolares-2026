@@ -21,7 +21,7 @@ namespace TransporteEscolarAPI.Controllers
             _conductorRepository = conductorRepository;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todos")]
         public async Task<IActionResult> GetConductores(
             [FromQuery] int? pagina,
             [FromQuery] int? limite,
@@ -67,8 +67,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(conductoresDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ConductorDTO>> GetConductor(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<ConductorDTO>> GetConductor([FromQuery] int id)
         {
             var conductor = await _conductorRepository.ObtenerPorIdAsync(id);
             if (conductor == null) return NotFound(new { mensaje = "Conductor no encontrado" });
@@ -85,8 +85,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(conductorDTO);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<ConductorDTO>> PostConductor(ConductorCreateDTO conductorCreateDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<ConductorDTO>> PostConductor([FromBody] ConductorCreateDTO conductorCreateDTO)
         {
             // 1. Validar si el usuario ya es conductor
             var usuarioExistente = await _conductorRepository.ObtenerPorIdUsuarioAsync(conductorCreateDTO.IdUsuario);
@@ -127,8 +127,8 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetConductor), new { id = conductorDTO.IdConductor }, conductorDTO);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<ConductorDTO>> PutConductor(int id, ConductorUpdateDTO conductorUpdateDTO)
+        [HttpPut("actualizar")]
+        public async Task<ActionResult<ConductorDTO>> PutConductor([FromQuery] int id, [FromBody] ConductorUpdateDTO conductorUpdateDTO)
         {
             var conductor = await _conductorRepository.ObtenerPorIdAsync(id);
             if (conductor == null) return NotFound(new { mensaje = "Conductor no encontrado" });
@@ -163,9 +163,9 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(conductorDTO);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("eliminar")]
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DeleteConductor(int id)
+        public async Task<IActionResult> DeleteConductor([FromQuery] int id)
         {
             var eliminado = await _conductorRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Conductor no encontrado" });

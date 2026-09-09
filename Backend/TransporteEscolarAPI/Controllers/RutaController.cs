@@ -21,7 +21,7 @@ namespace TransporteEscolarAPI.Controllers
             _rutaRepository = rutaRepository;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todas")]
         public async Task<IActionResult> GetRutas(
             [FromQuery] int? pagina,
             [FromQuery] int? limite,
@@ -65,8 +65,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(rutasDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<RutaDTO>> GetRuta(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<RutaDTO>> GetRuta([FromQuery] int id)
         {
             var ruta = await _rutaRepository.ObtenerPorIdAsync(id);
             if (ruta == null) return NotFound(new { mensaje = "Ruta no encontrada" });
@@ -82,8 +82,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(rutaDTO);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<RutaDTO>> PostRuta(RutaCreateDTO rutaCreateDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<RutaDTO>> PostRuta([FromBody] RutaCreateDTO rutaCreateDTO)
         {
             var ruta = new Ruta
             {
@@ -105,8 +105,8 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetRuta), new { id = rutaDTO.IdRuta }, rutaDTO);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutRuta(int id, RutaDTO rutaDTO)
+        [HttpPut("actualizar")]
+        public async Task<IActionResult> PutRuta([FromQuery] int id, [FromBody] RutaDTO rutaDTO)
         {
             if (id != rutaDTO.IdRuta) return BadRequest(new { mensaje = "El ID no coincide" });
 
@@ -123,9 +123,9 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(new { mensaje = "Ruta actualizada con éxito" });
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("eliminar")]
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DeleteRuta(int id)
+        public async Task<IActionResult> DeleteRuta([FromQuery] int id)
         {
             var eliminado = await _rutaRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Ruta no encontrada" });

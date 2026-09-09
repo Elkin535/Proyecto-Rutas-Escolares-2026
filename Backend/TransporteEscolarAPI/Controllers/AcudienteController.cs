@@ -21,7 +21,7 @@ namespace TransporteEscolarAPI.Controllers
             _acudienteRepository = acudienteRepository;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todos")]
         public async Task<IActionResult> GetAcudientes(
             [FromQuery] int? pagina,
             [FromQuery] int? limite,
@@ -63,8 +63,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(acudientesDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<AcudienteDTO>> GetAcudiente(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<AcudienteDTO>> GetAcudiente([FromQuery] int id)
         {
             var acudiente = await _acudienteRepository.ObtenerPorIdAsync(id);
             if (acudiente == null) return NotFound(new { mensaje = "Acudiente no encontrado" });
@@ -79,8 +79,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(acudienteDTO);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<AcudienteDTO>> PostAcudiente(AcudienteCreateDTO acudienteCreateDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<AcudienteDTO>> PostAcudiente([FromBody] AcudienteCreateDTO acudienteCreateDTO)
         {
             // Opcional: Validar aquí si ya existe un acudiente con ese id_usuario antes de insertar
             var acudienteExistente = await _acudienteRepository.ObtenerPorIdUsuarioAsync(acudienteCreateDTO.IdUsuario);
@@ -107,8 +107,8 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetAcudiente), new { id = acudienteDTO.IdAcudiente }, acudienteDTO);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<AcudienteDTO>> PutAcudiente(int id, AcudienteUpdateDTO acudienteUpdateDTO)
+        [HttpPut("actualizar")]
+        public async Task<ActionResult<AcudienteDTO>> PutAcudiente([FromQuery] int id, [FromBody] AcudienteUpdateDTO acudienteUpdateDTO)
         {
             var acudiente = await _acudienteRepository.ObtenerPorIdAsync(id);
             if (acudiente == null) return NotFound(new { mensaje = "Acudiente no encontrado" });
@@ -129,9 +129,9 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(acudienteDTO);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("eliminar")]
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DeleteAcudiente(int id)
+        public async Task<IActionResult> DeleteAcudiente([FromQuery] int id)
         {
             var eliminado = await _acudienteRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Acudiente no encontrado" });

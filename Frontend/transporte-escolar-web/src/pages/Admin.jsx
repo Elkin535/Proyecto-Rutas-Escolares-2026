@@ -32,6 +32,12 @@ function Admin() {
   const { tab } = useParams();
   const activeTab = tab || "resumen";
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificacion, setNotificacion] = useState({ show: false, message: "", type: "success" });
+
+  const mostrarNotificacion = (message, type = "success") => {
+    setNotificacion({ show: true, message, type });
+    setTimeout(() => setNotificacion({ show: false, message: "", type: "success" }), 4000);
+  };
   const [rutas, setRutas] = useState([]);
 
   // ── Estados generales ──
@@ -175,6 +181,7 @@ function Admin() {
       case "conductores":
         cargarUsuarios();
         cargarConductores();
+        cargarVehiculos();
         break;
       case "vehiculos":
         cargarVehiculos();
@@ -215,6 +222,7 @@ function Admin() {
       console.error("Error al cargar vehiculos:", err);
     }
   };
+
 
   const obtenerInfoUsuario = (idUsuario) => {
     return usuarios.find(u => u.idUsuario === idUsuario) || {};
@@ -396,7 +404,7 @@ function Admin() {
         (pos) => {
           mapRouteInstanceRef.current.flyTo([pos.coords.latitude, pos.coords.longitude], 15);
         },
-        () => alert("No se pudo obtener la ubicación GPS.")
+        () => mostrarNotificacion("No se pudo obtener la ubicación GPS.", "error")
       );
     }
   };
@@ -430,11 +438,11 @@ function Admin() {
   const agregarRuta = async (e) => {
     e.preventDefault();
     if (!nuevaRutaNombre.trim()) {
-      alert("Por favor ingresa un nombre para la ruta.");
+      mostrarNotificacion("Por favor ingresa un nombre para la ruta.", "error");
       return;
     }
     if (!nuevaRutaConductor) {
-      alert("Por favor selecciona o asigna un conductor.");
+      mostrarNotificacion("Por favor selecciona o asigna un conductor.", "error");
       return;
     }
 
@@ -472,13 +480,14 @@ function Admin() {
         await cargarRutas();
         limpiarFormularioRuta();
         setShowModalRuta(false);
+        mostrarNotificacion("Ruta guardada con éxito", "success");
       } else {
         const errData = await response.json().catch(() => null);
-        alert(errData?.mensaje || "Error al guardar la ruta en el servidor.");
+        mostrarNotificacion(errData?.mensaje || "Error al guardar la ruta en el servidor.", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("No se pudo conectar con el servidor.");
+      mostrarNotificacion("No se pudo conectar con el servidor.", "error");
     } finally {
       setGuardandoRuta(false);
     }
@@ -489,8 +498,9 @@ function Admin() {
     try {
       const response = await fetchAuth(`Ruta/eliminar?id=${id}`, { method: "DELETE" });
       if (response.ok) setRutas(rutas.filter(r => r.id !== id));
+        mostrarNotificacion("Ruta eliminada con éxito", "success");
     } catch (err) {
-      alert("No se pudo conectar con el servidor para eliminar.");
+      mostrarNotificacion("No se pudo conectar con el servidor para eliminar.", "error");
     }
   };
 
@@ -515,12 +525,13 @@ function Admin() {
       if (response.ok) {
         await cargarRutas();
         setShowModalEditarRuta(false);
+        mostrarNotificacion("Ruta actualizada con éxito", "success");
         setRutaEditando(null);
       } else {
-        alert("Error al actualizar la ruta en el servidor.");
+        mostrarNotificacion("Error al actualizar la ruta en el servidor.", "error");
       }
     } catch (err) {
-      alert("No se pudo conectar con el servidor para actualizar.");
+      mostrarNotificacion("No se pudo conectar con el servidor para actualizar.", "error");
     }
   };
 
@@ -543,7 +554,7 @@ function Admin() {
     e.preventDefault();
     if (!nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
     if (!nuevoEstudianteAcudiente) {
-      alert("Por favor selecciona un acudiente válido de la lista.");
+      mostrarNotificacion("Por favor selecciona un acudiente válido de la lista.", "error");
       return;
     }
     const body = {
@@ -563,12 +574,13 @@ function Admin() {
         await cargarEstudiantes();
         limpiarFormularioEstudiante();
         setShowModalEstudiante(false);
+        mostrarNotificacion("Estudiante guardado con éxito", "success");
       } else {
         const errorData = await response.json().catch(() => null);
-        alert(errorData?.mensaje || "Error al guardar el estudiante.");
+        mostrarNotificacion(errorData?.mensaje || "Error al guardar el estudiante.", "error");
       }
     } catch (err) {
-      alert("Error de red.");
+      mostrarNotificacion("Error de red.", "error");
     }
   };
 
@@ -576,7 +588,7 @@ function Admin() {
     e.preventDefault();
     if (!estudianteEditando || !nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
     if (!nuevoEstudianteAcudiente) {
-      alert("Por favor selecciona un acudiente válido de la lista.");
+      mostrarNotificacion("Por favor selecciona un acudiente válido de la lista.", "error");
       return;
     }
     const body = {
@@ -597,9 +609,10 @@ function Admin() {
         await cargarEstudiantes();
         limpiarFormularioEstudiante();
         setShowModalEstudiante(false);
-      } else alert("Error al actualizar el estudiante.");
+        mostrarNotificacion("Estudiante guardado con éxito", "success");
+      } else mostrarNotificacion("Error al actualizar el estudiante.", "error");
     } catch (err) {
-      alert("Error de red.");
+      mostrarNotificacion("Error de red.", "error");
     }
   };
 
@@ -610,9 +623,10 @@ function Admin() {
       if (response.ok) {
         await cargarEstudiantes();
         if (estudianteEditando && estudianteEditando.idEstudiante === id) limpiarFormularioEstudiante();
+        mostrarNotificacion("Estudiante eliminado con éxito", "success");
       }
     } catch (err) {
-      alert("Error de red.");
+      mostrarNotificacion("Error de red.", "error");
     }
   };
 
@@ -691,12 +705,13 @@ function Admin() {
         await cargarVehiculos();
         limpiarFormularioVehiculo();
         setShowModalVehiculo(false);
+        mostrarNotificacion("Vehículo guardado con éxito", "success");
       } else {
         const errorData = await response.json().catch(() => null);
-        alert(errorData?.mensaje || "Error al guardar el vehículo.");
+        mostrarNotificacion(errorData?.mensaje || "Error al guardar el vehículo.", "error");
       }
     } catch (err) {
-      alert("Error de red.");
+      mostrarNotificacion("Error de red.", "error");
     }
   };
 
@@ -720,9 +735,10 @@ function Admin() {
         await cargarVehiculos();
         limpiarFormularioVehiculo();
         setShowModalVehiculo(false);
-      } else alert("Error al actualizar el vehículo.");
+        mostrarNotificacion("Vehículo guardado con éxito", "success");
+      } else mostrarNotificacion("Error al actualizar el vehículo.", "error");
     } catch (err) {
-      alert("Error de red.");
+      mostrarNotificacion("Error de red.", "error");
     }
   };
 
@@ -730,11 +746,9 @@ function Admin() {
     if (!window.confirm("¿Seguro que deseas eliminar este vehículo?")) return;
     try {
       const response = await fetchAuth(`Vehiculo/eliminar?id=${idVehiculo}`, { method: "DELETE" });
-      if (response.ok) {
-        await cargarVehiculos();
-      } else alert("Error al eliminar vehículo. Verifica que no esté en uso.");
+      if (response.ok) { await cargarVehiculos(); mostrarNotificacion("Vehículo eliminado con éxito", "success"); } else mostrarNotificacion("Error al eliminar vehículo. Verifica que no esté en uso.", "error");
     } catch (err) {
-      alert("Error de red.");
+      mostrarNotificacion("Error de red.", "error");
     }
   };
 
@@ -780,9 +794,10 @@ function Admin() {
         await cargarAcudientes();
         limpiarFormularioAcudiente();
         setShowModalAcudiente(false);
+        mostrarNotificacion("Acudiente guardado con éxito", "success");
       } else throw new Error("Error al crear acudiente.");
     } catch (err) {
-      alert(err.message);
+      mostrarNotificacion(err.message, "error");
     }
   };
 
@@ -809,9 +824,10 @@ function Admin() {
         await cargarAcudientes();
         limpiarFormularioAcudiente();
         setShowModalAcudiente(false);
+        mostrarNotificacion("Acudiente guardado con éxito", "success");
       } else throw new Error("Error al actualizar acudiente.");
     } catch (err) {
-      alert(err.message);
+      mostrarNotificacion(err.message, "error");
     }
   };
 
@@ -825,7 +841,7 @@ function Admin() {
       await cargarAcudientes();
       if (acudienteEditando && acudienteEditando.idAcudiente === idAcudiente) limpiarFormularioAcudiente();
     } catch (err) {
-      alert(err.message);
+      mostrarNotificacion(err.message, "error");
     }
   };
 
@@ -889,7 +905,7 @@ function Admin() {
         throw new Error(data.mensaje || "Error al crear conductor.");
       }
     } catch (err) {
-      alert(err.message);
+      mostrarNotificacion(err.message, "error");
     }
   };
 
@@ -921,7 +937,7 @@ function Admin() {
         throw new Error(data.mensaje || "Error al actualizar conductor.");
       }
     } catch (err) {
-      alert(err.message);
+      mostrarNotificacion(err.message, "error");
     }
   };
 
@@ -934,7 +950,7 @@ function Admin() {
       await cargarUsuarios(); await cargarConductores();
       if (conductorEditando && conductorEditando.idConductor === idConductor) limpiarFormularioConductor();
     } catch (err) {
-      alert(err.message);
+      mostrarNotificacion(err.message, "error");
     }
   };
 
@@ -953,6 +969,7 @@ function Admin() {
     setNuevoConductorCorreo(""); setNuevoConductorContrasena(""); setNuevoConductorTelefono("");
     setNuevoConductorLicencia(""); setNuevoConductorCategoria(""); setNuevoConductorVehiculo("");
     setShowModalConductor(false);
+        mostrarNotificacion("Conductor guardado con éxito", "success");
   };
 
   const obtenerNombreRuta = (idRuta) => {
@@ -1384,11 +1401,13 @@ function Admin() {
 
               {/* MODAL: Crear / Editar Estudiante */}
               {showModalEstudiante && (
-                <div className="modal-overlay" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                <div className="modal-overlay" onClick={() => { setShowModalEstudiante(false);
+        mostrarNotificacion("Estudiante guardado con éxito", "success"); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false);
+        mostrarNotificacion("Estudiante guardado con éxito", "success"); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
                         <X size={18} />
                       </button>
                     </div>
@@ -1474,7 +1493,8 @@ function Admin() {
                         </datalist>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false);
+        mostrarNotificacion("Estudiante guardado con éxito", "success"); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>
                         <button type="submit" className="add-btn modal-submit-btn">
                           {estudianteEditando ? <Pencil size={16} /> : <Plus size={16} />}
                           <span>{estudianteEditando ? "Guardar Cambios" : "Guardar Estudiante"}</span>
@@ -1546,11 +1566,13 @@ function Admin() {
 
               {/* MODAL: Crear / Editar Acudiente */}
               {showModalAcudiente && (
-                <div className="modal-overlay" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
+                <div className="modal-overlay" onClick={() => { setShowModalAcudiente(false);
+        mostrarNotificacion("Acudiente guardado con éxito", "success"); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{acudienteEditando ? "Editar Acudiente" : "Crear Nuevo Acudiente"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalAcudiente(false);
+        mostrarNotificacion("Acudiente guardado con éxito", "success"); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
                         <X size={18} />
                       </button>
                     </div>
@@ -1584,7 +1606,8 @@ function Admin() {
                         </div>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>Cancelar</button>
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalAcudiente(false);
+        mostrarNotificacion("Acudiente guardado con éxito", "success"); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>Cancelar</button>
                         <button type="submit" className="add-btn modal-submit-btn">
                           {acudienteEditando ? <Pencil size={16} /> : <Plus size={16} />}
                           <span>{acudienteEditando ? "Guardar Cambios" : "Guardar Acudiente"}</span>
@@ -1609,11 +1632,13 @@ function Admin() {
               </div>
 
               {showModalConductor && (
-                <div className="modal-overlay" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>
+                <div className="modal-overlay" onClick={() => { setShowModalConductor(false);
+        mostrarNotificacion("Conductor guardado con éxito", "success"); setConductorEditando(null); limpiarFormularioConductor(); }}>
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{conductorEditando ? "Editar Conductor" : "Crear Nuevo Conductor"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalConductor(false);
+        mostrarNotificacion("Conductor guardado con éxito", "success"); setConductorEditando(null); limpiarFormularioConductor(); }}>
                         <X size={18} />
                       </button>
                     </div>
@@ -1660,7 +1685,8 @@ function Admin() {
                         </select>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>Cancelar</button>
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalConductor(false);
+        mostrarNotificacion("Conductor guardado con éxito", "success"); setConductorEditando(null); limpiarFormularioConductor(); }}>Cancelar</button>
                         <button type="submit" className="add-btn modal-submit-btn">
                           {conductorEditando ? <Pencil size={16} /> : <Plus size={16} />}
                           <span>{conductorEditando ? "Guardar Cambios" : "Guardar Conductor"}</span>
@@ -1706,11 +1732,13 @@ function Admin() {
               </div>
 
               {showModalVehiculo && (
-                <div className="modal-overlay" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
+                <div className="modal-overlay" onClick={() => { setShowModalVehiculo(false);
+        mostrarNotificacion("Vehículo guardado con éxito", "success"); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{vehiculoEditando ? "Editar Vehículo" : "Añadir Nuevo Vehículo"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalVehiculo(false);
+        mostrarNotificacion("Vehículo guardado con éxito", "success"); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
                         <X size={18} />
                       </button>
                     </div>
@@ -1740,7 +1768,8 @@ function Admin() {
                         </div>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>Cancelar</button>
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalVehiculo(false);
+        mostrarNotificacion("Vehículo guardado con éxito", "success"); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>Cancelar</button>
                         <button type="submit" className="add-btn modal-submit-btn">
                           {vehiculoEditando ? <Pencil size={16} /> : <Plus size={16} />}
                           <span>{vehiculoEditando ? "Guardar Cambios" : "Guardar Vehículo"}</span>

@@ -1245,4 +1245,43 @@
   color: #ef4444;
 }
 
-
+
+/* ====================================================
+   TOAST NOTIFICATION (GLOBAL)
+   ==================================================== */
+.toast-notification {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards;
+  backdrop-filter: blur(8px);
+}
+
+.toast-notification.success {
+  background: rgba(16, 185, 129, 0.9);
+  border: 1px solid #059669;
+}
+
+.toast-notification.error {
+  background: rgba(239, 68, 68, 0.9);
+  border: 1px solid #b91c1c;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

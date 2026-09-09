@@ -21,7 +21,7 @@ namespace TransporteEscolarAPI.Controllers
             _vehiculoRepository = vehiculoRepository;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todos")]
         public async Task<IActionResult> GetVehiculos(
             [FromQuery] int? pagina,
             [FromQuery] int? limite,
@@ -69,8 +69,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(vehiculosDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<VehiculoDTO>> GetVehiculo(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<VehiculoDTO>> GetVehiculo([FromQuery] int id)
         {
             var vehiculo = await _vehiculoRepository.ObtenerPorIdAsync(id);
             if (vehiculo == null) return NotFound(new { mensaje = "Vehículo no encontrado" });
@@ -88,8 +88,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(vehiculoDTO);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<VehiculoDTO>> PostVehiculo(VehiculoCreateDTO vehiculoCreateDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<VehiculoDTO>> PostVehiculo([FromBody] VehiculoCreateDTO vehiculoCreateDTO)
         {
             var vehiculoExistente = await _vehiculoRepository.ObtenerPorPlacaAsync(vehiculoCreateDTO.Placa);
             if (vehiculoExistente != null)
@@ -121,9 +121,37 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetVehiculo), new { id = vehiculoDTO.IdVehiculo }, vehiculoDTO);
         }
 
-        [HttpDelete("{id}")]
+        [HttpPut("actualizar")]
+        public async Task<IActionResult> PutVehiculo([FromQuery] int id, [FromBody] VehiculoCreateDTO dto)
+        {
+            var vehiculo = await _vehiculoRepository.ObtenerPorIdAsync(id);
+            if (vehiculo == null) return NotFound(new { mensaje = "Vehículo no encontrado" });
+
+            // Validar si la placa cambió y ya existe en otro vehículo
+            if (!string.Equals(vehiculo.Placa, dto.Placa, StringComparison.OrdinalIgnoreCase))
+            {
+                var existente = await _vehiculoRepository.ObtenerPorPlacaAsync(dto.Placa);
+                if (existente != null && existente.IdVehiculo != id)
+                {
+                    return BadRequest(new { mensaje = $"La placa {dto.Placa.ToUpper()} ya está en uso." });
+                }
+            }
+
+            vehiculo.Placa = dto.Placa.ToUpper();
+            vehiculo.Modelo = dto.Modelo;
+            vehiculo.CapacidadPasajeros = dto.CapacidadPasajeros;
+            vehiculo.SoatVencimiento = dto.SoatVencimiento;
+            vehiculo.TecnomecanicaVencimiento = dto.TecnomecanicaVencimiento;
+
+            var actualizado = await _vehiculoRepository.ActualizarAsync(vehiculo);
+            if (!actualizado) return StatusCode(500, new { mensaje = "Error al actualizar el vehículo" });
+
+            return Ok(new { mensaje = "Vehículo actualizado con éxito" });
+        }
+
+        [HttpDelete("eliminar")]
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DeleteVehiculo(int id)
+        public async Task<IActionResult> DeleteVehiculo([FromQuery] int id)
         {
             var eliminado = await _vehiculoRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Vehículo no encontrado" });

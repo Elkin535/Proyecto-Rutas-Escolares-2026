@@ -21,7 +21,7 @@ namespace TransporteEscolarAPI.Controllers
             _estudianteRepository = estudianteRepository;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todos")]
         public async Task<IActionResult> GetEstudiantes(
             [FromQuery] int? pagina,
             [FromQuery] int? limite,
@@ -75,8 +75,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(estudiantesDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EstudianteDTO>> GetEstudiante(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<EstudianteDTO>> GetEstudiante([FromQuery] int id)
         {
             var estudiante = await _estudianteRepository.ObtenerPorIdAsync(id);
             if (estudiante == null) return NotFound(new { mensaje = "Estudiante no encontrado" });
@@ -98,8 +98,8 @@ namespace TransporteEscolarAPI.Controllers
         }
 
         // Nuevo endpoint para traer los estudiantes de un acudiente en específico
-        [HttpGet("acudiente/{idAcudiente}")]
-        public async Task<ActionResult<IEnumerable<EstudianteDTO>>> GetEstudiantesPorAcudiente(int idAcudiente)
+        [HttpGet("obtener-por-acudiente")]
+        public async Task<ActionResult<IEnumerable<EstudianteDTO>>> GetEstudiantesPorAcudiente([FromQuery] int idAcudiente)
         {
             var estudiantes = await _estudianteRepository.ObtenerPorAcudienteAsync(idAcudiente);
             var estudiantesDTO = estudiantes.Select(e => new EstudianteDTO
@@ -118,8 +118,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(estudiantesDTO);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<EstudianteDTO>> PostEstudiante(EstudianteCreateDTO estudianteCreateDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<EstudianteDTO>> PostEstudiante([FromBody] EstudianteCreateDTO estudianteCreateDTO)
         {
             var estudiante = new Estudiante
             {
@@ -151,8 +151,8 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetEstudiante), new { id = estudianteDTO.IdEstudiante }, estudianteDTO);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<EstudianteDTO>> PutEstudiante(int id, EstudianteUpdateDTO estudianteUpdateDTO)
+        [HttpPut("actualizar")]
+        public async Task<ActionResult<EstudianteDTO>> PutEstudiante([FromQuery] int id, [FromBody] EstudianteUpdateDTO estudianteUpdateDTO)
         {
             var estudiante = await _estudianteRepository.ObtenerPorIdAsync(id);
             if (estudiante == null) return NotFound(new { mensaje = "Estudiante no encontrado" });
@@ -185,9 +185,9 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(estudianteDTO);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("eliminar")]
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DeleteEstudiante(int id)
+        public async Task<IActionResult> DeleteEstudiante([FromQuery] int id)
         {
             var eliminado = await _estudianteRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Estudiante no encontrado" });

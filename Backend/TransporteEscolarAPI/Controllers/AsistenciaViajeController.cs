@@ -22,8 +22,8 @@ namespace TransporteEscolarAPI.Controllers
             _asistenciaRepository = asistenciaRepository;
         }
 
-        [HttpGet("viaje/{idViaje}")]
-        public async Task<ActionResult<IEnumerable<AsistenciaViajeDTO>>> GetAsistenciasPorViaje(int idViaje)
+        [HttpGet("obtener-viaje")]
+        public async Task<ActionResult<IEnumerable<AsistenciaViajeDTO>>> GetAsistenciasPorViaje([FromQuery] int idViaje)
         {
             var asistencias = await _asistenciaRepository.ObtenerPorViajeAsync(idViaje);
             var dtos = asistencias.Select(av => new AsistenciaViajeDTO
@@ -39,8 +39,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(dtos);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<AsistenciaViajeDTO>> GetAsistencia(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<AsistenciaViajeDTO>> GetAsistencia([FromQuery] int id)
         {
             var av = await _asistenciaRepository.ObtenerPorIdAsync(id);
             if (av == null) return NotFound(new { mensaje = "Registro de asistencia no encontrado" });
@@ -58,8 +58,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(dto);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<AsistenciaViajeDTO>> PostAsistencia(AsistenciaViajeCreateDTO createDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<AsistenciaViajeDTO>> PostAsistencia([FromBody] AsistenciaViajeCreateDTO createDTO)
         {
             // Validar si ya existe el registro del estudiante en este viaje
             var existente = await _asistenciaRepository.ObtenerPorEstudianteYViajeAsync(createDTO.IdEstudiante, createDTO.IdViaje);
@@ -92,8 +92,8 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetAsistencia), new { id = dto.IdAsistencia }, dto);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAsistencia(int id, AsistenciaViajeUpdateDTO updateDTO)
+        [HttpPut("actualizar")]
+        public async Task<IActionResult> PutAsistencia([FromQuery] int id, [FromBody] AsistenciaViajeUpdateDTO updateDTO)
         {
             var av = await _asistenciaRepository.ObtenerPorIdAsync(id);
             if (av == null) return NotFound(new { mensaje = "Registro de asistencia no encontrado" });
@@ -124,8 +124,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(new { mensaje = "Estado de asistencia actualizado", horaAbordaje = av.HoraAbordaje, horaEntrega = av.HoraEntrega });
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsistencia(int id)
+        [HttpDelete("eliminar")]
+        public async Task<IActionResult> DeleteAsistencia([FromQuery] int id)
         {
             var eliminado = await _asistenciaRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Registro de asistencia no encontrado" });

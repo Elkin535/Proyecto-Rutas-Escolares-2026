@@ -21,7 +21,7 @@ namespace TransporteEscolarAPI.Controllers
             _rolRepository = rolRepository;
         }
 
-        [HttpGet]
+        [HttpGet("obtener-todos")]
         public async Task<ActionResult<IEnumerable<RolDTO>>> GetRoles()
         {
             var roles = await _rolRepository.ObtenerTodosAsync();
@@ -34,8 +34,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(rolesDTO);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<RolDTO>> GetRol(int id)
+        [HttpGet("obtener-por-id")]
+        public async Task<ActionResult<RolDTO>> GetRol([FromQuery] int id)
         {
             var rol = await _rolRepository.ObtenerPorIdAsync(id);
             if (rol == null) return NotFound(new { mensaje = "Rol no encontrado" });
@@ -49,8 +49,8 @@ namespace TransporteEscolarAPI.Controllers
             return Ok(rolDTO);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<RolDTO>> PostRol(RolCreateDTO rolCreateDTO)
+        [HttpPost("crear")]
+        public async Task<ActionResult<RolDTO>> PostRol([FromBody] RolCreateDTO rolCreateDTO)
         {
             var rol = new Rol
             {
@@ -68,8 +68,8 @@ namespace TransporteEscolarAPI.Controllers
             return CreatedAtAction(nameof(GetRol), new { id = rolDTO.IdRol }, rolDTO);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRol(int id)
+        [HttpDelete("eliminar")]
+        public async Task<IActionResult> DeleteRol([FromQuery] int id)
         {
             var eliminado = await _rolRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Rol no encontrado o no se pudo eliminar" });

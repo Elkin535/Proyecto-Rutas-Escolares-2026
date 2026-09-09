@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Bus, LogOut, CheckCircle, Navigation, Clock, User, Heart,
   ToggleLeft, ToggleRight, MapPin, Phone, MessageSquare,
-  ShieldCheck, AlertTriangle, RefreshCw, Calendar, Info, ChevronRight, Award
+  ShieldCheck, AlertTriangle, RefreshCw, Calendar, Info
 } from "lucide-react";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,90 +15,25 @@ function Acudiente() {
   const navigate = useNavigate();
   const [usuarioData, setUsuarioData] = useState({});
   const [estudiantesData, setEstudiantesData] = useState([]);
-
-  useEffect(() => {
-    const fetchEstudiante = async (userId) => {
-      try {
-        const resAcu = await fetchAuth("Acudiente");
-        const acudientes = await resAcu.json();
-        const miAcudiente = acudientes.find(a => a.idUsuario === userId);
-
-        if (miAcudiente) {
-          const resEst = await fetchAuth(`Estudiante/acudiente/${miAcudiente.idAcudiente}`);
-          const estudiantes = await resEst.json();
-          if (estudiantes && estudiantes.length > 0) {
-            setEstudiantesData(estudiantes);
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching estudiante:", err);
-      }
-    };
-
-    const userStr = localStorage.getItem("usuario");
-    if (userStr) {
-      try {
-        const userObj = JSON.parse(userStr);
-        setUsuarioData(userObj);
-        if (userObj.idUsuario) {
-          fetchEstudiante(userObj.idUsuario);
-        }
-      } catch (e) { }
-    }
-  }, []);
+  const [paradaEstudiante, setParadaEstudiante] = useState(null);
+  const [rutaInfo, setRutaInfo] = useState(null);
+  const [conductorInfo, setConductorInfo] = useState(null);
+  const [vehiculoInfo, setVehiculoInfo] = useState(null);
+  const [viajeActivo, setViajeActivo] = useState(null);
 
   const [hijoEstado, setHijoEstado] = useState("Pendiente");
   const [noViajaHoy, setNoViajaHoy] = useState(false);
   const [ubicacionBus, setUbicacionBus] = useState(null);
   const [alertaParada, setAlertaParada] = useState(false);
   const [alertaColegio, setAlertaColegio] = useState(false);
-
-  const miParada = { lat: 4.7110, lng: -74.0721 };
-  const colegio = { lat: 4.7450, lng: -74.0910 };
-  const idViajeActivo = 123; // Mismo ID que usa el conductor para pruebas
+  const [distanciaEstimada, setDistanciaEstimada] = useState(null);
 
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerBusRef = useRef(null);
+  const markerParadaRef = useRef(null);
 
-  // Inicializar Mapa
-  useEffect(() => {
-    if (mapRef.current && !mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([4.7110, -74.0721], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstanceRef.current);
-
-      // Parada y Colegio Markers
-      L.circleMarker([miParada.lat, miParada.lng], { color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.8, radius: 9 })
-        .addTo(mapInstanceRef.current)
-        .bindPopup("<strong>Tu Parada</strong><br/>Recogida: ~07:10 AM");
-
-      L.circleMarker([colegio.lat, colegio.lng], { color: '#8b5cf6', fillColor: '#a78bfa', fillOpacity: 0.8, radius: 9 })
-        .addTo(mapInstanceRef.current)
-        .bindPopup("<strong>Colegio Destino</strong><br/>Llegada aprox: 07:40 AM");
-
-      const busIcon = L.icon({
-        iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
-      });
-      markerBusRef.current = L.marker([4.7000, -74.0700], { icon: busIcon }).addTo(mapInstanceRef.current);
-
-      setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize();
-      }, 250);
-    }
-  }, []);
-
-  // Forzar invalidateSize cuando cambia el estado o pestaña para evitar huecos en blanco del mapa
-  useEffect(() => {
-    if (mapInstanceRef.current) {
-      setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize();
-      }, 250);
-    }
-  }, [hijoEstado, noViajaHoy]);
-
-  // Haversine Distance Calculator
+  // Haversine Distance Calculator en kilómetros
   const calcularDistancia = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -111,11 +46,187 @@ function Acudiente() {
     return R * c;
   };
 
+  // Carga inicial de datos reales
   useEffect(() => {
-    if (noViajaHoy) {
-      setHijoEstado("NoViaja");
-      return;
+    const cargarDatosAcudiente = async () => {
+      const userStr = localStorage.getItem("usuario");
+      if (!userStr) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      try {
+        const userObj = JSON.parse(userStr);
+        setUsuarioData(userObj);
+
+        // 1. Obtener acudiente de la BD
+        const resAcu = await fetchAuth("Acudiente/obtener-todos");
+        if (!resAcu.ok) return;
+        const acudientes = await resAcu.json();
+        const miAcudiente = acudientes.find(a => a.idUsuario === userObj.idUsuario) || acudientes[0];
+
+        if (!miAcudiente) return;
+
+        // 2. Obtener estudiantes del acudiente
+        const resEst = await fetchAuth(`Estudiante/obtener-por-acudiente?idAcudiente=${miAcudiente.idAcudiente}`);
+        let estudiantes = [];
+        if (resEst.ok) {
+          estudiantes = await resEst.json();
+          setEstudiantesData(estudiantes);
+        }
+
+        const primerEst = estudiantes && estudiantes.length > 0 ? estudiantes[0] : null;
+
+        // 3. Parada del estudiante
+        if (primerEst?.idParada) {
+          const resParada = await fetchAuth(`Parada/obtener-por-id?id=${primerEst.idParada}`);
+          if (resParada.ok) {
+            const parada = await resParada.json();
+            setParadaEstudiante(parada);
+          }
+        } else if (primerEst?.idRuta) {
+          // Si no tiene parada específica pero tiene ruta, consultar primera parada de la ruta
+          const resParadas = await fetchAuth(`Parada/obtener-por-ruta?idRuta=${primerEst.idRuta}`);
+          if (resParadas.ok) {
+            const paradas = await resParadas.json();
+            if (paradas && paradas.length > 0) {
+              setParadaEstudiante(paradas[0]);
+            }
+          }
+        }
+
+        // 4. Ruta y Conductor asignado
+        if (primerEst?.idRuta) {
+          const resRuta = await fetchAuth(`Ruta/obtener-por-id?id=${primerEst.idRuta}`);
+          if (resRuta.ok) {
+            const ruta = await resRuta.json();
+            setRutaInfo(ruta);
+          }
+        }
+
+        // Obtener conductores y usuarios para datos de contacto reales
+        const [resCond, resUsr, resVeh] = await Promise.all([
+          fetchAuth("Conductor/obtener-todos"),
+          fetchAuth("Usuario/obtener-todos"),
+          fetchAuth("Vehiculo/obtener-todos")
+        ]);
+
+        let conductores = resCond.ok ? await resCond.json() : [];
+        let usuarios = resUsr.ok ? await resUsr.json() : [];
+        let vehiculos = resVeh.ok ? await resVeh.json() : [];
+
+        if (conductores.length > 0) {
+          const cond = conductores[0];
+          const usr = usuarios.find(u => u.idUsuario === cond.idUsuario) || {};
+          const veh = vehiculos.find(v => v.idVehiculo === cond.idVehiculo) || vehiculos[0];
+
+          setConductorInfo({
+            nombre: usr.nombre ? `${usr.nombre} ${usr.apellido || ""}`.trim() : "Conductor Asignado",
+            telefono: usr.telefono || "+57 300 000 0000",
+            licencia: cond.numeroLicencia || "Vigente",
+            categoria: cond.categoriaLicencia || "C2"
+          });
+
+          if (veh) {
+            setVehiculoInfo(veh);
+          }
+        }
+
+        // 5. Consultar viaje activo en la flota
+        const resHist = await fetchAuth("Historial/obtener-todos");
+        if (resHist.ok) {
+          const historial = await resHist.json();
+          const viajeEnCurso = historial.find(h => h.estadoViaje === "En progreso");
+          if (viajeEnCurso) {
+            setViajeActivo(viajeEnCurso);
+            if (viajeEnCurso.latitudActual && viajeEnCurso.longitudActual) {
+              setUbicacionBus({
+                lat: viajeEnCurso.latitudActual,
+                lng: viajeEnCurso.longitudActual
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error al cargar datos del acudiente:", err);
+      }
+    };
+
+    cargarDatosAcudiente();
+  }, [navigate]);
+
+  // Inicializar Mapa Leaflet
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    // Inicializar mapa centrado
+    const initialCoords = paradaEstudiante
+      ? [paradaEstudiante.latitud, paradaEstudiante.longitud]
+      : [4.7110, -74.0721];
+
+    const map = L.map(mapRef.current).setView(initialCoords, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Intentar geolocalizar al acudiente si no hay parada aún
+    if (!paradaEstudiante && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+        },
+        (err) => console.log("Geolocalización del acudiente:", err.message),
+        { timeout: 6000 }
+      );
     }
+
+    mapInstanceRef.current = map;
+    setTimeout(() => map.invalidateSize(), 250);
+  }, [paradaEstudiante]);
+
+  // Actualizar marcador de la parada del estudiante cuando se cargue
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !paradaEstudiante) return;
+
+    if (markerParadaRef.current) {
+      markerParadaRef.current.remove();
+    }
+
+    markerParadaRef.current = L.circleMarker([paradaEstudiante.latitud, paradaEstudiante.longitud], {
+      color: '#f59e0b',
+      fillColor: '#fbbf24',
+      fillOpacity: 0.9,
+      radius: 10
+    })
+      .addTo(map)
+      .bindPopup(`<strong>Tu Parada Asignada</strong><br/>${paradaEstudiante.nombreParada}`);
+
+    map.panTo([paradaEstudiante.latitud, paradaEstudiante.longitud]);
+  }, [paradaEstudiante]);
+
+  // Sincronizar marcador del autobús cuando se actualice ubicacionBus
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !ubicacionBus) return;
+
+    const busIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+
+    if (!markerBusRef.current) {
+      markerBusRef.current = L.marker([ubicacionBus.lat, ubicacionBus.lng], { icon: busIcon }).addTo(map);
+    } else {
+      markerBusRef.current.setLatLng([ubicacionBus.lat, ubicacionBus.lng]);
+    }
+  }, [ubicacionBus]);
+
+  // Conexión en tiempo real con SignalR para el viaje activo
+  useEffect(() => {
+    if (noViajaHoy || !viajeActivo?.idViaje) return;
 
     const hubUrl = `${getApiBaseUrl().replace(/\/api$/, "")}/trackingHub`;
     const connection = new signalR.HubConnectionBuilder()
@@ -127,8 +238,8 @@ function Acudiente() {
 
     connection.start()
       .then(() => {
-        console.log("Conectado a SignalR Hub");
-        connection.invoke("SuscribirseAlViaje", idViajeActivo);
+        console.log(`Conectado a SignalR para viaje #${viajeActivo.idViaje}`);
+        connection.invoke("SuscribirseAlViaje", viajeActivo.idViaje);
       })
       .catch(err => console.error("Error al conectar a SignalR:", err));
 
@@ -136,33 +247,24 @@ function Acudiente() {
       const { latitud, longitud } = data;
       setUbicacionBus({ lat: latitud, lng: longitud });
 
-      if (markerBusRef.current && mapInstanceRef.current) {
-        markerBusRef.current.setLatLng([latitud, longitud]);
-      }
+      // Calcular distancia en tiempo real con la parada real del estudiante
+      if (paradaEstudiante?.latitud && paradaEstudiante?.longitud) {
+        const dist = calcularDistancia(latitud, longitud, paradaEstudiante.latitud, paradaEstudiante.longitud);
+        setDistanciaEstimada(dist.toFixed(1));
 
-      // Alerta Parada
-      const distAParada = calcularDistancia(latitud, longitud, miParada.lat, miParada.lng);
-      if (distAParada < 0.5) {
-        setAlertaParada(true);
-        if (distAParada < 0.05) setHijoEstado("Abordo");
-      } else {
-        setAlertaParada(false);
-      }
-
-      // Alerta Colegio
-      const distAlColegio = calcularDistancia(latitud, longitud, colegio.lat, colegio.lng);
-      if (distAlColegio < 0.5) {
-        setAlertaColegio(true);
-        if (distAlColegio < 0.05) setHijoEstado("Entregado");
-      } else {
-        setAlertaColegio(false);
+        if (dist < 0.5) {
+          setAlertaParada(true);
+          if (dist < 0.05) setHijoEstado("Abordo");
+        } else {
+          setAlertaParada(false);
+        }
       }
     });
 
     return () => {
       connection.stop();
     };
-  }, [noViajaHoy]);
+  }, [noViajaHoy, viajeActivo, paradaEstudiante]);
 
   const toggleNoViaja = () => {
     const nuevoEstado = !noViajaHoy;
@@ -178,32 +280,32 @@ function Acudiente() {
   const centrarEnBus = () => {
     if (mapInstanceRef.current && markerBusRef.current) {
       mapInstanceRef.current.flyTo(markerBusRef.current.getLatLng(), 15);
+    } else if (ubicacionBus && mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([ubicacionBus.lat, ubicacionBus.lng], 15);
+    } else {
+      alert("El transporte escolar aún no ha transmitido coordenadas GPS en este momento.");
     }
   };
 
   const centrarEnParada = () => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([miParada.lat, miParada.lng], 15);
-    }
-  };
-
-  const centrarEnColegio = () => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([colegio.lat, colegio.lng], 15);
+    if (mapInstanceRef.current && paradaEstudiante) {
+      mapInstanceRef.current.flyTo([paradaEstudiante.latitud, paradaEstudiante.longitud], 15);
     }
   };
 
   const cerrarSesion = () => {
     localStorage.removeItem("usuario");
+    localStorage.removeItem("token");
     navigate("/login", { replace: true });
   };
 
   const getNombreAcudiente = () => {
-    if (usuarioData?.nombre) return usuarioData.nombre;
-    if (usuarioData?.Nombre) return usuarioData.Nombre;
+    if (usuarioData?.nombre) return `${usuarioData.nombre} ${usuarioData.apellido || ""}`.trim();
     if (usuarioData?.correo) return usuarioData.correo.split('@')[0];
-    return "Acudiente";
+    return "Padre de Familia";
   };
+
+  const primerEstudiante = estudiantesData && estudiantesData.length > 0 ? estudiantesData[0] : null;
 
   return (
     <div className="acudiente-container">
@@ -253,18 +355,17 @@ function Acudiente() {
         {/* DASHBOARD GRID 2 COLUMNAS */}
         <div className="acudiente-dashboard-grid">
 
-          {/* COLUMNA IZQUIERDA: TARJETA ESTUDIANTE + TIMELINE + NOVEDADES + CONDUCTOR + HISTORIAL */}
+          {/* COLUMNA IZQUIERDA: TARJETA ESTUDIANTE + TIMELINE + NOVEDADES + CONDUCTOR */}
           <div className="acudiente-left-column">
 
             {/* TARJETA PRINCIPAL DEL ESTUDIANTE */}
-            {/* TARJETAS DE ESTUDIANTES */}
             {estudiantesData && estudiantesData.length > 0 ? (
               estudiantesData.map((estudiante, index) => (
                 <section key={estudiante.idEstudiante || index} className="hijo-card" style={{ marginBottom: '1rem' }}>
                   <div className="hijo-header">
                     <div className="hijo-profile">
                       <div className="hijo-avatar">
-                        {`${estudiante.nombre.charAt(0)}${estudiante.apellido.charAt(0)}`.toUpperCase()}
+                        {`${(estudiante.nombre || 'E').charAt(0)}${(estudiante.apellido || 'E').charAt(0)}`.toUpperCase()}
                       </div>
                       <div>
                         <h4>{`${estudiante.nombre} ${estudiante.apellido}`}</h4>
@@ -281,16 +382,16 @@ function Acudiente() {
 
                   <div className="hijo-details-grid">
                     <div className="detail-item">
-                      <Clock size={16} />
-                      <span>Hora Recogida: <strong>07:10 AM</strong></span>
+                      <MapPin size={16} />
+                      <span>Parada: <strong>{paradaEstudiante?.nombreParada || "Parada asignada"}</strong></span>
                     </div>
                     <div className="detail-item">
                       <Bus size={16} />
-                      <span>Ruta: <strong>Ruta 01 - Norte</strong></span>
+                      <span>Ruta: <strong>{rutaInfo?.nombreRuta || "Ruta Asignada"}</strong></span>
                     </div>
                     <div className="detail-item">
                       <User size={16} />
-                      <span>Conductor: <strong>Carlos Gómez</strong></span>
+                      <span>Conductor: <strong>{conductorInfo?.nombre || "Asignando conductor..."}</strong></span>
                     </div>
                   </div>
                 </section>
@@ -303,30 +404,9 @@ function Acudiente() {
                       <User size={24} />
                     </div>
                     <div>
-                      <h4>Estudiante Asignado</h4>
-                      <p>Grado Asignado • Colegio Destino</p>
+                      <h4>Estudiante en Proceso de Registro</h4>
+                      <p>Esperando asignación de estudiante por administración</p>
                     </div>
-                  </div>
-                  <span className={`status-badge-parent ${hijoEstado}`}>
-                    {hijoEstado === "Pendiente" && "🟡 Esperando bus"}
-                    {hijoEstado === "Abordo" && "🟠 En el bus"}
-                    {hijoEstado === "Entregado" && "🟢 Entregado"}
-                    {hijoEstado === "NoViaja" && "⚪ No viaja hoy"}
-                  </span>
-                </div>
-
-                <div className="hijo-details-grid">
-                  <div className="detail-item">
-                    <Clock size={16} />
-                    <span>Hora Recogida: <strong>07:10 AM</strong></span>
-                  </div>
-                  <div className="detail-item">
-                    <Bus size={16} />
-                    <span>Ruta: <strong>Ruta 01 - Norte</strong></span>
-                  </div>
-                  <div className="detail-item">
-                    <User size={16} />
-                    <span>Conductor: <strong>Carlos Gómez</strong></span>
                   </div>
                 </div>
               </section>
@@ -344,7 +424,7 @@ function Acudiente() {
                     <div className="step-icon-circle">1</div>
                     <div className="step-info">
                       <span className="step-title">Esperando en Parada</span>
-                      <span className="step-time">07:10 AM (Programado)</span>
+                      <span className="step-time">{paradaEstudiante ? paradaEstudiante.nombreParada : "Parada habitual"}</span>
                     </div>
                   </div>
 
@@ -354,7 +434,7 @@ function Acudiente() {
                     <div className="step-icon-circle">2</div>
                     <div className="step-info">
                       <span className="step-title">Abordó la Ruta Escolar</span>
-                      <span className="step-time">{hijoEstado === "Abordo" || hijoEstado === "Entregado" ? "07:14 AM" : "Pendiente"}</span>
+                      <span className="step-time">{hijoEstado === "Abordo" || hijoEstado === "Entregado" ? "En camino al colegio" : "Pendiente"}</span>
                     </div>
                   </div>
 
@@ -364,7 +444,7 @@ function Acudiente() {
                     <div className="step-icon-circle">3</div>
                     <div className="step-info">
                       <span className="step-title">Entregado en Colegio</span>
-                      <span className="step-time">{hijoEstado === "Entregado" ? "07:38 AM" : "Pendiente"}</span>
+                      <span className="step-time">{hijoEstado === "Entregado" ? "Entregado con éxito" : (primerEstudiante?.colegio || "Colegio")}</span>
                     </div>
                   </div>
                 </div>
@@ -383,7 +463,7 @@ function Acudiente() {
               </button>
             </section>
 
-            {/* DATOS DEL CONDUCTOR Y VEHÍCULO */}
+            {/* DATOS DEL CONDUCTOR Y VEHÍCULO REAL */}
             <section className="driver-contact-card">
               <div className="card-subtitle-wrapper">
                 <Bus size={18} />
@@ -394,60 +474,31 @@ function Acudiente() {
                   <User size={28} />
                 </div>
                 <div className="driver-details-text">
-                  <h5>Carlos Gómez</h5>
-                  <p>Licencia: <strong>C2 Vigente</strong> • Tel: <strong>+57 300 987 6543</strong></p>
-                  <p>Vehículo: <strong>Mercedes-Benz Sprinter</strong> (Placa: <span className="plate-tag">TOW-345</span>)</p>
+                  <h5>{conductorInfo?.nombre || "Conductor Oficial"}</h5>
+                  <p>Licencia: <strong>{conductorInfo?.licencia || "Vigente"} ({conductorInfo?.categoria || "C2"})</strong> • Tel: <strong>{conductorInfo?.telefono || "No registrado"}</strong></p>
+                  <p>Vehículo: <strong>{vehiculoInfo?.modelo || "Transporte Escolar"}</strong> (Placa: <span className="plate-tag">{vehiculoInfo?.placa || "ASIGNANDO"}</span>)</p>
                 </div>
               </div>
               <div className="driver-actions-row">
-                <a href="tel:+573009876543" className="contact-action-btn phone">
+                <a href={`tel:${conductorInfo?.telefono || ""}`} className="contact-action-btn phone">
                   <Phone size={15} />
                   <span>Llamar Conductor</span>
                 </a>
-                <a href="https://wa.me/573009876543?text=Hola,%20soy%20el%20acudiente%20de%20la%20ruta" target="_blank" rel="noreferrer" className="contact-action-btn whatsapp">
+                <a
+                  href={`https://wa.me/${(conductorInfo?.telefono || "").replace(/[^0-9]/g, "")}?text=Hola,%20soy%20el%20acudiente%20de%20la%20ruta`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="contact-action-btn whatsapp"
+                >
                   <MessageSquare size={15} />
                   <span>Escribir Mensaje</span>
                 </a>
               </div>
             </section>
 
-            {/* HISTORIAL RECIENTE DE RECORRIDOS */}
-            <section className="activity-history-card">
-              <div className="card-subtitle-wrapper">
-                <Clock size={18} />
-                <h4>Registro Reciente de Rutas</h4>
-              </div>
-              <div className="history-list">
-                <div className="history-item">
-                  <div className="history-dot green"></div>
-                  <div className="history-text">
-                    <span className="history-event">Llegada al colegio confirmada</span>
-                    <span className="history-date">Ayer • 07:36 AM</span>
-                  </div>
-                  <span className="history-status green">Completado</span>
-                </div>
-                <div className="history-item">
-                  <div className="history-dot green"></div>
-                  <div className="history-text">
-                    <span className="history-event">Recogido en parada habitual</span>
-                    <span className="history-date">Ayer • 07:12 AM</span>
-                  </div>
-                  <span className="history-status green">Abordó</span>
-                </div>
-                <div className="history-item">
-                  <div className="history-dot blue"></div>
-                  <div className="history-text">
-                    <span className="history-event">Entrega en casa finalizada</span>
-                    <span className="history-date">18 Jul • 03:45 PM</span>
-                  </div>
-                  <span className="history-status blue">Entregado</span>
-                </div>
-              </div>
-            </section>
-
           </div>
 
-          {/* COLUMNA DERECHA: MAPA EN TIEMPO REAL + BOTONES DE ACCIÓN + AVISOS */}
+          {/* COLUMNA DERECHA: MAPA EN TIEMPO REAL */}
           <div className="acudiente-right-column">
 
             {/* MAPA RECORRIDO EN TIEMPO REAL */}
@@ -458,7 +509,7 @@ function Acudiente() {
                     <span className="pulse-dot"></span>
                     <h4>Ubicación de la Ruta en Tiempo Real</h4>
                   </div>
-                  <span className="map-route-name">Bus TOW-345</span>
+                  <span className="map-route-name">{vehiculoInfo?.placa ? `Bus ${vehiculoInfo.placa}` : "Ruta en Vivo"}</span>
                 </div>
 
                 <div className="map-quick-actions">
@@ -470,26 +521,20 @@ function Acudiente() {
                     <Bus size={14} />
                     <span>Centrar Bus</span>
                   </button>
-                  <button className="map-btn" onClick={centrarEnColegio}>
-                    <Navigation size={14} color="#8b5cf6" />
-                    <span>Colegio</span>
-                  </button>
                 </div>
 
                 <div ref={mapRef} className="acudiente-map-canvas"></div>
 
                 <div className="map-footer-stats">
-                  <div className="stat-pill">
-                    <span className="stat-label">Distancia Aprox:</span>
-                    <span className="stat-val">1.2 km</span>
-                  </div>
-                  <div className="stat-pill">
-                    <span className="stat-label">Tiempo Estimado:</span>
-                    <span className="stat-val">5 - 8 mins</span>
-                  </div>
+                  {distanciaEstimada && (
+                    <div className="stat-pill">
+                      <span className="stat-label">Distancia Aprox:</span>
+                      <span className="stat-val">{distanciaEstimada} km</span>
+                    </div>
+                  )}
                   <div className="stat-pill live">
                     <span className="live-dot"></span>
-                    <span>Señal GPS Activa</span>
+                    <span>{viajeActivo ? `Viaje en curso #${viajeActivo.idViaje}` : "Esperando inicio de recorrido"}</span>
                   </div>
                 </div>
               </section>
@@ -514,19 +559,19 @@ function Acudiente() {
                 <h4>Garantía de Seguridad SchoolTrack</h4>
               </div>
               <div className="safety-body">
-                <p>Todas las unidades cuentan con rastreo Satelital GPS continuo, velocidad monitoreada por la central del colegio y validación de abordaje digital.</p>
+                <p>Todas las unidades cuentan con rastreo Satelital GPS continuo, velocidad monitoreada por la central y validación de abordaje digital.</p>
                 <div className="safety-bullets">
                   <div className="bullet-item">
                     <CheckCircle size={14} color="#10b981" />
-                    <span>Notificaciones automáticas al teléfono</span>
+                    <span>Transmisión en tiempo real vía WebSockets / SignalR</span>
                   </div>
                   <div className="bullet-item">
                     <CheckCircle size={14} color="#10b981" />
-                    <span>Conductor con licencia y certificación vigente</span>
+                    <span>Conductor y vehículo validados en la plataforma</span>
                   </div>
                   <div className="bullet-item">
                     <CheckCircle size={14} color="#10b981" />
-                    <span>Monitoreo 24/7 de paradas autorizadas</span>
+                    <span>Monitoreo de paradas autorizadas en mapa vial</span>
                   </div>
                 </div>
               </div>
@@ -546,4 +591,3 @@ function Acudiente() {
 }
 
 export default Acudiente;
-

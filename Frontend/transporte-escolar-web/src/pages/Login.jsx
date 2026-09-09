@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, ArrowLeft, CheckCircle, KeyRound, Bus } from "lucide-react";
+import { getApiBaseUrl } from "../services/api";
 import "./Login.css";
 
 function Login() {
@@ -21,7 +22,7 @@ function Login() {
 
     setError("");
     try {
-      const response = await fetch("https://schooltrack.seminario1.eleueleo.com/api/Usuario/login", {
+      const response = await fetch(`${getApiBaseUrl()}/Usuario/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

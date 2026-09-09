@@ -953,4 +953,296 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ══════════════════════════════════════════════
+   DISEÑADOR DE RUTA Y MAPA OSRM
+══════════════════════════════════════════════ */
+.modal-route-designer {
+  max-width: 860px;
+  width: 95vw;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 28px;
+}
+
+.modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title-wrap .title-icon {
+  color: #00d4ff;
+}
+
+.route-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .route-form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.route-map-designer-section {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.designer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.designer-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.designer-tip svg {
+  color: #00d4ff;
+  flex-shrink: 0;
+}
+
+.designer-tip strong {
+  color: #e2e8f0;
+}
+
+.designer-tools-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.map-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(0, 212, 255, 0.12);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.map-action-btn:hover {
+  background: rgba(0, 212, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.map-action-btn.clear {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.map-action-btn.clear:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.route-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.route-map-canvas {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Badges numerados para paradas en el mapa */
+.route-stop-custom-icon {
+  background: transparent;
+  border: none;
+}
+
+.stop-marker-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff, #0077ff);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 212, 255, 0.5), 0 0 0 2px #0f172a;
+  border: 2px solid #ffffff;
+  transition: transform 0.2s;
+}
+
+.stop-marker-badge:hover {
+  transform: scale(1.15);
+}
+
+/* Pills flotantes de OSRM */
+.osrm-stats-pill {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  padding: 10px 14px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+  z-index: 1000;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.25s ease;
+}
+
+.stats-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  flex-shrink: 0;
+}
+
+.stats-data {
+  color: #e2e8f0;
+  flex-grow: 1;
+}
+
+.stats-badge-optimal {
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.osrm-calculating-pill {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.9);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Lista de chips de paradas */
+.designer-stops-list {
+  margin-top: 14px;
+}
+
+.stops-title {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.stops-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.stop-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 4px 8px;
+  transition: border-color 0.2s;
+}
+
+.stop-chip:hover {
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.chip-badge {
+  background: #00d4ff;
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.75rem;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chip-input {
+  background: transparent !important;
+  border: none !important;
+  color: #f8fafc !important;
+  font-size: 0.82rem !important;
+  padding: 2px 4px !important;
+  width: 120px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chip-del-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.chip-del-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
 

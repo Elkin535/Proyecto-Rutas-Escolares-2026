@@ -20,6 +20,7 @@ function Conductor() {
   const [idViaje, setIdViaje] = useState(null);
   const [simulacionActiva, setSimulacionActiva] = useState(false);
   const [cargandoDatos, setCargandoDatos] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -257,32 +258,53 @@ function Conductor() {
   };
 
   const iniciarRecorrido = async () => {
-    const idConductor = conductorData?.idConductor || 1;
-    const idVehiculo = vehiculoData?.idVehiculo || 1;
+    const idConductor = conductorData?.idConductor || conductorData?.IdConductor;
+    const idVehiculo = vehiculoData?.idVehiculo || vehiculoData?.IdVehiculo;
+
+    if (!idConductor) {
+      setErrorMsg("Tu usuario (" + (usuarioData?.nombre || "Conductor") + ") no tiene un perfil registrado en la tabla de Conductores. Por favor créalo en el panel de Administrador.");
+      return;
+    }
+
+    if (!idVehiculo) {
+      setErrorMsg("No tienes un vehículo asignado en el sistema. Por favor asigna un vehículo a tu conductor en el panel de Administración.");
+      return;
+    }
 
     try {
+      console.log("Iniciando viaje con:", { idVehiculo: parseInt(idVehiculo), idConductor: parseInt(idConductor) });
       const res = await fetchAuth("Historial/iniciar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          idVehiculo: idVehiculo,
-          idConductor: idConductor
+          idVehiculo: parseInt(idVehiculo),
+          idConductor: parseInt(idConductor)
         })
       });
 
       let nuevoIdViaje = null;
       if (res.ok) {
         const viaje = await res.json();
-        nuevoIdViaje = viaje.idViaje;
+        nuevoIdViaje = viaje.idViaje || viaje.IdViaje;
       } else {
-        // En caso de que ya existiera un viaje activo para este conductor
+        const errorJson = await res.json().catch(() => null);
+        console.warn("Respuesta al iniciar viaje:", res.status, errorJson);
+
+        // En caso de que ya existiera un viaje activo para este conductor, lo recuperamos
         const resHist = await fetchAuth("Historial/obtener-todos");
         if (resHist.ok) {
           const historial = await resHist.json();
           const viajeEnCurso = historial.find(
-            h => h.idConductor === idConductor && h.estadoViaje === "En progreso"
+            h => (h.idConductor || h.IdConductor) === parseInt(idConductor) && h.estadoViaje === "En progreso"
           );
-          if (viajeEnCurso) nuevoIdViaje = viajeEnCurso.idViaje;
+          if (viajeEnCurso) {
+            nuevoIdViaje = viajeEnCurso.idViaje || viajeEnCurso.IdViaje;
+          }
+        }
+
+        if (!nuevoIdViaje) {
+          setErrorMsg(errorJson?.mensaje || `Error del servidor (${res.status}): No se pudo iniciar el viaje. Verifica tu registro de conductor y vehículo.`);
+          return;
         }
       }
 
@@ -302,12 +324,10 @@ function Conductor() {
             { enableHighAccuracy: true, maximumAge: 3000 }
           );
         }
-      } else {
-        alert("No se pudo iniciar el viaje en el servidor. Por favor verifica los datos.");
       }
     } catch (err) {
-      console.error("Error al iniciar recorrido:", err);
-      alert("Error de conexión al iniciar el viaje escolar.");
+      console.error("Error detallado al iniciar recorrido:", err);
+      setErrorMsg("Error al iniciar el viaje: " + (err?.message || JSON.stringify(err)));
     }
   };
 
@@ -421,6 +441,20 @@ function Conductor() {
 
       {/* PORTAL BODY */}
       <main className="conductor-main">
+        {/* Banner de Error Personalizado */}
+        {errorMsg && (
+          <div className="custom-error-banner">
+            <AlertCircle size={28} className="error-icon-main" />
+            <div className="error-content">
+              <h4>¡Atención!</h4>
+              <p>{errorMsg}</p>
+            </div>
+            <button className="error-close-btn" onClick={() => setErrorMsg(null)}>
+              <X size={20} />
+            </button>
+          </div>
+        )}
+
         {/* Perfil del Conductor / Info Vehículo Dinámica */}
         <section className="conductor-profile-card">
           <div className="driver-avatar-circle">

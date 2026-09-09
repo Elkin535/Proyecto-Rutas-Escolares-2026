@@ -577,3 +577,74 @@
     justify-content: flex-end;
   }
 }
+
+/* BANNER DE ERROR PERSONALIZADO */
+.custom-error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-left: 4px solid #ef4444;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
+  animation: slideDownFade 0.3s ease-out;
+  margin-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.error-icon-main {
+  color: #ef4444;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-content h4 {
+  color: #fca5a5;
+  margin: 0 0 6px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.error-content p {
+  color: #f8fafc;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.error-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.error-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ef4444;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

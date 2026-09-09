@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -14,8 +14,15 @@ import {
   UserSquare2,
   Contact,
   Menu,
-  Search
+  Search,
+  MapPin,
+  Navigation,
+  Compass,
+  RotateCcw,
+  Check
 } from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { fetchAuth } from "../services/api";
 import "./Admin.css";
 
@@ -30,6 +37,12 @@ function Admin() {
   // ── Estados generales ──
   const [usuarios, setUsuarios] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
+  const [metricas, setMetricas] = useState({
+    totalRutas: 0,
+    totalConductores: 0,
+    totalVehiculos: 0,
+    totalEstudiantes: 0
+  });
 
   // ── Paginación y Filtrado state ──
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,6 +109,15 @@ function Admin() {
   const [nuevaRutaNombre, setNuevaRutaNombre] = useState("");
   const [nuevaRutaConductor, setNuevaRutaConductor] = useState("");
   const [nuevaRutaPlaca, setNuevaRutaPlaca] = useState("");
+  const [paradasRuta, setParadasRuta] = useState([]);
+  const [infoRutaOptima, setInfoRutaOptima] = useState(null);
+  const [calculandoRuta, setCalculandoRuta] = useState(false);
+  const [guardandoRuta, setGuardandoRuta] = useState(false);
+
+  const mapRouteContainerRef = useRef(null);
+  const mapRouteInstanceRef = useRef(null);
+  const markersRouteRef = useRef([]);
+  const polylineRouteRef = useRef(null);
 
   // Variables para estudiante
   const [nuevoEstudianteNombre, setNuevoEstudianteNombre] = useState("");
@@ -135,25 +157,23 @@ function Admin() {
   useEffect(() => {
     switch (activeTab) {
       case "resumen":
-        cargarUsuarios();
-        cargarVehiculos();
-        cargarRutas();
-        cargarEstudiantes();
-        cargarAcudientes();
-        cargarConductores();
+        cargarMetricas();
         break;
       case "rutas":
+        cargarUsuarios();
+        cargarConductores();
+        cargarVehiculos();
         cargarRutas();
         break;
       case "estudiantes":
         cargarEstudiantes();
         break;
       case "acudientes":
-        cargarUsuarios(); // A veces necesitan usuarios
+        cargarUsuarios();
         cargarAcudientes();
         break;
       case "conductores":
-        cargarUsuarios(); // Necesitan usuarios
+        cargarUsuarios();
         cargarConductores();
         break;
       case "vehiculos":
@@ -167,9 +187,20 @@ function Admin() {
   // ════════════════════════════════════════
   //  CARGAS GENERALES
   // ════════════════════════════════════════
+  const cargarMetricas = async () => {
+    try {
+      const response = await fetchAuth(`Usuario/dashboard-metricas`);
+      if (response.ok) {
+        setMetricas(await response.json());
+      }
+    } catch (err) {
+      console.error("Error al cargar métricas del dashboard:", err);
+    }
+  };
+
   const cargarUsuarios = async () => {
     try {
-      const response = await fetchAuth(`Usuario`);
+      const response = await fetchAuth(`Usuario/obtener-todos`);
       if (response.ok) setUsuarios(await response.json());
     } catch (err) {
       console.error("Error al cargar usuarios:", err);
@@ -178,7 +209,7 @@ function Admin() {
 
   const cargarVehiculos = async () => {
     try {
-      const response = await fetchAuth(`Vehiculo`);
+      const response = await fetchAuth(`Vehiculo/obtener-todos`);
       if (response.ok) setVehiculos(await response.json());
     } catch (err) {
       console.error("Error al cargar vehiculos:", err);
@@ -190,13 +221,19 @@ function Admin() {
   };
 
   // ════════════════════════════════════════
-  //  RUTAS
+  //  RUTAS Y DISEÑADOR CON MAPA LEAFLET + OSRM
   // ════════════════════════════════════════
   const cargarRutas = async () => {
     try {
-      const response = await fetchAuth(`Ruta`);
-      if (response.ok) {
-        const data = await response.json();
+      const [rutasRes, paradasRes] = await Promise.all([
+        fetchAuth(`Ruta/obtener-todas`),
+        fetchAuth(`Parada/obtener-todas`)
+      ]);
+
+      if (rutasRes.ok) {
+        const data = await rutasRes.json();
+        const paradasData = paradasRes.ok ? await paradasRes.json() : [];
+
         const mappedRutas = data.map(r => {
           let conductor = "No asignado";
           let vehiculo = "Sin placa";
@@ -207,12 +244,17 @@ function Admin() {
           } else {
             conductor = r.descripcion || "No asignado";
           }
+
+          const cantParadas = Array.isArray(paradasData)
+            ? paradasData.filter(p => p.idRuta === r.idRuta).length
+            : 0;
+
           return {
             id: r.idRuta,
             nombre: r.nombreRuta,
             conductor: conductor,
             vehiculo: vehiculo,
-            paradas: Math.floor(Math.random() * 5) + 3,
+            paradas: cantParadas,
             estado: r.estado ? "En servicio" : "Mantenimiento"
           };
         });
@@ -223,34 +265,229 @@ function Admin() {
     }
   };
 
+  // Inicialización de Leaflet al abrir modal de ruta
+  useEffect(() => {
+    if (!showModalRuta) {
+      if (mapRouteInstanceRef.current) {
+        mapRouteInstanceRef.current.remove();
+        mapRouteInstanceRef.current = null;
+      }
+      markersRouteRef.current = [];
+      polylineRouteRef.current = null;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      if (!mapRouteContainerRef.current) return;
+
+      if (mapRouteInstanceRef.current) {
+        mapRouteInstanceRef.current.remove();
+        mapRouteInstanceRef.current = null;
+      }
+
+      // Inicializar mapa centrado por defecto
+      const map = L.map(mapRouteContainerRef.current).setView([4.7110, -74.0721], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Centrar en ubicación actual real del usuario
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const coords = [pos.coords.latitude, pos.coords.longitude];
+            map.setView(coords, 14);
+          },
+          (err) => console.log("Geolocalización:", err.message),
+          { timeout: 6000 }
+        );
+      }
+
+      // Evento de click en el mapa para colocar paradas
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        setParadasRuta(prev => [
+          ...prev,
+          {
+            idTemp: Date.now() + Math.random(),
+            lat,
+            lng,
+            nombre: `Parada ${prev.length + 1}`
+          }
+        ]);
+      });
+
+      mapRouteInstanceRef.current = map;
+      setTimeout(() => map.invalidateSize(), 250);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [showModalRuta]);
+
+  // Actualizar marcadores y calcular ruta vial con OSRM al cambiar paradas
+  useEffect(() => {
+    const map = mapRouteInstanceRef.current;
+    if (!map || !showModalRuta) return;
+
+    // Limpiar marcadores anteriores
+    markersRouteRef.current.forEach(m => m.remove());
+    markersRouteRef.current = [];
+
+    // Limpiar polyline anterior
+    if (polylineRouteRef.current) {
+      polylineRouteRef.current.remove();
+      polylineRouteRef.current = null;
+    }
+
+    // Dibujar marcadores con badges numerados
+    paradasRuta.forEach((p, idx) => {
+      const customIcon = L.divIcon({
+        className: 'route-stop-custom-icon',
+        html: `<div class="stop-marker-badge">${idx + 1}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      const marker = L.marker([p.lat, p.lng], { icon: customIcon })
+        .addTo(map)
+        .bindPopup(`<strong>${p.nombre}</strong><br/>Parada #${idx + 1}<br/><small>${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}</small>`);
+
+      markersRouteRef.current.push(marker);
+    });
+
+    // Calcular ruta vial óptima con OSRM si hay 2 o más paradas
+    if (paradasRuta.length >= 2) {
+      setCalculandoRuta(true);
+      const coordsQuery = paradasRuta.map(p => `${p.lng},${p.lat}`).join(';');
+      fetch(`https://router.project-osrm.org/route/v1/driving/${coordsQuery}?overview=full&geometries=geojson`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+            const rutaVial = data.routes[0];
+            const distKm = (rutaVial.distance / 1000).toFixed(1);
+            const durMin = Math.round(rutaVial.duration / 60);
+
+            setInfoRutaOptima({ distanciaKm: distKm, duracionMin: durMin });
+
+            if (mapRouteInstanceRef.current) {
+              if (polylineRouteRef.current) polylineRouteRef.current.remove();
+              polylineRouteRef.current = L.geoJSON(rutaVial.geometry, {
+                style: {
+                  color: '#00d4ff',
+                  weight: 5,
+                  opacity: 0.9,
+                  lineJoin: 'round'
+                }
+              }).addTo(mapRouteInstanceRef.current);
+            }
+          }
+        })
+        .catch(err => console.error("Error calculando ruta óptima OSRM:", err))
+        .finally(() => setCalculandoRuta(false));
+    } else {
+      setInfoRutaOptima(null);
+    }
+  }, [paradasRuta, showModalRuta]);
+
+  const centrarEnMiUbicacion = () => {
+    if (navigator.geolocation && mapRouteInstanceRef.current) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          mapRouteInstanceRef.current.flyTo([pos.coords.latitude, pos.coords.longitude], 15);
+        },
+        () => alert("No se pudo obtener la ubicación GPS.")
+      );
+    }
+  };
+
+  const eliminarParadaRuta = (index) => {
+    setParadasRuta(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const actualizarNombreParada = (index, nuevoNombre) => {
+    setParadasRuta(prev => prev.map((p, i) => i === index ? { ...p, nombre: nuevoNombre } : p));
+  };
+
+  const limpiarParadasRuta = () => {
+    setParadasRuta([]);
+    setInfoRutaOptima(null);
+    if (polylineRouteRef.current) {
+      polylineRouteRef.current.remove();
+      polylineRouteRef.current = null;
+    }
+    markersRouteRef.current.forEach(m => m.remove());
+    markersRouteRef.current = [];
+  };
+
+  const limpiarFormularioRuta = () => {
+    setNuevaRutaNombre("");
+    setNuevaRutaConductor("");
+    setNuevaRutaPlaca("");
+    limpiarParadasRuta();
+  };
+
   const agregarRuta = async (e) => {
     e.preventDefault();
-    if (!nuevaRutaNombre || !nuevaRutaConductor) return;
+    if (!nuevaRutaNombre.trim()) {
+      alert("Por favor ingresa un nombre para la ruta.");
+      return;
+    }
+    if (!nuevaRutaConductor) {
+      alert("Por favor selecciona o asigna un conductor.");
+      return;
+    }
+
+    setGuardandoRuta(true);
     const descripcion = `Conductor: ${nuevaRutaConductor} | Vehículo: ${nuevaRutaPlaca || "SIN PLACA"}`;
     try {
-      const response = await fetchAuth(`Ruta`, {
+      const response = await fetchAuth(`Ruta/crear`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombreRuta: nuevaRutaNombre, descripcion: descripcion })
       });
+
       if (response.ok) {
+        const rutaCreada = await response.json();
+        const idRuta = rutaCreada.idRuta;
+
+        // Guardar paradas seleccionadas en el mapa si existen
+        if (paradasRuta.length > 0) {
+          for (let i = 0; i < paradasRuta.length; i++) {
+            const p = paradasRuta[i];
+            await fetchAuth(`Parada/crear`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                idRuta: idRuta,
+                nombreParada: p.nombre || `Parada ${i + 1}`,
+                latitud: p.lat,
+                longitud: p.lng,
+                ordenVisita: i + 1
+              })
+            });
+          }
+        }
+
         await cargarRutas();
-        setNuevaRutaNombre("");
-        setNuevaRutaConductor("");
-        setNuevaRutaPlaca("");
+        limpiarFormularioRuta();
         setShowModalRuta(false);
       } else {
-        alert("Error al guardar la ruta en el servidor.");
+        const errData = await response.json().catch(() => null);
+        alert(errData?.mensaje || "Error al guardar la ruta en el servidor.");
       }
     } catch (err) {
+      console.error(err);
       alert("No se pudo conectar con el servidor.");
+    } finally {
+      setGuardandoRuta(false);
     }
   };
 
   const eliminarRuta = async (id) => {
     if (!window.confirm("¿Estás seguro de que deseas eliminar esta ruta escolar?")) return;
     try {
-      const response = await fetchAuth(`Ruta/${id}`, { method: "DELETE" });
+      const response = await fetchAuth(`Ruta/eliminar?id=${id}`, { method: "DELETE" });
       if (response.ok) setRutas(rutas.filter(r => r.id !== id));
     } catch (err) {
       alert("No se pudo conectar con el servidor para eliminar.");
@@ -270,7 +507,7 @@ function Admin() {
     if (!editRutaNombre || !editRutaConductor) return;
     const descripcion = `Conductor: ${editRutaConductor} | Vehículo: ${editRutaPlaca || "SIN PLACA"}`;
     try {
-      const response = await fetchAuth(`Ruta/${rutaEditando.id}`, {
+      const response = await fetchAuth(`Ruta/actualizar?id=${rutaEditando.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idRuta: rutaEditando.id, nombreRuta: editRutaNombre, descripcion: descripcion })
@@ -293,7 +530,7 @@ function Admin() {
   const cargarEstudiantes = async () => {
     setCargandoEstudiantes(true);
     try {
-      const response = await fetchAuth(`Estudiante`);
+      const response = await fetchAuth(`Estudiante/obtener-todos`);
       if (response.ok) setEstudiantes(await response.json());
     } catch (err) {
       console.error("Error al cargar estudiantes:", err);
@@ -319,7 +556,7 @@ function Admin() {
       idParada: null
     };
     try {
-      const response = await fetchAuth(`Estudiante`, {
+      const response = await fetchAuth(`Estudiante/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -353,7 +590,7 @@ function Admin() {
       idParada: null
     };
     try {
-      const response = await fetchAuth(`Estudiante/${estudianteEditando.idEstudiante}`, {
+      const response = await fetchAuth(`Estudiante/actualizar?id=${estudianteEditando.idEstudiante}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -369,7 +606,7 @@ function Admin() {
   const eliminarEstudiante = async (id) => {
     if (!window.confirm("¿Estás seguro de eliminar este estudiante?")) return;
     try {
-      const response = await fetchAuth(`Estudiante/${id}`, { method: "DELETE" });
+      const response = await fetchAuth(`Estudiante/eliminar?id=${id}`, { method: "DELETE" });
       if (response.ok) {
         await cargarEstudiantes();
         if (estudianteEditando && estudianteEditando.idEstudiante === id) limpiarFormularioEstudiante();
@@ -447,7 +684,7 @@ function Admin() {
       tecnomecanicaVencimiento: nuevoVehiculoTecno ? new Date(`${nuevoVehiculoTecno}T00:00:00`).toISOString() : null
     };
     try {
-      const response = await fetchAuth(`Vehiculo`, {
+      const response = await fetchAuth(`Vehiculo/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -476,7 +713,7 @@ function Admin() {
       tecnomecanicaVencimiento: nuevoVehiculoTecno ? new Date(`${nuevoVehiculoTecno}T00:00:00`).toISOString() : null
     };
     try {
-      const response = await fetchAuth(`Vehiculo/${vehiculoEditando.idVehiculo}`, {
+      const response = await fetchAuth(`Vehiculo/actualizar?id=${vehiculoEditando.idVehiculo}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
       });
       if (response.ok) {
@@ -492,7 +729,7 @@ function Admin() {
   const eliminarVehiculo = async (idVehiculo) => {
     if (!window.confirm("¿Seguro que deseas eliminar este vehículo?")) return;
     try {
-      const response = await fetchAuth(`Vehiculo/${idVehiculo}`, { method: "DELETE" });
+      const response = await fetchAuth(`Vehiculo/eliminar?id=${idVehiculo}`, { method: "DELETE" });
       if (response.ok) {
         await cargarVehiculos();
       } else alert("Error al eliminar vehículo. Verifica que no esté en uso.");
@@ -507,7 +744,7 @@ function Admin() {
   const cargarAcudientes = async () => {
     setCargandoAcudientes(true);
     try {
-      const response = await fetchAuth(`Acudiente`);
+      const response = await fetchAuth(`Acudiente/obtener-todos`);
       if (response.ok) setAcudientes(await response.json());
     } catch (err) {
       console.error("Error al cargar acudientes:", err);
@@ -520,7 +757,7 @@ function Admin() {
     e.preventDefault();
     if (!nuevoAcudienteNombre || !nuevoAcudienteApellido || !nuevoAcudienteCorreo || !nuevoAcudienteContrasena) return;
     try {
-      const userRes = await fetchAuth(`Usuario`, {
+      const userRes = await fetchAuth(`Usuario/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idRol: 3, nombre: nuevoAcudienteNombre, apellido: nuevoAcudienteApellido,
@@ -533,7 +770,7 @@ function Admin() {
       }
       const userData = await userRes.json();
 
-      const acudienteRes = await fetchAuth(`Acudiente`, {
+      const acudienteRes = await fetchAuth(`Acudiente/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idUsuario: userData.idUsuario, direccionResidencia: nuevoAcudienteDireccion || null })
       });
@@ -553,7 +790,7 @@ function Admin() {
     e.preventDefault();
     if (!acudienteEditando || !nuevoAcudienteNombre || !nuevoAcudienteApellido || !nuevoAcudienteCorreo) return;
     try {
-      const userRes = await fetchAuth(`Usuario/${acudienteEditando.idUsuario}`, {
+      const userRes = await fetchAuth(`Usuario/actualizar?id=${acudienteEditando.idUsuario}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: nuevoAcudienteNombre, apellido: nuevoAcudienteApellido,
@@ -562,7 +799,7 @@ function Admin() {
       });
       if (!userRes.ok) throw new Error("Error al actualizar usuario.");
 
-      const acudienteRes = await fetchAuth(`Acudiente/${acudienteEditando.idAcudiente}`, {
+      const acudienteRes = await fetchAuth(`Acudiente/actualizar?id=${acudienteEditando.idAcudiente}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idUsuario: acudienteEditando.idUsuario, direccionResidencia: nuevoAcudienteDireccion || null })
       });
@@ -581,9 +818,9 @@ function Admin() {
   const eliminarAcudiente = async (idAcudiente, idUsuario) => {
     if (!window.confirm("¿Estás seguro de eliminar este acudiente? Se eliminará su usuario asociado.")) return;
     try {
-      const res = await fetchAuth(`Acudiente/${idAcudiente}`, { method: "DELETE" });
+      const res = await fetchAuth(`Acudiente/eliminar?id=${idAcudiente}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar acudiente.");
-      await fetchAuth(`Usuario/${idUsuario}`, { method: "DELETE" });
+      await fetchAuth(`Usuario/eliminar?id=${idUsuario}`, { method: "DELETE" });
       await cargarUsuarios();
       await cargarAcudientes();
       if (acudienteEditando && acudienteEditando.idAcudiente === idAcudiente) limpiarFormularioAcudiente();
@@ -614,7 +851,7 @@ function Admin() {
   const cargarConductores = async () => {
     setCargandoConductores(true);
     try {
-      const response = await fetchAuth(`Conductor`);
+      const response = await fetchAuth(`Conductor/obtener-todos`);
       if (response.ok) setConductores(await response.json());
     } catch (err) {
       console.error("Error al cargar conductores:", err);
@@ -627,7 +864,7 @@ function Admin() {
     e.preventDefault();
     if (!nuevoConductorNombre || !nuevoConductorApellido || !nuevoConductorCorreo || !nuevoConductorContrasena || !nuevoConductorLicencia) return;
     try {
-      const userRes = await fetchAuth(`Usuario`, {
+      const userRes = await fetchAuth(`Usuario/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idRol: 2, nombre: nuevoConductorNombre, apellido: nuevoConductorApellido,
@@ -637,7 +874,7 @@ function Admin() {
       if (!userRes.ok) throw new Error("Error al crear usuario.");
       const userData = await userRes.json();
 
-      const conductorRes = await fetchAuth(`Conductor`, {
+      const conductorRes = await fetchAuth(`Conductor/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idUsuario: userData.idUsuario, idVehiculo: nuevoConductorVehiculo ? parseInt(nuevoConductorVehiculo) : null,
@@ -660,7 +897,7 @@ function Admin() {
     e.preventDefault();
     if (!conductorEditando || !nuevoConductorNombre || !nuevoConductorApellido || !nuevoConductorCorreo || !nuevoConductorLicencia) return;
     try {
-      const userRes = await fetchAuth(`Usuario/${conductorEditando.idUsuario}`, {
+      const userRes = await fetchAuth(`Usuario/actualizar?id=${conductorEditando.idUsuario}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: nuevoConductorNombre, apellido: nuevoConductorApellido,
@@ -669,7 +906,7 @@ function Admin() {
       });
       if (!userRes.ok) throw new Error("Error al actualizar usuario.");
 
-      const conductorRes = await fetchAuth(`Conductor/${conductorEditando.idConductor}`, {
+      const conductorRes = await fetchAuth(`Conductor/actualizar?id=${conductorEditando.idConductor}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idUsuario: conductorEditando.idUsuario, idVehiculo: nuevoConductorVehiculo ? parseInt(nuevoConductorVehiculo) : null,
@@ -691,9 +928,9 @@ function Admin() {
   const eliminarConductor = async (idConductor, idUsuario) => {
     if (!window.confirm("¿Estás seguro de eliminar este conductor? Se eliminará su usuario asociado.")) return;
     try {
-      const res = await fetchAuth(`Conductor/${idConductor}`, { method: "DELETE" });
+      const res = await fetchAuth(`Conductor/eliminar?id=${idConductor}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar conductor.");
-      await fetchAuth(`Usuario/${idUsuario}`, { method: "DELETE" });
+      await fetchAuth(`Usuario/eliminar?id=${idUsuario}`, { method: "DELETE" });
       await cargarUsuarios(); await cargarConductores();
       if (conductorEditando && conductorEditando.idConductor === idConductor) limpiarFormularioConductor();
     } catch (err) {
@@ -810,10 +1047,10 @@ function Admin() {
             <div className="tab-pane">
               {/* Omitiendo por brevedad, es el mismo contenido de resumen */}
               <div className="metrics-grid">
-                <div className="metric-card"><div className="metric-icon routes"><RouteIcon size={24} /></div><div className="metric-data"><span className="metric-value">{rutas.length}</span><span className="metric-label">Rutas Creadas</span></div></div>
-                <div className="metric-card"><div className="metric-icon drivers"><Users size={24} /></div><div className="metric-data"><span className="metric-value">{conductores.length}</span><span className="metric-label">Conductores</span></div></div>
-                <div className="metric-card"><div className="metric-icon vehicles"><Bus size={24} /></div><div className="metric-data"><span className="metric-value">{vehiculos.length}</span><span className="metric-label">Vehículos</span></div></div>
-                <div className="metric-card"><div className="metric-icon students"><ClipboardList size={24} /></div><div className="metric-data"><span className="metric-value">{estudiantes.length}</span><span className="metric-label">Alumnos Asignados</span></div></div>
+                <div className="metric-card"><div className="metric-icon routes"><RouteIcon size={24} /></div><div className="metric-data"><span className="metric-value">{metricas.totalRutas}</span><span className="metric-label">Rutas Creadas</span></div></div>
+                <div className="metric-card"><div className="metric-icon drivers"><Users size={24} /></div><div className="metric-data"><span className="metric-value">{metricas.totalConductores}</span><span className="metric-label">Conductores</span></div></div>
+                <div className="metric-card"><div className="metric-icon vehicles"><Bus size={24} /></div><div className="metric-data"><span className="metric-value">{metricas.totalVehiculos}</span><span className="metric-label">Vehículos</span></div></div>
+                <div className="metric-card"><div className="metric-icon students"><ClipboardList size={24} /></div><div className="metric-data"><span className="metric-value">{metricas.totalEstudiantes}</span><span className="metric-label">Alumnos Asignados</span></div></div>
               </div>
             </div>
           )}
@@ -866,51 +1103,166 @@ function Admin() {
                 </div>
               </div>
 
-              {/* MODAL: Crear Nueva Ruta */}
+              {/* MODAL: Diseñador de Ruta con Mapa y OSRM */}
               {showModalRuta && (
                 <div className="modal-overlay" onClick={() => setShowModalRuta(false)}>
-                  <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-card modal-route-designer" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
-                      <h4>Crear Nueva Ruta</h4>
+                      <div className="modal-title-wrap">
+                        <RouteIcon size={22} className="title-icon" />
+                        <h4>Crear Ruta Escolar y Paradas</h4>
+                      </div>
                       <button className="modal-close-btn" onClick={() => setShowModalRuta(false)}>
                         <X size={18} />
                       </button>
                     </div>
+
                     <form onSubmit={agregarRuta}>
-                      <div className="form-group">
-                        <label>Nombre de la Ruta</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Ruta 04 - Occidente"
-                          value={nuevaRutaNombre}
-                          onChange={(e) => setNuevaRutaNombre(e.target.value)}
-                          required
-                        />
+                      {/* Datos Principales de la Ruta */}
+                      <div className="route-form-grid">
+                        <div className="form-group">
+                          <label>Nombre de la Ruta *</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Ruta 04 - Occidente"
+                            value={nuevaRutaNombre}
+                            onChange={(e) => setNuevaRutaNombre(e.target.value)}
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>Conductor Asignado *</label>
+                          <select
+                            value={nuevaRutaConductor}
+                            onChange={(e) => setNuevaRutaConductor(e.target.value)}
+                            required
+                          >
+                            <option value="">-- Selecciona un conductor --</option>
+                            {conductores.map(c => {
+                              const u = obtenerInfoUsuario(c.idUsuario);
+                              const nom = u.nombre ? `${u.nombre} ${u.apellido || ""}`.trim() : `Conductor #${c.idConductor}`;
+                              return (
+                                <option key={c.idConductor} value={nom}>
+                                  {nom} (Lic: {c.licenciaConduccion || "N/A"})
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label>Vehículo Asignado</label>
+                          <select
+                            value={nuevaRutaPlaca}
+                            onChange={(e) => setNuevaRutaPlaca(e.target.value)}
+                          >
+                            <option value="">-- Selecciona un vehículo --</option>
+                            {vehiculos.map(v => (
+                              <option key={v.idVehiculo} value={v.placa}>
+                                {v.placa} {v.modelo ? `(${v.modelo})` : ""} - Cap: {v.capacidad || "?"} pax
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                      <div className="form-group">
-                        <label>Conductor Asignado</label>
-                        <input
-                          type="text"
-                          placeholder="Nombre del conductor"
-                          value={nuevaRutaConductor}
-                          onChange={(e) => setNuevaRutaConductor(e.target.value)}
-                          required
-                        />
+
+                      {/* Diseñador de Mapa */}
+                      <div className="route-map-designer-section">
+                        <div className="designer-toolbar">
+                          <div className="designer-tip">
+                            <MapPin size={16} />
+                            <span>Haz clic en el mapa para colocar las <strong>paradas</strong> en orden.</span>
+                          </div>
+                          <div className="designer-tools-btns">
+                            <button
+                              type="button"
+                              className="map-action-btn"
+                              onClick={centrarEnMiUbicacion}
+                              title="Centrar en mi ubicación GPS actual"
+                            >
+                              <Navigation size={14} />
+                              <span>Mi Ubicación</span>
+                            </button>
+                            {paradasRuta.length > 0 && (
+                              <button
+                                type="button"
+                                className="map-action-btn clear"
+                                onClick={limpiarParadasRuta}
+                                title="Limpiar todas las paradas"
+                              >
+                                <RotateCcw size={14} />
+                                <span>Limpiar ({paradasRuta.length})</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Canvas del Mapa Leaflet */}
+                        <div className="route-map-wrapper">
+                          <div ref={mapRouteContainerRef} className="route-map-canvas" />
+
+                          {/* Estadísticas de OSRM */}
+                          {infoRutaOptima && (
+                            <div className="osrm-stats-pill">
+                              <span className="stats-indicator"></span>
+                              <div className="stats-data">
+                                <strong>Ruta Óptima Vial:</strong> {infoRutaOptima.distanciaKm} km (~{infoRutaOptima.duracionMin} min)
+                              </div>
+                              <span className="stats-badge-optimal">OSRM Vial</span>
+                            </div>
+                          )}
+
+                          {calculandoRuta && (
+                            <div className="osrm-calculating-pill">
+                              Trazando recorrido más óptimo por calles...
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Lista de paradas agregadas */}
+                        {paradasRuta.length > 0 && (
+                          <div className="designer-stops-list">
+                            <span className="stops-title">
+                              Paradas trazadas ({paradasRuta.length}):
+                            </span>
+                            <div className="stops-chips-wrap">
+                              {paradasRuta.map((p, idx) => (
+                                <div key={p.idTemp || idx} className="stop-chip">
+                                  <span className="chip-badge">{idx + 1}</span>
+                                  <input
+                                    type="text"
+                                    className="chip-input"
+                                    value={p.nombre}
+                                    onChange={(e) => actualizarNombreParada(idx, e.target.value)}
+                                    placeholder={`Parada ${idx + 1}`}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="chip-del-btn"
+                                    onClick={() => eliminarParadaRuta(idx)}
+                                    title="Quitar esta parada"
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="form-group">
-                        <label>Placa del Vehículo</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. ABC-123"
-                          value={nuevaRutaPlaca}
-                          onChange={(e) => setNuevaRutaPlaca(e.target.value)}
-                        />
-                      </div>
+
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => setShowModalRuta(false)}>Cancelar</button>
-                        <button type="submit" className="add-btn modal-submit-btn">
+                        <button type="button" className="btn-cancelar" onClick={() => setShowModalRuta(false)}>
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="add-btn modal-submit-btn"
+                          disabled={guardandoRuta}
+                        >
                           <Plus size={16} />
-                          <span>Guardar Ruta</span>
+                          <span>{guardandoRuta ? "Guardando..." : `Guardar Ruta ${paradasRuta.length > 0 ? `(${paradasRuta.length} paradas)` : ""}`}</span>
                         </button>
                       </div>
                     </form>

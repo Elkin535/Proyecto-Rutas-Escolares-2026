@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TransporteEscolarAPI.Data;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
 using TransporteEscolarAPI.Models;
@@ -18,12 +20,32 @@ namespace TransporteEscolarAPI.Controllers
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IRolRepository _rolRepository;
         private readonly IAuthService _authService;
+        private readonly AppDbContext _context;
 
-        public UsuarioController(IUsuarioRepository usuarioRepository, IRolRepository rolRepository, IAuthService authService)
+        public UsuarioController(IUsuarioRepository usuarioRepository, IRolRepository rolRepository, IAuthService authService, AppDbContext context)
         {
             _usuarioRepository = usuarioRepository;
             _rolRepository = rolRepository;
             _authService = authService;
+            _context = context;
+        }
+
+        [HttpGet("dashboard-metricas")]
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> GetDashboardMetricas()
+        {
+            var totalRutas = await _context.Rutas.CountAsync();
+            var totalConductores = await _context.Conductores.CountAsync();
+            var totalVehiculos = await _context.Vehiculos.CountAsync();
+            var totalEstudiantes = await _context.Estudiantes.CountAsync();
+
+            return Ok(new
+            {
+                totalRutas,
+                totalConductores,
+                totalVehiculos,
+                totalEstudiantes
+            });
         }
 
         [HttpGet("obtener-todos")]

@@ -86,7 +86,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://schooltrack.seminario1.eleueleo.com")
+        policy.SetIsOriginAllowed(origin => true)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(origin => true)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -95,32 +102,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (args.Contains("--ef-database-update"))
-{
-    Console.WriteLine("Executing database migrations (--ef-database-update)...");
-    try
-    {
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            db.Database.Migrate();
-        }
-        Console.WriteLine("Database migrations applied successfully.");
-        return 0;
-    }
-    catch (Exception ex)
-    {
-        Console.Error.WriteLine($"Error applying database migrations: {ex.Message}");
-        return 1;
-    }
-}
-
-app.MapOpenApi();
-app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
-
-app.UseHttpsRedirection();
-
 app.UseCors("AllowAll");
+// app.UseHttpsRedirection();
 
 // ⚠️ Usar Autenticación ANTES de Autorización
 app.UseAuthentication();

@@ -46,11 +46,21 @@ namespace TransporteEscolarAPI.Service
 
         public string GenerateJwtToken(Usuario usuario, string roleName)
         {
+            return GenerateJwtToken(usuario, roleName, false, out _);
+        }
+
+        public string GenerateJwtToken(Usuario usuario, string roleName, bool recordarSesion, out DateTime expiraEn)
+        {
             var jwtKey = _configuration["JwtSettings:Key"] 
                 ?? throw new InvalidOperationException("Clave JWT no configurada en appsettings.json");
             var issuer = _configuration["JwtSettings:Issuer"] ?? "SchoolTrackAPI";
             var audience = _configuration["JwtSettings:Audience"] ?? "SchoolTrackWeb";
             var expirationHours = int.Parse(_configuration["JwtSettings:ExpirationHours"] ?? "8");
+            var rememberMeDays = int.Parse(_configuration["JwtSettings:RememberMeDays"] ?? "30");
+
+            expiraEn = recordarSesion
+                ? DateTime.UtcNow.AddDays(rememberMeDays)
+                : DateTime.UtcNow.AddHours(expirationHours);
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -62,14 +72,15 @@ namespace TransporteEscolarAPI.Service
                 new Claim(ClaimTypes.Name, $"{usuario.Nombre} {usuario.Apellido}"),
                 new Claim(ClaimTypes.Role, roleName),
                 new Claim("role", roleName),
-                new Claim("idRol", usuario.IdRol.ToString())
+                new Claim("idRol", usuario.IdRol.ToString()),
+                new Claim("recordarSesion", recordarSesion.ToString().ToLower())
             };
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(expirationHours),
+                expires: expiraEn,
                 signingCredentials: credentials
             );
 

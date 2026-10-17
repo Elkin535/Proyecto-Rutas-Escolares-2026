@@ -153,7 +153,7 @@ namespace TransporteEscolarAPI.Controllers
             var rol = await _rolRepository.ObtenerPorIdAsync(usuario.IdRol);
             var nombreRol = rol?.NombreRol ?? "Usuario";
 
-            var token = _authService.GenerateJwtToken(usuario, nombreRol);
+            var token = _authService.GenerateJwtToken(usuario, nombreRol, loginRequest.RecordarSesion, out var expiraEn);
 
             var response = new LoginResponseDTO
             {
@@ -163,10 +163,54 @@ namespace TransporteEscolarAPI.Controllers
                 Apellido = usuario.Apellido,
                 Correo = usuario.Correo,
                 NombreRol = nombreRol,
-                Token = token
+                Token = token,
+                RecordarSesion = loginRequest.RecordarSesion,
+                ExpiraEn = expiraEn
             };
 
             return Ok(response);
+        }
+
+        /// <summary>
+        /// Valida el token guardado en el dispositivo (sesión recordada) y devuelve los datos actuales del usuario.
+        /// Si el token expiró o es inválido, el middleware JWT responde 401 automáticamente.
+        /// </summary>
+        [HttpGet("validar-sesion")]
+        public async Task<ActionResult<LoginResponseDTO>> ValidarSesion()
+        {
+            var idClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(idClaim, out var idUsuario))
+            {
+                return Unauthorized(new { mensaje = "Sesión inválida" });
+            }
+
+            // Si el usuario fue eliminado después de guardar la sesión, se invalida
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(idUsuario);
+            if (usuario == null)
+            {
+                return Unauthorized(new { mensaje = "Sesión inválida" });
+            }
+
+            var rol = await _rolRepository.ObtenerPorIdAsync(usuario.IdRol);
+            var nombreRol = rol?.NombreRol ?? "Usuario";
+
+            var expClaim = User.FindFirst("exp")?.Value;
+            var expiraEn = long.TryParse(expClaim, out var exp)
+                ? DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime
+                : DateTime.UtcNow;
+
+            return Ok(new LoginResponseDTO
+            {
+                IdUsuario = usuario.IdUsuario,
+                IdRol = usuario.IdRol,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Correo = usuario.Correo,
+                NombreRol = nombreRol,
+                Token = string.Empty, // el cliente conserva el token que ya tiene
+                RecordarSesion = User.FindFirst("recordarSesion")?.Value == "true",
+                ExpiraEn = expiraEn
+            });
         }
 
         [HttpPut("actualizar")]

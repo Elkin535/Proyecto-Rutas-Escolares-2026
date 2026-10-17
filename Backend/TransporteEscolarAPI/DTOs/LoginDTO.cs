@@ -10,6 +10,11 @@ namespace TransporteEscolarAPI.DTOs
 
         [Required]
         public string Contrasena { get; set; } = string.Empty;
+
+        /// <summary>
+        /// "Guardar inicio de sesión": si es true el token dura más días (JwtSettings:RememberMeDays).
+        /// </summary>
+        public bool RecordarSesion { get; set; } = false;
     }
 
     public class LoginResponseDTO
@@ -21,5 +26,7 @@ namespace TransporteEscolarAPI.DTOs
         public string Correo { get; set; } = string.Empty;
         public string NombreRol { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
+        public bool RecordarSesion { get; set; }
+        public DateTime ExpiraEn { get; set; }
     }
 }

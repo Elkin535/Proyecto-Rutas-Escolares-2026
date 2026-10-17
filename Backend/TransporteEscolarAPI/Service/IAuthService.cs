@@ -21,6 +21,12 @@ namespace TransporteEscolarAPI.Service
 
         /// <summary>
         /// Genera un Token JWT firmado conteniendo los claims del usuario (ID, Correo, Nombre, Rol).
+        /// Si recordarSesion es true, la expiración usa JwtSettings:RememberMeDays en lugar de ExpirationHours.
+        /// </summary>
+        string GenerateJwtToken(Usuario usuario, string roleName, bool recordarSesion, out DateTime expiraEn);
+
+        /// <summary>
+        /// Sobrecarga de compatibilidad: token de duración normal.
         /// </summary>
         string GenerateJwtToken(Usuario usuario, string roleName);
     }

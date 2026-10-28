@@ -13,8 +13,14 @@ var builder = WebApplication.CreateBuilder(args);
 // =========================================================================
 // 1. CONEXIÓN A POSTGRESQL
 // =========================================================================
+// En Render la base llega como DATABASE_URL (postgres://usuario:clave@host:puerto/base); en local, desde appsettings
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+var connectionString = string.IsNullOrEmpty(databaseUrl)
+    ? builder.Configuration.GetConnectionString("PostgreSQLConnection")
+    : ConvertirDatabaseUrl(databaseUrl);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQLConnection"))
+    options.UseNpgsql(connectionString)
            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 // =========================================================================
@@ -127,3 +133,17 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 return 0;
+
+static string ConvertirDatabaseUrl(string url)
+{
+    var uri = new Uri(url);
+    var credenciales = uri.UserInfo.Split(':', 2);
+    return new Npgsql.NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.Port > 0 ? uri.Port : 5432,
+        Database = uri.AbsolutePath.TrimStart('/'),
+        Username = Uri.UnescapeDataString(credenciales[0]),
+        Password = credenciales.Length > 1 ? Uri.UnescapeDataString(credenciales[1]) : null,
+    }.ConnectionString;
+}

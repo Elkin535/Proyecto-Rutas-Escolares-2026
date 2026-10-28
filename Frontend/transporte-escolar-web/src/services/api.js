@@ -4,7 +4,11 @@
  * - Redirige automáticamente al Login en caso de estado 401 Unauthorized.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://schooltrack.seminario1.eleueleo.com/api";
+// En Render se recibe solo el dominio de la API (VITE_API_HOST); en local, la URL completa (VITE_API_URL)
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.VITE_API_HOST && `https://${import.meta.env.VITE_API_HOST}/api`) ||
+  "https://schooltrack.seminario1.eleueleo.com/api";
 
 export async function fetchAuth(endpoint, options = {}) {
   const token = localStorage.getItem("token");

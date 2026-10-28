@@ -9,6 +9,7 @@ using TransporteEscolarAPI.Interfaces;
 using TransporteEscolarAPI.Models;
 using Microsoft.AspNetCore.SignalR;
 using TransporteEscolarAPI.Hubs;
+using TransporteEscolarAPI.Service;
 
 namespace TransporteEscolarAPI.Controllers
 {
@@ -19,11 +20,13 @@ namespace TransporteEscolarAPI.Controllers
     {
         private readonly IHistorialRepository _historialRepository;
         private readonly IHubContext<TrackingHub> _hubContext;
+        private readonly INotificacionService _notificaciones;
 
-        public HistorialController(IHistorialRepository historialRepository, IHubContext<TrackingHub> hubContext)
+        public HistorialController(IHistorialRepository historialRepository, IHubContext<TrackingHub> hubContext, INotificacionService notificaciones)
         {
             _historialRepository = historialRepository;
             _hubContext = hubContext;
+            _notificaciones = notificaciones;
         }
 
         [HttpGet("obtener-todos")]
@@ -54,6 +57,8 @@ namespace TransporteEscolarAPI.Controllers
             };
 
             var nuevoViaje = await _historialRepository.CrearAsync(historial);
+            await _notificaciones.NotificarAcudientesDelViajeAsync(nuevoViaje.IdViaje,
+                "🚌 El recorrido inició", "El bus escolar salió. Te avisaremos cuando esté cerca de tu parada.");
             return Ok(nuevoViaje);
         }
 
@@ -75,6 +80,8 @@ namespace TransporteEscolarAPI.Controllers
                 longitud = gpsDto.LongitudActual
             });
 
+            await _notificaciones.RevisarProximidadAsync(idViaje, gpsDto.LatitudActual, gpsDto.LongitudActual);
+
             return Ok(new { mensaje = "Coordenadas GPS actualizadas con éxito" });
         }
 
@@ -88,6 +95,8 @@ namespace TransporteEscolarAPI.Controllers
             viaje.EstadoViaje = "Finalizado";
 
             await _historialRepository.ActualizarAsync(viaje);
+            await _notificaciones.NotificarAcudientesDelViajeAsync(idViaje,
+                "✅ Recorrido finalizado", "El bus escolar terminó el recorrido de hoy.");
             return Ok(new { mensaje = "Viaje completado y guardado en el historial con éxito" });
         }
     }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
 using TransporteEscolarAPI.Models;
+using TransporteEscolarAPI.Service;
 
 namespace TransporteEscolarAPI.Controllers
 {
@@ -16,10 +17,12 @@ namespace TransporteEscolarAPI.Controllers
     public class AsistenciaViajeController : ControllerBase
     {
         private readonly IAsistenciaViajeRepository _asistenciaRepository;
+        private readonly INotificacionService _notificaciones;
 
-        public AsistenciaViajeController(IAsistenciaViajeRepository asistenciaRepository)
+        public AsistenciaViajeController(IAsistenciaViajeRepository asistenciaRepository, INotificacionService notificaciones)
         {
             _asistenciaRepository = asistenciaRepository;
+            _notificaciones = notificaciones;
         }
 
         [HttpGet("obtener-viaje")]
@@ -120,6 +123,9 @@ namespace TransporteEscolarAPI.Controllers
 
             var actualizado = await _asistenciaRepository.ActualizarAsync(av);
             if (!actualizado) return BadRequest(new { mensaje = "No se pudo actualizar la asistencia" });
+
+            if (!anteriorEstado.Equals(updateDTO.EstadoAbordaje, StringComparison.OrdinalIgnoreCase))
+                await _notificaciones.NotificarAsistenciaAsync(av.IdEstudiante, updateDTO.EstadoAbordaje);
 
             return Ok(new { mensaje = "Estado de asistencia actualizado", horaAbordaje = av.HoraAbordaje, horaEntrega = av.HoraEntrega });
         }

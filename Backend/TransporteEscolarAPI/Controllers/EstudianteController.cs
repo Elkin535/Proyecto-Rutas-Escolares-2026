@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using TransporteEscolarAPI.DTOs;
 using TransporteEscolarAPI.Interfaces;
 using TransporteEscolarAPI.Models;
+using TransporteEscolarAPI.Service;
+using System;
+using Microsoft.Extensions.Logging;
 
 namespace TransporteEscolarAPI.Controllers
 {
@@ -15,10 +18,17 @@ namespace TransporteEscolarAPI.Controllers
     public class EstudianteController : ControllerBase
     {
         private readonly IEstudianteRepository _estudianteRepository;
+        private readonly IReconocimientoService _reconocimiento;
+        private readonly ILogger<EstudianteController> _logger;
 
-        public EstudianteController(IEstudianteRepository estudianteRepository)
+        public EstudianteController(
+            IEstudianteRepository estudianteRepository,
+            IReconocimientoService reconocimiento,
+            ILogger<EstudianteController> logger)
         {
             _estudianteRepository = estudianteRepository;
+            _reconocimiento = reconocimiento;
+            _logger = logger;
         }
 
         [HttpGet("obtener-todos")]
@@ -44,7 +54,8 @@ namespace TransporteEscolarAPI.Controllers
                     CursoGrado = e.CursoGrado,
                     Estado = e.Estado,
                     IdRuta = e.IdRuta,
-                    IdParada = e.IdParada
+                    IdParada = e.IdParada,
+                    RostroRegistrado = e.RostroRegistrado
                 });
 
                 var resultado = new ResultadoPaginadoDTO<EstudianteDTO>
@@ -69,7 +80,8 @@ namespace TransporteEscolarAPI.Controllers
                 CursoGrado = e.CursoGrado,
                 Estado = e.Estado,
                 IdRuta = e.IdRuta,
-                IdParada = e.IdParada
+                IdParada = e.IdParada,
+                RostroRegistrado = e.RostroRegistrado
             });
 
             return Ok(estudiantesDTO);
@@ -91,7 +103,8 @@ namespace TransporteEscolarAPI.Controllers
                 CursoGrado = estudiante.CursoGrado,
                 Estado = estudiante.Estado,
                 IdRuta = estudiante.IdRuta,
-                IdParada = estudiante.IdParada
+                IdParada = estudiante.IdParada,
+                RostroRegistrado = estudiante.RostroRegistrado
             };
 
             return Ok(estudianteDTO);
@@ -112,7 +125,8 @@ namespace TransporteEscolarAPI.Controllers
                 CursoGrado = e.CursoGrado,
                 Estado = e.Estado,
                 IdRuta = e.IdRuta,
-                IdParada = e.IdParada
+                IdParada = e.IdParada,
+                RostroRegistrado = e.RostroRegistrado
             });
 
             return Ok(estudiantesDTO);
@@ -145,7 +159,8 @@ namespace TransporteEscolarAPI.Controllers
                 CursoGrado = nuevoEstudiante.CursoGrado,
                 Estado = nuevoEstudiante.Estado,
                 IdRuta = nuevoEstudiante.IdRuta,
-                IdParada = nuevoEstudiante.IdParada
+                IdParada = nuevoEstudiante.IdParada,
+                RostroRegistrado = nuevoEstudiante.RostroRegistrado
             };
 
             return CreatedAtAction(nameof(GetEstudiante), new { id = estudianteDTO.IdEstudiante }, estudianteDTO);
@@ -179,7 +194,8 @@ namespace TransporteEscolarAPI.Controllers
                 CursoGrado = estudiante.CursoGrado,
                 Estado = estudiante.Estado,
                 IdRuta = estudiante.IdRuta,
-                IdParada = estudiante.IdParada
+                IdParada = estudiante.IdParada,
+                RostroRegistrado = estudiante.RostroRegistrado
             };
 
             return Ok(estudianteDTO);
@@ -189,8 +205,16 @@ namespace TransporteEscolarAPI.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteEstudiante([FromQuery] int id)
         {
+            var estudiante = await _estudianteRepository.ObtenerPorIdAsync(id);
             var eliminado = await _estudianteRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Estudiante no encontrado" });
+
+            // Sus datos biométricos también se borran de AWS; si AWS falla, el estudiante igual queda eliminado
+            if (estudiante?.RostroRegistrado == true)
+            {
+                try { await _reconocimiento.EliminarRostroAsync(id); }
+                catch (Exception ex) { _logger.LogError(ex, "No se pudo borrar el rostro del estudiante {Id} en Rekognition", id); }
+            }
 
             return Ok(new { mensaje = "Estudiante eliminado con éxito" });
         }

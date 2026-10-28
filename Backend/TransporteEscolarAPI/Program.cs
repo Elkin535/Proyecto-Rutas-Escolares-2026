@@ -33,6 +33,13 @@ builder.Services.AddScoped<IAsistenciaViajeRepository, AsistenciaViajeRepository
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Reconocimiento facial (AWS Rekognition) y notificaciones push (Expo)
+builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+builder.Services.AddAWSService<Amazon.Rekognition.IAmazonRekognition>();
+builder.Services.AddScoped<IReconocimientoService, ReconocimientoService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<INotificacionService, NotificacionService>();
+
 // =========================================================================
 // 3. AUTENTICACIÓN JWT
 // =========================================================================

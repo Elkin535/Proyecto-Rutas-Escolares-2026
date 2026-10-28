@@ -40,5 +40,9 @@ namespace TransporteEscolarAPI.Models
 
         [Column("id_parada")]
         public int? IdParada { get; set; }
+
+        // El rostro vive en la colección de AWS Rekognition (ExternalImageId = IdEstudiante)
+        [Column("rostro_registrado")]
+        public bool RostroRegistrado { get; set; }
     }
 }

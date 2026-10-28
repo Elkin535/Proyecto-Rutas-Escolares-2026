@@ -11,5 +11,6 @@ namespace TransporteEscolarAPI.DTOs
         public bool Estado { get; set; }
         public int? IdRuta { get; set; }
         public int? IdParada { get; set; }
+        public bool RostroRegistrado { get; set; }
     }
 }

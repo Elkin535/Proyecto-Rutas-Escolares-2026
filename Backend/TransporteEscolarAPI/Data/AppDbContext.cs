@@ -21,11 +21,15 @@ namespace TransporteEscolarAPI.Data
         public DbSet<Ruta> Rutas { get; set; }
         public DbSet<Parada> Paradas { get; set; }
         public DbSet<AsistenciaViaje> AsistenciasViajes { get; set; }
+        public DbSet<DispositivoPush> DispositivosPush { get; set; }
+        public DbSet<Alerta> Alertas { get; set; }
 
         // Este método sirve para configurar reglas avanzadas (mapeos, llaves compuestas, etc.)
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<DispositivoPush>().HasIndex(d => d.Token).IsUnique();
 
             // Seeding default roles
             modelBuilder.Entity<Rol>().HasData(

@@ -44,12 +44,9 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     envVars:
-      # Dominio de la API sin "https://" (Render lo completa con el nombre real del servicio)
-      - key: VITE_API_HOST
-        fromService:
-          type: web
-          name: schooltrack-api
-          property: host
+      # Dirección pública de la API (fromService solo entrega el nombre interno, que el navegador no alcanza)
+      - key: VITE_API_URL
+        value: https://schooltrack-api-noyk.onrender.com/api
     # React Router: cualquier ruta (/admin, /login...) se sirve con index.html
     routes:
       - type: rewrite

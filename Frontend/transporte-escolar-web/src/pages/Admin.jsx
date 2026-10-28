@@ -38,6 +38,22 @@ function Admin() {
     setNotificacion({ show: true, message, type });
     setTimeout(() => setNotificacion({ show: false, message: "", type: "success" }), 4000);
   };
+
+  // Evita guardar dos veces si se pulsa "Guardar" mientras la petición anterior sigue en curso
+  const [guardando, setGuardando] = useState(false);
+  const guardandoRef = useRef(false);
+  const conBloqueo = (guardar) => async (e) => {
+    e.preventDefault();
+    if (guardandoRef.current) return;
+    guardandoRef.current = true;
+    setGuardando(true);
+    try {
+      await guardar(e);
+    } finally {
+      guardandoRef.current = false;
+      setGuardando(false);
+    }
+  };
   const [rutas, setRutas] = useState([]);
 
   // ── Estados generales ──
@@ -899,7 +915,7 @@ function Admin() {
       });
 
       if (conductorRes.ok) {
-        await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor();
+        await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor(); mostrarNotificacion("Conductor guardado con éxito", "success");
       } else {
         const data = await conductorRes.json();
         throw new Error(data.mensaje || "Error al crear conductor.");
@@ -931,7 +947,7 @@ function Admin() {
       });
 
       if (conductorRes.ok) {
-        await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor();
+        await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor(); mostrarNotificacion("Conductor guardado con éxito", "success");
       } else {
         const data = await conductorRes.json();
         throw new Error(data.mensaje || "Error al actualizar conductor.");
@@ -969,7 +985,6 @@ function Admin() {
     setNuevoConductorCorreo(""); setNuevoConductorContrasena(""); setNuevoConductorTelefono("");
     setNuevoConductorLicencia(""); setNuevoConductorCategoria(""); setNuevoConductorVehiculo("");
     setShowModalConductor(false);
-        mostrarNotificacion("Conductor guardado con éxito", "success");
   };
 
   const obtenerNombreRuta = (idRuta) => {
@@ -1122,7 +1137,7 @@ function Admin() {
 
               {/* MODAL: Diseñador de Ruta con Mapa y OSRM */}
               {showModalRuta && (
-                <div className="modal-overlay" onClick={() => setShowModalRuta(false)}>
+                <div className="modal-overlay">
                   <div className="modal-card modal-route-designer" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <div className="modal-title-wrap">
@@ -1134,7 +1149,7 @@ function Admin() {
                       </button>
                     </div>
 
-                    <form onSubmit={agregarRuta}>
+                    <form onSubmit={conBloqueo(agregarRuta)}>
                       {/* Datos Principales de la Ruta */}
                       <div className="route-form-grid">
                         <div className="form-group">
@@ -1289,7 +1304,7 @@ function Admin() {
 
               {/* MODAL: Editar Ruta */}
               {showModalEditarRuta && (
-                <div className="modal-overlay" onClick={() => setShowModalEditarRuta(false)}>
+                <div className="modal-overlay">
                   <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>Editar Ruta</h4>
@@ -1297,7 +1312,7 @@ function Admin() {
                         <X size={18} />
                       </button>
                     </div>
-                    <form onSubmit={actualizarRuta}>
+                    <form onSubmit={conBloqueo(actualizarRuta)}>
                       <div className="form-group">
                         <label>Nombre de la Ruta</label>
                         <input
@@ -1329,9 +1344,9 @@ function Admin() {
                       </div>
                       <div className="modal-actions">
                         <button type="button" className="btn-cancelar" onClick={() => setShowModalEditarRuta(false)}>Cancelar</button>
-                        <button type="submit" className="add-btn modal-submit-btn">
+                        <button type="submit" className="add-btn modal-submit-btn" disabled={guardando}>
                           <Pencil size={16} />
-                          <span>Guardar Cambios</span>
+                          <span>{guardando ? "Guardando..." : "Guardar Cambios"}</span>
                         </button>
                       </div>
                     </form>
@@ -1401,17 +1416,15 @@ function Admin() {
 
               {/* MODAL: Crear / Editar Estudiante */}
               {showModalEstudiante && (
-                <div className="modal-overlay" onClick={() => { setShowModalEstudiante(false);
-        mostrarNotificacion("Estudiante guardado con éxito", "success"); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                <div className="modal-overlay">
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{estudianteEditando ? "Editar Estudiante" : "Crear Nuevo Estudiante"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false);
-        mostrarNotificacion("Estudiante guardado con éxito", "success"); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>
                         <X size={18} />
                       </button>
                     </div>
-                    <form onSubmit={estudianteEditando ? actualizarEstudiante : agregarEstudiante}>
+                    <form onSubmit={conBloqueo(estudianteEditando ? actualizarEstudiante : agregarEstudiante)}>
                       <div className="form-grid-2">
                         <div className="form-group">
                           <label>Nombre</label>
@@ -1493,11 +1506,10 @@ function Admin() {
                         </datalist>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false);
-        mostrarNotificacion("Estudiante guardado con éxito", "success"); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>
-                        <button type="submit" className="add-btn modal-submit-btn">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalEstudiante(false); setEstudianteEditando(null); limpiarFormularioEstudiante(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn" disabled={guardando}>
                           {estudianteEditando ? <Pencil size={16} /> : <Plus size={16} />}
-                          <span>{estudianteEditando ? "Guardar Cambios" : "Guardar Estudiante"}</span>
+                          <span>{guardando ? "Guardando..." : estudianteEditando ? "Guardar Cambios" : "Guardar Estudiante"}</span>
                         </button>
                       </div>
                     </form>
@@ -1566,17 +1578,15 @@ function Admin() {
 
               {/* MODAL: Crear / Editar Acudiente */}
               {showModalAcudiente && (
-                <div className="modal-overlay" onClick={() => { setShowModalAcudiente(false);
-        mostrarNotificacion("Acudiente guardado con éxito", "success"); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
+                <div className="modal-overlay">
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{acudienteEditando ? "Editar Acudiente" : "Crear Nuevo Acudiente"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalAcudiente(false);
-        mostrarNotificacion("Acudiente guardado con éxito", "success"); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>
                         <X size={18} />
                       </button>
                     </div>
-                    <form onSubmit={acudienteEditando ? actualizarAcudiente : agregarAcudiente}>
+                    <form onSubmit={conBloqueo(acudienteEditando ? actualizarAcudiente : agregarAcudiente)}>
                       <div className="form-grid-2">
                         <div className="form-group">
                           <label>Nombre</label>
@@ -1606,11 +1616,10 @@ function Admin() {
                         </div>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalAcudiente(false);
-        mostrarNotificacion("Acudiente guardado con éxito", "success"); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>Cancelar</button>
-                        <button type="submit" className="add-btn modal-submit-btn">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalAcudiente(false); setAcudienteEditando(null); limpiarFormularioAcudiente(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn" disabled={guardando}>
                           {acudienteEditando ? <Pencil size={16} /> : <Plus size={16} />}
-                          <span>{acudienteEditando ? "Guardar Cambios" : "Guardar Acudiente"}</span>
+                          <span>{guardando ? "Guardando..." : acudienteEditando ? "Guardar Cambios" : "Guardar Acudiente"}</span>
                         </button>
                       </div>
                     </form>
@@ -1632,17 +1641,15 @@ function Admin() {
               </div>
 
               {showModalConductor && (
-                <div className="modal-overlay" onClick={() => { setShowModalConductor(false);
-        mostrarNotificacion("Conductor guardado con éxito", "success"); setConductorEditando(null); limpiarFormularioConductor(); }}>
+                <div className="modal-overlay">
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{conductorEditando ? "Editar Conductor" : "Crear Nuevo Conductor"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalConductor(false);
-        mostrarNotificacion("Conductor guardado con éxito", "success"); setConductorEditando(null); limpiarFormularioConductor(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>
                         <X size={18} />
                       </button>
                     </div>
-                    <form onSubmit={conductorEditando ? actualizarConductor : agregarConductor}>
+                    <form onSubmit={conBloqueo(conductorEditando ? actualizarConductor : agregarConductor)}>
                       <div className="form-grid-2">
                         <div className="form-group">
                           <label>Nombre</label>
@@ -1685,11 +1692,10 @@ function Admin() {
                         </select>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalConductor(false);
-        mostrarNotificacion("Conductor guardado con éxito", "success"); setConductorEditando(null); limpiarFormularioConductor(); }}>Cancelar</button>
-                        <button type="submit" className="add-btn modal-submit-btn">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalConductor(false); setConductorEditando(null); limpiarFormularioConductor(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn" disabled={guardando}>
                           {conductorEditando ? <Pencil size={16} /> : <Plus size={16} />}
-                          <span>{conductorEditando ? "Guardar Cambios" : "Guardar Conductor"}</span>
+                          <span>{guardando ? "Guardando..." : conductorEditando ? "Guardar Cambios" : "Guardar Conductor"}</span>
                         </button>
                       </div>
                     </form>
@@ -1732,17 +1738,15 @@ function Admin() {
               </div>
 
               {showModalVehiculo && (
-                <div className="modal-overlay" onClick={() => { setShowModalVehiculo(false);
-        mostrarNotificacion("Vehículo guardado con éxito", "success"); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
+                <div className="modal-overlay">
                   <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
                       <h4>{vehiculoEditando ? "Editar Vehículo" : "Añadir Nuevo Vehículo"}</h4>
-                      <button className="modal-close-btn" onClick={() => { setShowModalVehiculo(false);
-        mostrarNotificacion("Vehículo guardado con éxito", "success"); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
+                      <button className="modal-close-btn" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>
                         <X size={18} />
                       </button>
                     </div>
-                    <form onSubmit={vehiculoEditando ? actualizarVehiculo : agregarVehiculo}>
+                    <form onSubmit={conBloqueo(vehiculoEditando ? actualizarVehiculo : agregarVehiculo)}>
                       <div className="form-grid-2">
                         <div className="form-group">
                           <label>Placa</label>
@@ -1768,11 +1772,10 @@ function Admin() {
                         </div>
                       </div>
                       <div className="modal-actions">
-                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalVehiculo(false);
-        mostrarNotificacion("Vehículo guardado con éxito", "success"); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>Cancelar</button>
-                        <button type="submit" className="add-btn modal-submit-btn">
+                        <button type="button" className="btn-cancelar" onClick={() => { setShowModalVehiculo(false); setVehiculoEditando(null); limpiarFormularioVehiculo(); }}>Cancelar</button>
+                        <button type="submit" className="add-btn modal-submit-btn" disabled={guardando}>
                           {vehiculoEditando ? <Pencil size={16} /> : <Plus size={16} />}
-                          <span>{vehiculoEditando ? "Guardar Cambios" : "Guardar Vehículo"}</span>
+                          <span>{guardando ? "Guardando..." : vehiculoEditando ? "Guardar Cambios" : "Guardar Vehículo"}</span>
                         </button>
                       </div>
                     </form>

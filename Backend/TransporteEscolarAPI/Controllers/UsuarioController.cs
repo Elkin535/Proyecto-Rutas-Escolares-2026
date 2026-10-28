@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -244,6 +245,31 @@ namespace TransporteEscolarAPI.Controllers
             };
 
             return Ok(usuarioDTO);
+        }
+
+        // Cualquier usuario autenticado cambia SOLO su propia contraseña (el id sale del token, no del cliente)
+        [HttpPut("cambiar-contrasena")]
+        public async Task<IActionResult> CambiarContrasena([FromBody] CambiarContrasenaDTO dto)
+        {
+            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var idUsuario)) return Unauthorized();
+
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(idUsuario);
+            if (usuario == null) return NotFound(new { mensaje = "Usuario no encontrado" });
+
+            // Misma verificación que el login: admite contraseñas antiguas guardadas sin cifrar
+            var actualValida = _authService.IsPasswordHashed(usuario.Contrasena)
+                ? _authService.VerifyPassword(dto.ContrasenaActual, usuario.Contrasena)
+                : usuario.Contrasena == dto.ContrasenaActual;
+            if (!actualValida) return BadRequest(new { mensaje = "La contraseña actual no es correcta." });
+
+            if (dto.ContrasenaNueva == dto.ContrasenaActual)
+                return BadRequest(new { mensaje = "La nueva contraseña debe ser distinta de la actual." });
+
+            usuario.Contrasena = _authService.HashPassword(dto.ContrasenaNueva);
+            var actualizado = await _usuarioRepository.ActualizarAsync(usuario);
+            if (!actualizado) return StatusCode(500, new { mensaje = "No se pudo cambiar la contraseña" });
+
+            return Ok(new { mensaje = "Contraseña actualizada con éxito" });
         }
 
         [HttpDelete("eliminar")]

@@ -92,12 +92,18 @@ namespace TransporteEscolarAPI.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<UsuarioDTO>> PostUsuario([FromBody] UsuarioCreateDTO usuarioCreateDTO)
         {
+            var correo = usuarioCreateDTO.Correo.Trim();
+            if (await CorreoEnUsoAsync(correo, null))
+            {
+                return BadRequest(new { mensaje = $"Ya existe un usuario registrado con el correo {correo}." });
+            }
+
             var usuario = new Usuario
             {
                 IdRol = usuarioCreateDTO.IdRol,
-                Nombre = usuarioCreateDTO.Nombre,
-                Apellido = usuarioCreateDTO.Apellido,
-                Correo = usuarioCreateDTO.Correo,
+                Nombre = usuarioCreateDTO.Nombre.Trim(),
+                Apellido = usuarioCreateDTO.Apellido.Trim(),
+                Correo = correo,
                 Contrasena = _authService.HashPassword(usuarioCreateDTO.Contrasena),
                 Telefono = usuarioCreateDTO.Telefono,
                 FechaCreacion = DateTime.UtcNow
@@ -221,9 +227,15 @@ namespace TransporteEscolarAPI.Controllers
             var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
             if (usuario == null) return NotFound(new { mensaje = "Usuario no encontrado" });
 
-            usuario.Nombre = usuarioUpdateDTO.Nombre;
-            usuario.Apellido = usuarioUpdateDTO.Apellido;
-            usuario.Correo = usuarioUpdateDTO.Correo;
+            var correo = usuarioUpdateDTO.Correo.Trim();
+            if (await CorreoEnUsoAsync(correo, id))
+            {
+                return BadRequest(new { mensaje = $"El correo {correo} ya está en uso por otro usuario." });
+            }
+
+            usuario.Nombre = usuarioUpdateDTO.Nombre.Trim();
+            usuario.Apellido = usuarioUpdateDTO.Apellido.Trim();
+            usuario.Correo = correo;
             if (!string.IsNullOrEmpty(usuarioUpdateDTO.Contrasena))
             {
                 usuario.Contrasena = _authService.HashPassword(usuarioUpdateDTO.Contrasena);
@@ -280,6 +292,15 @@ namespace TransporteEscolarAPI.Controllers
             if (!eliminado) return NotFound(new { mensaje = "Usuario no encontrado" });
 
             return Ok(new { mensaje = "Usuario eliminado con éxito" });
+        }
+
+        // El correo identifica al usuario en el login: no puede repetirse (sin distinguir mayúsculas)
+        private Task<bool> CorreoEnUsoAsync(string correo, int? excluirIdUsuario)
+        {
+            var correoNormalizado = correo.ToLower();
+            return _context.Usuarios.AnyAsync(u =>
+                u.Correo.ToLower() == correoNormalizado &&
+                (excluirIdUsuario == null || u.IdUsuario != excluirIdUsuario));
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TransporteEscolarAPI.Data;
 using TransporteEscolarAPI.Interfaces;
+using TransporteEscolarAPI.Middleware;
 using TransporteEscolarAPI.Repositories;
 using TransporteEscolarAPI.Service;
 
@@ -18,6 +19,15 @@ var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 var connectionString = string.IsNullOrEmpty(databaseUrl)
     ? builder.Configuration.GetConnectionString("PostgreSQLConnection")
     : ConvertirDatabaseUrl(databaseUrl);
+
+// La cadena real no va en appsettings.json (se sube a git): en local va en user-secrets
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Falta la conexión a la base de datos. En local ejecuta en la carpeta del backend:\n" +
+        "  dotnet user-secrets set \"ConnectionStrings:PostgreSQLConnection\" \"Host=...;Port=5432;Database=...;Username=...;Password=...;Ssl Mode=Require\"\n" +
+        "En Render se usa la variable DATABASE_URL.");
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
@@ -92,7 +102,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddSignalR();
 
-builder.Services.AddControllers();
+// Errores de validación de los DTO devueltos como { mensaje, errores } en español
+builder.Services.AddControllers().AddRespuestasDeValidacion();
 builder.Services.AddOpenApi();
 
 builder.Services.AddCors(options =>
@@ -116,6 +127,8 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseCors("AllowAll");
+// Después de CORS: así las respuestas de error conservan las cabeceras CORS y el navegador puede leer el mensaje
+app.UseManejoErrores();
 // app.UseHttpsRedirection();
 
 // ⚠️ Usar Autenticación ANTES de Autorización

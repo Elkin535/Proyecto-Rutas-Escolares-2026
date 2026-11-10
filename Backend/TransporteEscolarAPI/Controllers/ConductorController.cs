@@ -15,10 +15,33 @@ namespace TransporteEscolarAPI.Controllers
     public class ConductorController : ControllerBase
     {
         private readonly IConductorRepository _conductorRepository;
+        private readonly IUsuarioRepository _usuarioRepository;
+        private readonly IVehiculoRepository _vehiculoRepository;
 
-        public ConductorController(IConductorRepository conductorRepository)
+        public ConductorController(
+            IConductorRepository conductorRepository,
+            IUsuarioRepository usuarioRepository,
+            IVehiculoRepository vehiculoRepository)
         {
             _conductorRepository = conductorRepository;
+            _usuarioRepository = usuarioRepository;
+            _vehiculoRepository = vehiculoRepository;
+        }
+
+        // Devuelve el mensaje de error si el vehículo no existe o ya tiene otro conductor; null si se puede asignar
+        private async Task<string?> ValidarVehiculoAsync(int idVehiculo, int? idConductorActual)
+        {
+            var vehiculo = await _vehiculoRepository.ObtenerPorIdAsync(idVehiculo);
+            if (vehiculo == null) return "El vehículo seleccionado no existe.";
+
+            var asignado = await _conductorRepository.ObtenerPorIdVehiculoAsync(idVehiculo);
+            if (asignado != null && asignado.IdConductor != idConductorActual)
+            {
+                var otro = await _usuarioRepository.ObtenerPorIdAsync(asignado.IdUsuario);
+                var nombre = otro != null ? $"{otro.Nombre} {otro.Apellido}" : $"el conductor #{asignado.IdConductor}";
+                return $"El vehículo {vehiculo.Placa} ya está asignado a {nombre}. Elige otro vehículo o déjalo sin asignar.";
+            }
+            return null;
         }
 
         [HttpGet("obtener-todos")]
@@ -88,29 +111,34 @@ namespace TransporteEscolarAPI.Controllers
         [HttpPost("crear")]
         public async Task<ActionResult<ConductorDTO>> PostConductor([FromBody] ConductorCreateDTO conductorCreateDTO)
         {
-            // 1. Validar si el usuario ya es conductor
+            // 1. El usuario debe existir y no ser ya conductor
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(conductorCreateDTO.IdUsuario);
+            if (usuario == null)
+            {
+                return BadRequest(new { mensaje = "El usuario indicado no existe." });
+            }
+
             var usuarioExistente = await _conductorRepository.ObtenerPorIdUsuarioAsync(conductorCreateDTO.IdUsuario);
             if (usuarioExistente != null)
             {
                 return BadRequest(new { mensaje = "Este usuario ya está registrado como conductor." });
             }
 
-            // 2. Validar si el vehículo ya tiene otro conductor asignado (si se envía un id_vehiculo)
+            // 2. Si se envía vehículo: debe existir y no tener otro conductor
             if (conductorCreateDTO.IdVehiculo.HasValue)
             {
-                var vehiculoAsignado = await _conductorRepository.ObtenerPorIdVehiculoAsync(conductorCreateDTO.IdVehiculo.Value);
-                if (vehiculoAsignado != null)
-                {
-                    return BadRequest(new { mensaje = "El vehículo seleccionado ya está asignado a otro conductor." });
-                }
+                var error = await ValidarVehiculoAsync(conductorCreateDTO.IdVehiculo.Value, null);
+                if (error != null) return BadRequest(new { mensaje = error });
             }
 
             var conductor = new Conductor
             {
                 IdUsuario = conductorCreateDTO.IdUsuario,
                 IdVehiculo = conductorCreateDTO.IdVehiculo,
-                NumeroLicencia = conductorCreateDTO.NumeroLicencia,
-                CategoriaLicencia = conductorCreateDTO.CategoriaLicencia
+                NumeroLicencia = conductorCreateDTO.NumeroLicencia.Trim(),
+                CategoriaLicencia = string.IsNullOrWhiteSpace(conductorCreateDTO.CategoriaLicencia)
+                    ? null
+                    : conductorCreateDTO.CategoriaLicencia.Trim().ToUpper()
             };
 
             var nuevoConductor = await _conductorRepository.CrearAsync(conductor);
@@ -136,17 +164,16 @@ namespace TransporteEscolarAPI.Controllers
             // Validar si se está cambiando de vehículo y este ya tiene otro conductor asignado
             if (conductorUpdateDTO.IdVehiculo.HasValue && conductor.IdVehiculo != conductorUpdateDTO.IdVehiculo)
             {
-                var vehiculoAsignado = await _conductorRepository.ObtenerPorIdVehiculoAsync(conductorUpdateDTO.IdVehiculo.Value);
-                if (vehiculoAsignado != null && vehiculoAsignado.IdConductor != id)
-                {
-                    return BadRequest(new { mensaje = "El vehículo seleccionado ya está asignado a otro conductor." });
-                }
+                var error = await ValidarVehiculoAsync(conductorUpdateDTO.IdVehiculo.Value, id);
+                if (error != null) return BadRequest(new { mensaje = error });
             }
 
             conductor.IdUsuario = conductorUpdateDTO.IdUsuario;
             conductor.IdVehiculo = conductorUpdateDTO.IdVehiculo;
-            conductor.NumeroLicencia = conductorUpdateDTO.NumeroLicencia;
-            conductor.CategoriaLicencia = conductorUpdateDTO.CategoriaLicencia;
+            conductor.NumeroLicencia = conductorUpdateDTO.NumeroLicencia.Trim();
+            conductor.CategoriaLicencia = string.IsNullOrWhiteSpace(conductorUpdateDTO.CategoriaLicencia)
+                ? null
+                : conductorUpdateDTO.CategoriaLicencia.Trim().ToUpper();
 
             var actualizado = await _conductorRepository.ActualizarAsync(conductor);
             if (!actualizado) return StatusCode(500, new { mensaje = "Error al actualizar el conductor" });

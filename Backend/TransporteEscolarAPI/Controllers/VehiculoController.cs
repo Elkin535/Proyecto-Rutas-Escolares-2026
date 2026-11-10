@@ -16,9 +16,12 @@ namespace TransporteEscolarAPI.Controllers
     {
         private readonly IVehiculoRepository _vehiculoRepository;
 
-        public VehiculoController(IVehiculoRepository vehiculoRepository)
+        private readonly IConductorRepository _conductorRepository;
+
+        public VehiculoController(IVehiculoRepository vehiculoRepository, IConductorRepository conductorRepository)
         {
             _vehiculoRepository = vehiculoRepository;
+            _conductorRepository = conductorRepository;
         }
 
         [HttpGet("obtener-todos")]
@@ -153,6 +156,12 @@ namespace TransporteEscolarAPI.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteVehiculo([FromQuery] int id)
         {
+            var conductorAsignado = await _conductorRepository.ObtenerPorIdVehiculoAsync(id);
+            if (conductorAsignado != null)
+            {
+                return BadRequest(new { mensaje = "No se puede eliminar: el vehículo está asignado a un conductor. Quítaselo primero desde Conductores." });
+            }
+
             var eliminado = await _vehiculoRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Vehículo no encontrado" });
 

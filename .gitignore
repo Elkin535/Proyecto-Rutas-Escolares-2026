@@ -145,3 +145,6 @@ vite.config.ts.timestamp-*
 # .NET  
 bin/  
 obj/ 
+
+# Salida de "dotnet publish" (se genera al compilar; puede contener configuración)
+publish/

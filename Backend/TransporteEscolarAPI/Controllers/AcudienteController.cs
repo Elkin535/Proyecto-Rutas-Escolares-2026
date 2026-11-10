@@ -16,9 +16,12 @@ namespace TransporteEscolarAPI.Controllers
     {
         private readonly IAcudienteRepository _acudienteRepository;
 
-        public AcudienteController(IAcudienteRepository acudienteRepository)
+        private readonly IEstudianteRepository _estudianteRepository;
+
+        public AcudienteController(IAcudienteRepository acudienteRepository, IEstudianteRepository estudianteRepository)
         {
             _acudienteRepository = acudienteRepository;
+            _estudianteRepository = estudianteRepository;
         }
 
         [HttpGet("obtener-todos")]
@@ -133,6 +136,13 @@ namespace TransporteEscolarAPI.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteAcudiente([FromQuery] int id)
         {
+            var estudiantes = await _estudianteRepository.ObtenerPorAcudienteAsync(id);
+            var cantidad = estudiantes.Count();
+            if (cantidad > 0)
+            {
+                return BadRequest(new { mensaje = $"No se puede eliminar: el acudiente tiene {cantidad} estudiante(s) a cargo. Reasígnalos o elimínalos primero." });
+            }
+
             var eliminado = await _acudienteRepository.EliminarAsync(id);
             if (!eliminado) return NotFound(new { mensaje = "Acudiente no encontrado" });
 

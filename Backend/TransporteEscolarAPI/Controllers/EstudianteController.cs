@@ -20,15 +20,31 @@ namespace TransporteEscolarAPI.Controllers
         private readonly IEstudianteRepository _estudianteRepository;
         private readonly IReconocimientoService _reconocimiento;
         private readonly ILogger<EstudianteController> _logger;
+        private readonly IAcudienteRepository _acudienteRepository;
+        private readonly IRutaRepository _rutaRepository;
 
         public EstudianteController(
             IEstudianteRepository estudianteRepository,
             IReconocimientoService reconocimiento,
-            ILogger<EstudianteController> logger)
+            ILogger<EstudianteController> logger,
+            IAcudienteRepository acudienteRepository,
+            IRutaRepository rutaRepository)
         {
             _estudianteRepository = estudianteRepository;
             _reconocimiento = reconocimiento;
             _logger = logger;
+            _acudienteRepository = acudienteRepository;
+            _rutaRepository = rutaRepository;
+        }
+
+        // La base no tiene llaves foráneas: se valida aquí que el acudiente y la ruta existan
+        private async Task<string?> ValidarRelacionesAsync(int idAcudiente, int? idRuta)
+        {
+            if (await _acudienteRepository.ObtenerPorIdAsync(idAcudiente) == null)
+                return "El acudiente seleccionado no existe.";
+            if (idRuta.HasValue && await _rutaRepository.ObtenerPorIdAsync(idRuta.Value) == null)
+                return "La ruta seleccionada no existe.";
+            return null;
         }
 
         [HttpGet("obtener-todos")]
@@ -135,6 +151,9 @@ namespace TransporteEscolarAPI.Controllers
         [HttpPost("crear")]
         public async Task<ActionResult<EstudianteDTO>> PostEstudiante([FromBody] EstudianteCreateDTO estudianteCreateDTO)
         {
+            var error = await ValidarRelacionesAsync(estudianteCreateDTO.IdAcudiente, estudianteCreateDTO.IdRuta);
+            if (error != null) return BadRequest(new { mensaje = error });
+
             var estudiante = new Estudiante
             {
                 IdAcudiente = estudianteCreateDTO.IdAcudiente,
@@ -171,6 +190,9 @@ namespace TransporteEscolarAPI.Controllers
         {
             var estudiante = await _estudianteRepository.ObtenerPorIdAsync(id);
             if (estudiante == null) return NotFound(new { mensaje = "Estudiante no encontrado" });
+
+            var error = await ValidarRelacionesAsync(estudianteUpdateDTO.IdAcudiente, estudianteUpdateDTO.IdRuta);
+            if (error != null) return BadRequest(new { mensaje = error });
 
             estudiante.IdAcudiente = estudianteUpdateDTO.IdAcudiente;
             estudiante.Nombre = estudianteUpdateDTO.Nombre;

@@ -1262,8 +1262,43 @@
   color: white;
   font-weight: 600;
   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards;
+  /* El tiempo en pantalla lo controla mostrarNotificacion() en Admin.jsx */
+  animation: slideInRight 0.3s ease-out;
   backdrop-filter: blur(8px);
+  max-width: min(440px, calc(100vw - 32px));
+}
+
+.toast-message {
+  flex: 1;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.toast-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 600px) {
+  .toast-notification {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
 }
 
 .toast-notification.success {

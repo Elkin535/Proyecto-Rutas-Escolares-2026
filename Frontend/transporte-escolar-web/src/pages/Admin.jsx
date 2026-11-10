@@ -19,12 +19,35 @@ import {
   Navigation,
   Compass,
   RotateCcw,
-  Check
+  Check,
+  CircleAlert,
+  CircleCheck
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { fetchAuth } from "../services/api";
+import { fetchAuth, leerError } from "../services/api";
+import SelectorBuscable from "../components/SelectorBuscable";
 import "./Admin.css";
+
+// ════════════════════════════════════════
+//  VALIDACIONES DE FORMULARIOS
+//  (mismas reglas que los DTO del backend; devuelven el primer error o null)
+// ════════════════════════════════════════
+const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const REGEX_TELEFONO = /^\+?[0-9\s-]{7,15}$/;
+
+const validarDatosUsuario = ({ nombre, apellido, correo, contrasena, telefono }, esEdicion) => {
+  if (!nombre.trim()) return "El nombre es obligatorio.";
+  if (nombre.trim().length > 100) return "El nombre no puede superar los 100 caracteres.";
+  if (!apellido.trim()) return "El apellido es obligatorio.";
+  if (apellido.trim().length > 150) return "El apellido no puede superar los 150 caracteres.";
+  if (!correo.trim()) return "El correo es obligatorio.";
+  if (!REGEX_CORREO.test(correo.trim())) return "El correo no tiene un formato válido (ej. nombre@correo.com).";
+  if (!esEdicion && !contrasena) return "La contraseña es obligatoria.";
+  if (contrasena && contrasena.length < 6) return "La contraseña debe tener al menos 6 caracteres.";
+  if (telefono && !REGEX_TELEFONO.test(telefono.trim())) return "El teléfono debe tener entre 7 y 15 dígitos (solo números).";
+  return null;
+};
 
 
 function Admin() {
@@ -32,11 +55,37 @@ function Admin() {
   const { tab } = useParams();
   const activeTab = tab || "resumen";
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notificacion, setNotificacion] = useState({ show: false, message: "", type: "success" });
+  const [notificacion, setNotificacion] = useState({ show: false, message: "", type: "success", id: 0 });
+  const timerNotificacionRef = useRef(null);
 
+  // Los errores se quedan más tiempo en pantalla para que alcancen a leerse
   const mostrarNotificacion = (message, type = "success") => {
-    setNotificacion({ show: true, message, type });
-    setTimeout(() => setNotificacion({ show: false, message: "", type: "success" }), 4000);
+    clearTimeout(timerNotificacionRef.current);
+    // id distinto en cada aviso para reiniciar la animación aunque el mensaje se repita
+    setNotificacion(n => ({ show: true, message, type, id: n.id + 1 }));
+    timerNotificacionRef.current = setTimeout(
+      () => setNotificacion(n => ({ ...n, show: false })),
+      type === "error" ? 6000 : 3500
+    );
+  };
+
+  const cerrarNotificacion = () => {
+    clearTimeout(timerNotificacionRef.current);
+    setNotificacion(n => ({ ...n, show: false }));
+  };
+
+  useEffect(() => () => clearTimeout(timerNotificacionRef.current), []);
+
+  // fetch lanza TypeError ("Failed to fetch") cuando no hay conexión con la API
+  const mensajeDeError = (err) =>
+    err instanceof TypeError
+      ? "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo."
+      : err?.message || "Ocurrió un error inesperado.";
+
+  // Correo repetido: se avisa antes de llamar a la API (la API también lo valida)
+  const correoEnUso = (correo, idUsuarioExcluido = null) => {
+    const c = correo.trim().toLowerCase();
+    return usuarios.some(u => u.correo?.toLowerCase() === c && u.idUsuario !== idUsuarioExcluido);
   };
 
   // Evita guardar dos veces si se pulsa "Guardar" mientras la petición anterior sigue en curso
@@ -188,6 +237,10 @@ function Admin() {
         cargarRutas();
         break;
       case "estudiantes":
+        // Acudientes, usuarios y rutas se necesitan para los selectores y la tabla
+        cargarUsuarios();
+        cargarAcudientes();
+        cargarRutas();
         cargarEstudiantes();
         break;
       case "acudientes":
@@ -457,8 +510,20 @@ function Admin() {
       mostrarNotificacion("Por favor ingresa un nombre para la ruta.", "error");
       return;
     }
+    if (nuevaRutaNombre.trim().length > 100) {
+      mostrarNotificacion("El nombre de la ruta no puede superar los 100 caracteres.", "error");
+      return;
+    }
+    if (rutas.some(r => r.nombre?.trim().toLowerCase() === nuevaRutaNombre.trim().toLowerCase())) {
+      mostrarNotificacion(`Ya existe una ruta llamada "${nuevaRutaNombre.trim()}".`, "error");
+      return;
+    }
     if (!nuevaRutaConductor) {
       mostrarNotificacion("Por favor selecciona o asigna un conductor.", "error");
+      return;
+    }
+    if (paradasRuta.some(p => !p.nombre?.trim())) {
+      mostrarNotificacion("Todas las paradas deben tener un nombre.", "error");
       return;
     }
 
@@ -468,7 +533,7 @@ function Admin() {
       const response = await fetchAuth(`Ruta/crear`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombreRuta: nuevaRutaNombre, descripcion: descripcion })
+        body: JSON.stringify({ nombreRuta: nuevaRutaNombre.trim(), descripcion: descripcion })
       });
 
       if (response.ok) {
@@ -476,30 +541,40 @@ function Admin() {
         const idRuta = rutaCreada.idRuta;
 
         // Guardar paradas seleccionadas en el mapa si existen
-        if (paradasRuta.length > 0) {
-          for (let i = 0; i < paradasRuta.length; i++) {
-            const p = paradasRuta[i];
-            await fetchAuth(`Parada/crear`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                idRuta: idRuta,
-                nombreParada: p.nombre || `Parada ${i + 1}`,
-                latitud: p.lat,
-                longitud: p.lng,
-                ordenVisita: i + 1
-              })
-            });
+        const paradasFallidas = [];
+        let ultimoError = "";
+        for (let i = 0; i < paradasRuta.length; i++) {
+          const p = paradasRuta[i];
+          const paradaRes = await fetchAuth(`Parada/crear`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idRuta: idRuta,
+              nombreParada: p.nombre.trim() || `Parada ${i + 1}`,
+              latitud: p.lat,
+              longitud: p.lng,
+              ordenVisita: i + 1
+            })
+          });
+          if (!paradaRes.ok) {
+            paradasFallidas.push(i + 1);
+            ultimoError = await leerError(paradaRes, "");
           }
         }
 
         await cargarRutas();
         limpiarFormularioRuta();
         setShowModalRuta(false);
-        mostrarNotificacion("Ruta guardada con éxito", "success");
+        if (paradasFallidas.length > 0) {
+          mostrarNotificacion(
+            `La ruta se creó, pero no se pudieron guardar las paradas ${paradasFallidas.join(", ")}. ${ultimoError}`.trim(),
+            "error"
+          );
+        } else {
+          mostrarNotificacion("Ruta guardada con éxito", "success");
+        }
       } else {
-        const errData = await response.json().catch(() => null);
-        mostrarNotificacion(errData?.mensaje || "Error al guardar la ruta en el servidor.", "error");
+        mostrarNotificacion(await leerError(response, "Error al guardar la ruta en el servidor."), "error");
       }
     } catch (err) {
       console.error(err);
@@ -513,8 +588,12 @@ function Admin() {
     if (!window.confirm("¿Estás seguro de que deseas eliminar esta ruta escolar?")) return;
     try {
       const response = await fetchAuth(`Ruta/eliminar?id=${id}`, { method: "DELETE" });
-      if (response.ok) setRutas(rutas.filter(r => r.id !== id));
+      if (response.ok) {
+        setRutas(rutas.filter(r => r.id !== id));
         mostrarNotificacion("Ruta eliminada con éxito", "success");
+      } else {
+        mostrarNotificacion(await leerError(response, "No se pudo eliminar la ruta."), "error");
+      }
     } catch (err) {
       mostrarNotificacion("No se pudo conectar con el servidor para eliminar.", "error");
     }
@@ -523,20 +602,42 @@ function Admin() {
   const abrirModalEditar = (ruta) => {
     setRutaEditando(ruta);
     setEditRutaNombre(ruta.nombre);
-    setEditRutaConductor(ruta.conductor);
-    setEditRutaPlaca(ruta.vehiculo === "Sin placa" ? "" : ruta.vehiculo);
+    setEditRutaConductor(ruta.conductor === "No asignado" ? "" : ruta.conductor);
+    const sinPlaca = !ruta.vehiculo || ["sin placa"].includes(ruta.vehiculo.trim().toLowerCase());
+    setEditRutaPlaca(sinPlaca ? "" : ruta.vehiculo);
     setShowModalEditarRuta(true);
   };
 
   const actualizarRuta = async (e) => {
     e.preventDefault();
-    if (!editRutaNombre || !editRutaConductor) return;
-    const descripcion = `Conductor: ${editRutaConductor} | Vehículo: ${editRutaPlaca || "SIN PLACA"}`;
+    if (!editRutaNombre.trim()) {
+      mostrarNotificacion("Por favor ingresa un nombre para la ruta.", "error");
+      return;
+    }
+    if (editRutaNombre.trim().length > 100) {
+      mostrarNotificacion("El nombre de la ruta no puede superar los 100 caracteres.", "error");
+      return;
+    }
+    if (rutas.some(r => r.id !== rutaEditando.id && r.nombre?.trim().toLowerCase() === editRutaNombre.trim().toLowerCase())) {
+      mostrarNotificacion(`Ya existe otra ruta llamada "${editRutaNombre.trim()}".`, "error");
+      return;
+    }
+    if (!editRutaConductor.trim()) {
+      mostrarNotificacion("Por favor indica el conductor de la ruta.", "error");
+      return;
+    }
+    const descripcion = `Conductor: ${editRutaConductor.trim()} | Vehículo: ${editRutaPlaca.trim() || "SIN PLACA"}`;
     try {
       const response = await fetchAuth(`Ruta/actualizar?id=${rutaEditando.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idRuta: rutaEditando.id, nombreRuta: editRutaNombre, descripcion: descripcion })
+        // Se reenvía el estado actual: si no, la API lo guarda como false ("Mantenimiento")
+        body: JSON.stringify({
+          idRuta: rutaEditando.id,
+          nombreRuta: editRutaNombre.trim(),
+          descripcion: descripcion,
+          estado: rutaEditando.estado === "En servicio"
+        })
       });
       if (response.ok) {
         await cargarRutas();
@@ -544,7 +645,7 @@ function Admin() {
         mostrarNotificacion("Ruta actualizada con éxito", "success");
         setRutaEditando(null);
       } else {
-        mostrarNotificacion("Error al actualizar la ruta en el servidor.", "error");
+        mostrarNotificacion(await leerError(response, "Error al actualizar la ruta en el servidor."), "error");
       }
     } catch (err) {
       mostrarNotificacion("No se pudo conectar con el servidor para actualizar.", "error");
@@ -566,18 +667,29 @@ function Admin() {
     }
   };
 
+  const validarEstudiante = () => {
+    if (!nuevoEstudianteNombre.trim()) return "El nombre del estudiante es obligatorio.";
+    if (nuevoEstudianteNombre.trim().length > 100) return "El nombre no puede superar los 100 caracteres.";
+    if (!nuevoEstudianteApellido.trim()) return "El apellido del estudiante es obligatorio.";
+    if (nuevoEstudianteApellido.trim().length > 100) return "El apellido no puede superar los 100 caracteres.";
+    if (!nuevoEstudianteAcudiente) return "Por favor selecciona un acudiente válido de la lista.";
+    if (nuevoEstudianteColegio.trim().length > 100) return "El colegio no puede superar los 100 caracteres.";
+    if (filtroRuta.trim() && !nuevoEstudianteRuta) return "La ruta escrita no existe. Selecciónala de la lista o deja el campo vacío.";
+    return null;
+  };
+
   const agregarEstudiante = async (e) => {
     e.preventDefault();
-    if (!nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
-    if (!nuevoEstudianteAcudiente) {
-      mostrarNotificacion("Por favor selecciona un acudiente válido de la lista.", "error");
+    const errorValidacion = validarEstudiante();
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
       return;
     }
     const body = {
-      idAcudiente: nuevoEstudianteAcudiente ? parseInt(nuevoEstudianteAcudiente) : 0,
-      nombre: nuevoEstudianteNombre,
-      apellido: nuevoEstudianteApellido,
-      colegio: nuevoEstudianteColegio || null,
+      idAcudiente: parseInt(nuevoEstudianteAcudiente),
+      nombre: nuevoEstudianteNombre.trim(),
+      apellido: nuevoEstudianteApellido.trim(),
+      colegio: nuevoEstudianteColegio.trim() || null,
       cursoGrado: nuevoEstudianteCurso || null,
       idRuta: nuevoEstudianteRuta ? parseInt(nuevoEstudianteRuta) : null,
       idParada: null
@@ -592,26 +704,26 @@ function Admin() {
         setShowModalEstudiante(false);
         mostrarNotificacion("Estudiante guardado con éxito", "success");
       } else {
-        const errorData = await response.json().catch(() => null);
-        mostrarNotificacion(errorData?.mensaje || "Error al guardar el estudiante.", "error");
+        mostrarNotificacion(await leerError(response, "Error al guardar el estudiante."), "error");
       }
     } catch (err) {
-      mostrarNotificacion("Error de red.", "error");
+      mostrarNotificacion("No se pudo conectar con el servidor.", "error");
     }
   };
 
   const actualizarEstudiante = async (e) => {
     e.preventDefault();
-    if (!estudianteEditando || !nuevoEstudianteNombre || !nuevoEstudianteApellido) return;
-    if (!nuevoEstudianteAcudiente) {
-      mostrarNotificacion("Por favor selecciona un acudiente válido de la lista.", "error");
+    if (!estudianteEditando) return;
+    const errorValidacion = validarEstudiante();
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
       return;
     }
     const body = {
-      idAcudiente: nuevoEstudianteAcudiente ? parseInt(nuevoEstudianteAcudiente) : 0,
-      nombre: nuevoEstudianteNombre,
-      apellido: nuevoEstudianteApellido,
-      colegio: nuevoEstudianteColegio || null,
+      idAcudiente: parseInt(nuevoEstudianteAcudiente),
+      nombre: nuevoEstudianteNombre.trim(),
+      apellido: nuevoEstudianteApellido.trim(),
+      colegio: nuevoEstudianteColegio.trim() || null,
       cursoGrado: nuevoEstudianteCurso || null,
       estado: true,
       idRuta: nuevoEstudianteRuta ? parseInt(nuevoEstudianteRuta) : null,
@@ -625,10 +737,12 @@ function Admin() {
         await cargarEstudiantes();
         limpiarFormularioEstudiante();
         setShowModalEstudiante(false);
-        mostrarNotificacion("Estudiante guardado con éxito", "success");
-      } else mostrarNotificacion("Error al actualizar el estudiante.", "error");
+        mostrarNotificacion("Estudiante actualizado con éxito", "success");
+      } else {
+        mostrarNotificacion(await leerError(response, "Error al actualizar el estudiante."), "error");
+      }
     } catch (err) {
-      mostrarNotificacion("Error de red.", "error");
+      mostrarNotificacion("No se pudo conectar con el servidor.", "error");
     }
   };
 
@@ -640,9 +754,11 @@ function Admin() {
         await cargarEstudiantes();
         if (estudianteEditando && estudianteEditando.idEstudiante === id) limpiarFormularioEstudiante();
         mostrarNotificacion("Estudiante eliminado con éxito", "success");
+      } else {
+        mostrarNotificacion(await leerError(response, "No se pudo eliminar el estudiante."), "error");
       }
     } catch (err) {
-      mostrarNotificacion("Error de red.", "error");
+      mostrarNotificacion("No se pudo conectar con el servidor.", "error");
     }
   };
 
@@ -702,12 +818,34 @@ function Admin() {
     setShowModalVehiculo(true);
   };
 
+  const validarVehiculo = () => {
+    const placa = nuevoVehiculoPlaca.trim();
+    if (!placa) return "La placa es obligatoria.";
+    if (placa.length < 5 || placa.length > 15) return "La placa debe tener entre 5 y 15 caracteres (ej. ABC-123).";
+    if (!/^[A-Z0-9-\s]+$/.test(placa)) return "La placa solo puede tener letras, números y guiones.";
+    const idActual = vehiculoEditando?.idVehiculo;
+    const normalizar = (p) => (p || "").replace(/[\s-]/g, "").toUpperCase();
+    if (vehiculos.some(v => v.idVehiculo !== idActual && normalizar(v.placa) === normalizar(placa))) {
+      return `Ya existe un vehículo con la placa ${placa}.`;
+    }
+    const capacidad = Number(nuevoVehiculoCapacidad);
+    if (!nuevoVehiculoCapacidad || !Number.isInteger(capacidad) || capacidad < 1 || capacidad > 100) {
+      return "La capacidad de pasajeros debe ser un número entero entre 1 y 100.";
+    }
+    if (nuevoVehiculoModelo.trim().length > 50) return "El modelo no puede superar los 50 caracteres.";
+    return null;
+  };
+
   const agregarVehiculo = async (e) => {
     e.preventDefault();
-    if (!nuevoVehiculoPlaca || !nuevoVehiculoCapacidad) return;
+    const errorValidacion = validarVehiculo();
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
+      return;
+    }
     const body = {
-      placa: nuevoVehiculoPlaca,
-      modelo: nuevoVehiculoModelo || null,
+      placa: nuevoVehiculoPlaca.trim(),
+      modelo: nuevoVehiculoModelo.trim() || null,
       capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
       estado: true,
       soatVencimiento: nuevoVehiculoSoat ? new Date(`${nuevoVehiculoSoat}T00:00:00`).toISOString() : null,
@@ -723,21 +861,25 @@ function Admin() {
         setShowModalVehiculo(false);
         mostrarNotificacion("Vehículo guardado con éxito", "success");
       } else {
-        const errorData = await response.json().catch(() => null);
-        mostrarNotificacion(errorData?.mensaje || "Error al guardar el vehículo.", "error");
+        mostrarNotificacion(await leerError(response, "Error al guardar el vehículo."), "error");
       }
     } catch (err) {
-      mostrarNotificacion("Error de red.", "error");
+      mostrarNotificacion("No se pudo conectar con el servidor.", "error");
     }
   };
 
   const actualizarVehiculo = async (e) => {
     e.preventDefault();
-    if (!vehiculoEditando || !nuevoVehiculoPlaca || !nuevoVehiculoCapacidad) return;
+    if (!vehiculoEditando) return;
+    const errorValidacion = validarVehiculo();
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
+      return;
+    }
     const body = {
       idVehiculo: vehiculoEditando.idVehiculo,
-      placa: nuevoVehiculoPlaca,
-      modelo: nuevoVehiculoModelo || null,
+      placa: nuevoVehiculoPlaca.trim(),
+      modelo: nuevoVehiculoModelo.trim() || null,
       capacidadPasajeros: parseInt(nuevoVehiculoCapacidad),
       estado: true,
       soatVencimiento: nuevoVehiculoSoat ? new Date(`${nuevoVehiculoSoat}T00:00:00`).toISOString() : null,
@@ -751,10 +893,12 @@ function Admin() {
         await cargarVehiculos();
         limpiarFormularioVehiculo();
         setShowModalVehiculo(false);
-        mostrarNotificacion("Vehículo guardado con éxito", "success");
-      } else mostrarNotificacion("Error al actualizar el vehículo.", "error");
+        mostrarNotificacion("Vehículo actualizado con éxito", "success");
+      } else {
+        mostrarNotificacion(await leerError(response, "Error al actualizar el vehículo."), "error");
+      }
     } catch (err) {
-      mostrarNotificacion("Error de red.", "error");
+      mostrarNotificacion("No se pudo conectar con el servidor.", "error");
     }
   };
 
@@ -762,9 +906,14 @@ function Admin() {
     if (!window.confirm("¿Seguro que deseas eliminar este vehículo?")) return;
     try {
       const response = await fetchAuth(`Vehiculo/eliminar?id=${idVehiculo}`, { method: "DELETE" });
-      if (response.ok) { await cargarVehiculos(); mostrarNotificacion("Vehículo eliminado con éxito", "success"); } else mostrarNotificacion("Error al eliminar vehículo. Verifica que no esté en uso.", "error");
+      if (response.ok) {
+        await cargarVehiculos();
+        mostrarNotificacion("Vehículo eliminado con éxito", "success");
+      } else {
+        mostrarNotificacion(await leerError(response, "Error al eliminar vehículo. Verifica que no esté en uso."), "error");
+      }
     } catch (err) {
-      mostrarNotificacion("Error de red.", "error");
+      mostrarNotificacion("No se pudo conectar con el servidor.", "error");
     }
   };
 
@@ -783,67 +932,100 @@ function Admin() {
     }
   };
 
+  // Si el perfil (acudiente/conductor) no se pudo crear, se borra el usuario recién creado
+  // para no dejar usuarios "huérfanos" que luego bloquean el correo
+  const revertirUsuarioCreado = async (idUsuario) => {
+    try {
+      await fetchAuth(`Usuario/eliminar?id=${idUsuario}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("No se pudo revertir el usuario creado:", err);
+    }
+  };
+
+  const validarAcudiente = (esEdicion) => {
+    const error = validarDatosUsuario({
+      nombre: nuevoAcudienteNombre, apellido: nuevoAcudienteApellido, correo: nuevoAcudienteCorreo,
+      contrasena: nuevoAcudienteContrasena, telefono: nuevoAcudienteTelefono
+    }, esEdicion);
+    if (error) return error;
+    if (nuevoAcudienteDireccion.trim().length > 200) return "La dirección no puede superar los 200 caracteres.";
+    if (correoEnUso(nuevoAcudienteCorreo, esEdicion ? acudienteEditando?.idUsuario : null)) {
+      return `Ya existe un usuario registrado con el correo ${nuevoAcudienteCorreo.trim()}.`;
+    }
+    return null;
+  };
+
   const agregarAcudiente = async (e) => {
     e.preventDefault();
-    if (!nuevoAcudienteNombre || !nuevoAcudienteApellido || !nuevoAcudienteCorreo || !nuevoAcudienteContrasena) return;
+    const errorValidacion = validarAcudiente(false);
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
+      return;
+    }
     try {
       const userRes = await fetchAuth(`Usuario/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          idRol: 3, nombre: nuevoAcudienteNombre, apellido: nuevoAcudienteApellido,
-          correo: nuevoAcudienteCorreo, contrasena: nuevoAcudienteContrasena, telefono: nuevoAcudienteTelefono || null
+          idRol: 3, nombre: nuevoAcudienteNombre.trim(), apellido: nuevoAcudienteApellido.trim(),
+          correo: nuevoAcudienteCorreo.trim(), contrasena: nuevoAcudienteContrasena, telefono: nuevoAcudienteTelefono.trim() || null
         })
       });
-      if (!userRes.ok) {
-        const data = await userRes.json();
-        throw new Error(data.mensaje || "Error al crear usuario.");
-      }
+      if (!userRes.ok) throw new Error(await leerError(userRes, "Error al crear el usuario del acudiente."));
       const userData = await userRes.json();
 
       const acudienteRes = await fetchAuth(`Acudiente/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idUsuario: userData.idUsuario, direccionResidencia: nuevoAcudienteDireccion || null })
+        body: JSON.stringify({ idUsuario: userData.idUsuario, direccionResidencia: nuevoAcudienteDireccion.trim() || null })
       });
 
-      if (acudienteRes.ok) {
-        await cargarUsuarios();
-        await cargarAcudientes();
-        limpiarFormularioAcudiente();
-        setShowModalAcudiente(false);
-        mostrarNotificacion("Acudiente guardado con éxito", "success");
-      } else throw new Error("Error al crear acudiente.");
+      if (!acudienteRes.ok) {
+        const mensaje = await leerError(acudienteRes, "Error al crear el acudiente.");
+        await revertirUsuarioCreado(userData.idUsuario);
+        throw new Error(mensaje);
+      }
+
+      await cargarUsuarios();
+      await cargarAcudientes();
+      limpiarFormularioAcudiente();
+      setShowModalAcudiente(false);
+      mostrarNotificacion("Acudiente guardado con éxito", "success");
     } catch (err) {
-      mostrarNotificacion(err.message, "error");
+      mostrarNotificacion(mensajeDeError(err), "error");
     }
   };
 
   const actualizarAcudiente = async (e) => {
     e.preventDefault();
-    if (!acudienteEditando || !nuevoAcudienteNombre || !nuevoAcudienteApellido || !nuevoAcudienteCorreo) return;
+    if (!acudienteEditando) return;
+    const errorValidacion = validarAcudiente(true);
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
+      return;
+    }
     try {
       const userRes = await fetchAuth(`Usuario/actualizar?id=${acudienteEditando.idUsuario}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre: nuevoAcudienteNombre, apellido: nuevoAcudienteApellido,
-          correo: nuevoAcudienteCorreo, contrasena: nuevoAcudienteContrasena || null, telefono: nuevoAcudienteTelefono || null
+          nombre: nuevoAcudienteNombre.trim(), apellido: nuevoAcudienteApellido.trim(),
+          correo: nuevoAcudienteCorreo.trim(), contrasena: nuevoAcudienteContrasena || null, telefono: nuevoAcudienteTelefono.trim() || null
         })
       });
-      if (!userRes.ok) throw new Error("Error al actualizar usuario.");
+      if (!userRes.ok) throw new Error(await leerError(userRes, "Error al actualizar los datos del usuario."));
 
       const acudienteRes = await fetchAuth(`Acudiente/actualizar?id=${acudienteEditando.idAcudiente}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idUsuario: acudienteEditando.idUsuario, direccionResidencia: nuevoAcudienteDireccion || null })
+        body: JSON.stringify({ idUsuario: acudienteEditando.idUsuario, direccionResidencia: nuevoAcudienteDireccion.trim() || null })
       });
 
-      if (acudienteRes.ok) {
-        await cargarUsuarios();
-        await cargarAcudientes();
-        limpiarFormularioAcudiente();
-        setShowModalAcudiente(false);
-        mostrarNotificacion("Acudiente guardado con éxito", "success");
-      } else throw new Error("Error al actualizar acudiente.");
+      if (!acudienteRes.ok) throw new Error(await leerError(acudienteRes, "Error al actualizar el acudiente."));
+
+      await cargarUsuarios();
+      await cargarAcudientes();
+      limpiarFormularioAcudiente();
+      setShowModalAcudiente(false);
+      mostrarNotificacion("Acudiente actualizado con éxito", "success");
     } catch (err) {
-      mostrarNotificacion(err.message, "error");
+      mostrarNotificacion(mensajeDeError(err), "error");
     }
   };
 
@@ -851,13 +1033,18 @@ function Admin() {
     if (!window.confirm("¿Estás seguro de eliminar este acudiente? Se eliminará su usuario asociado.")) return;
     try {
       const res = await fetchAuth(`Acudiente/eliminar?id=${idAcudiente}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar acudiente.");
-      await fetchAuth(`Usuario/eliminar?id=${idUsuario}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await leerError(res, "Error al eliminar el acudiente."));
+      const userRes = await fetchAuth(`Usuario/eliminar?id=${idUsuario}`, { method: "DELETE" });
       await cargarUsuarios();
       await cargarAcudientes();
       if (acudienteEditando && acudienteEditando.idAcudiente === idAcudiente) limpiarFormularioAcudiente();
+      if (userRes.ok) {
+        mostrarNotificacion("Acudiente eliminado con éxito", "success");
+      } else {
+        mostrarNotificacion(`Se eliminó el acudiente, pero no su usuario: ${await leerError(userRes, "error desconocido.")}`, "error");
+      }
     } catch (err) {
-      mostrarNotificacion(err.message, "error");
+      mostrarNotificacion(mensajeDeError(err), "error");
     }
   };
 
@@ -892,68 +1079,109 @@ function Admin() {
     }
   };
 
+  // Conductor que ya tiene asignado un vehículo (excluyendo al que se está editando)
+  const conductorConVehiculo = (idVehiculo, idConductorExcluido = null) =>
+    conductores.find(c => c.idVehiculo === idVehiculo && c.idConductor !== idConductorExcluido);
+
+  const validarConductor = (esEdicion) => {
+    const error = validarDatosUsuario({
+      nombre: nuevoConductorNombre, apellido: nuevoConductorApellido, correo: nuevoConductorCorreo,
+      contrasena: nuevoConductorContrasena, telefono: nuevoConductorTelefono
+    }, esEdicion);
+    if (error) return error;
+    if (correoEnUso(nuevoConductorCorreo, esEdicion ? conductorEditando?.idUsuario : null)) {
+      return `Ya existe un usuario registrado con el correo ${nuevoConductorCorreo.trim()}.`;
+    }
+    const licencia = nuevoConductorLicencia.trim();
+    if (!licencia) return "El número de licencia es obligatorio.";
+    if (licencia.length > 50) return "El número de licencia no puede superar los 50 caracteres.";
+    if (conductores.some(c => c.idConductor !== conductorEditando?.idConductor && c.numeroLicencia?.trim().toLowerCase() === licencia.toLowerCase())) {
+      return `Ya existe un conductor con la licencia ${licencia}.`;
+    }
+    if (nuevoConductorCategoria.trim().length > 10) return "La categoría no puede superar los 10 caracteres (ej. C1).";
+    if (nuevoConductorVehiculo) {
+      const ocupado = conductorConVehiculo(parseInt(nuevoConductorVehiculo), esEdicion ? conductorEditando?.idConductor : null);
+      if (ocupado) {
+        const u = obtenerInfoUsuario(ocupado.idUsuario);
+        const nombre = u.nombre ? `${u.nombre} ${u.apellido || ""}`.trim() : `el conductor #${ocupado.idConductor}`;
+        return `El vehículo ${obtenerPlacaVehiculo(ocupado.idVehiculo)} ya está asignado a ${nombre}. Elige otro o déjalo sin asignar.`;
+      }
+    }
+    return null;
+  };
+
+  const datosConductor = (idUsuario) => ({
+    idUsuario,
+    idVehiculo: nuevoConductorVehiculo ? parseInt(nuevoConductorVehiculo) : null,
+    numeroLicencia: nuevoConductorLicencia.trim(),
+    categoriaLicencia: nuevoConductorCategoria.trim().toUpperCase() || null
+  });
+
   const agregarConductor = async (e) => {
     e.preventDefault();
-    if (!nuevoConductorNombre || !nuevoConductorApellido || !nuevoConductorCorreo || !nuevoConductorContrasena || !nuevoConductorLicencia) return;
+    const errorValidacion = validarConductor(false);
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
+      return;
+    }
     try {
       const userRes = await fetchAuth(`Usuario/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          idRol: 2, nombre: nuevoConductorNombre, apellido: nuevoConductorApellido,
-          correo: nuevoConductorCorreo, contrasena: nuevoConductorContrasena, telefono: nuevoConductorTelefono || null
+          idRol: 2, nombre: nuevoConductorNombre.trim(), apellido: nuevoConductorApellido.trim(),
+          correo: nuevoConductorCorreo.trim(), contrasena: nuevoConductorContrasena, telefono: nuevoConductorTelefono.trim() || null
         })
       });
-      if (!userRes.ok) throw new Error("Error al crear usuario.");
+      if (!userRes.ok) throw new Error(await leerError(userRes, "Error al crear el usuario del conductor."));
       const userData = await userRes.json();
 
       const conductorRes = await fetchAuth(`Conductor/crear`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idUsuario: userData.idUsuario, idVehiculo: nuevoConductorVehiculo ? parseInt(nuevoConductorVehiculo) : null,
-          numeroLicencia: nuevoConductorLicencia, categoriaLicencia: nuevoConductorCategoria || null
-        })
+        body: JSON.stringify(datosConductor(userData.idUsuario))
       });
 
-      if (conductorRes.ok) {
-        await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor(); mostrarNotificacion("Conductor guardado con éxito", "success");
-      } else {
-        const data = await conductorRes.json();
-        throw new Error(data.mensaje || "Error al crear conductor.");
+      if (!conductorRes.ok) {
+        const mensaje = await leerError(conductorRes, "Error al crear el conductor.");
+        await revertirUsuarioCreado(userData.idUsuario);
+        throw new Error(mensaje);
       }
+
+      await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor();
+      mostrarNotificacion("Conductor guardado con éxito", "success");
     } catch (err) {
-      mostrarNotificacion(err.message, "error");
+      mostrarNotificacion(mensajeDeError(err), "error");
     }
   };
 
   const actualizarConductor = async (e) => {
     e.preventDefault();
-    if (!conductorEditando || !nuevoConductorNombre || !nuevoConductorApellido || !nuevoConductorCorreo || !nuevoConductorLicencia) return;
+    if (!conductorEditando) return;
+    const errorValidacion = validarConductor(true);
+    if (errorValidacion) {
+      mostrarNotificacion(errorValidacion, "error");
+      return;
+    }
     try {
       const userRes = await fetchAuth(`Usuario/actualizar?id=${conductorEditando.idUsuario}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre: nuevoConductorNombre, apellido: nuevoConductorApellido,
-          correo: nuevoConductorCorreo, contrasena: nuevoConductorContrasena || null, telefono: nuevoConductorTelefono || null
+          nombre: nuevoConductorNombre.trim(), apellido: nuevoConductorApellido.trim(),
+          correo: nuevoConductorCorreo.trim(), contrasena: nuevoConductorContrasena || null, telefono: nuevoConductorTelefono.trim() || null
         })
       });
-      if (!userRes.ok) throw new Error("Error al actualizar usuario.");
+      if (!userRes.ok) throw new Error(await leerError(userRes, "Error al actualizar los datos del usuario."));
 
       const conductorRes = await fetchAuth(`Conductor/actualizar?id=${conductorEditando.idConductor}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idUsuario: conductorEditando.idUsuario, idVehiculo: nuevoConductorVehiculo ? parseInt(nuevoConductorVehiculo) : null,
-          numeroLicencia: nuevoConductorLicencia, categoriaLicencia: nuevoConductorCategoria || null
-        })
+        body: JSON.stringify(datosConductor(conductorEditando.idUsuario))
       });
 
-      if (conductorRes.ok) {
-        await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor(); mostrarNotificacion("Conductor guardado con éxito", "success");
-      } else {
-        const data = await conductorRes.json();
-        throw new Error(data.mensaje || "Error al actualizar conductor.");
-      }
+      if (!conductorRes.ok) throw new Error(await leerError(conductorRes, "Error al actualizar el conductor."));
+
+      await cargarUsuarios(); await cargarConductores(); limpiarFormularioConductor();
+      mostrarNotificacion("Conductor actualizado con éxito", "success");
     } catch (err) {
-      mostrarNotificacion(err.message, "error");
+      mostrarNotificacion(mensajeDeError(err), "error");
     }
   };
 
@@ -961,12 +1189,17 @@ function Admin() {
     if (!window.confirm("¿Estás seguro de eliminar este conductor? Se eliminará su usuario asociado.")) return;
     try {
       const res = await fetchAuth(`Conductor/eliminar?id=${idConductor}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar conductor.");
-      await fetchAuth(`Usuario/eliminar?id=${idUsuario}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await leerError(res, "Error al eliminar el conductor."));
+      const userRes = await fetchAuth(`Usuario/eliminar?id=${idUsuario}`, { method: "DELETE" });
       await cargarUsuarios(); await cargarConductores();
       if (conductorEditando && conductorEditando.idConductor === idConductor) limpiarFormularioConductor();
+      if (userRes.ok) {
+        mostrarNotificacion("Conductor eliminado con éxito", "success");
+      } else {
+        mostrarNotificacion(`Se eliminó el conductor, pero no su usuario: ${await leerError(userRes, "error desconocido.")}`, "error");
+      }
     } catch (err) {
-      mostrarNotificacion(err.message, "error");
+      mostrarNotificacion(mensajeDeError(err), "error");
     }
   };
 
@@ -995,6 +1228,72 @@ function Admin() {
   const obtenerPlacaVehiculo = (idVehiculo) => {
     const veh = vehiculos.find(v => v.idVehiculo === idVehiculo);
     return veh ? veh.placa : "Sin asignar";
+  };
+
+  // ── Opciones para los selectores con búsqueda del modal de rutas ──
+  // La ruta guarda el conductor y la placa como texto en su descripción, por eso el value es el nombre / la placa
+  const nombreDeConductor = (c) => {
+    const u = obtenerInfoUsuario(c.idUsuario);
+    return u.nombre ? `${u.nombre} ${u.apellido || ""}`.trim() : `Conductor #${c.idConductor}`;
+  };
+
+  // Si el valor guardado ya no existe en la lista (datos antiguos), se muestra igual para no perderlo
+  const conValorActual = (opciones, valorActual, aviso) =>
+    valorActual && !opciones.some(o => o.value === valorActual)
+      ? [{ value: valorActual, label: valorActual, sublabel: aviso }, ...opciones]
+      : opciones;
+
+  const opcionesConductoresRuta = (idRutaEditando = null, valorActual = "") => {
+    const vistos = new Set();
+    const opciones = [];
+    conductores.forEach(c => {
+      const nombre = nombreDeConductor(c);
+      if (vistos.has(nombre)) return;
+      vistos.add(nombre);
+      const u = obtenerInfoUsuario(c.idUsuario);
+      const otrasRutas = rutas.filter(r => r.conductor === nombre && r.id !== idRutaEditando).map(r => r.nombre);
+      opciones.push({
+        value: nombre,
+        label: nombre,
+        sublabel: [
+          `Lic. ${c.numeroLicencia || "N/A"}${c.categoriaLicencia ? ` (${c.categoriaLicencia})` : ""}`,
+          c.idVehiculo ? `Vehículo ${obtenerPlacaVehiculo(c.idVehiculo)}` : "Sin vehículo",
+          otrasRutas.length ? `En ruta: ${otrasRutas.join(", ")}` : null,
+          u.correo
+        ].filter(Boolean).join(" · "),
+        conductor: c
+      });
+    });
+    opciones.sort((a, b) => a.label.localeCompare(b.label, "es"));
+    return conValorActual(opciones, valorActual, "Conductor actual (no está entre los conductores registrados)");
+  };
+
+  const opcionesVehiculosRuta = (valorActual = "") => {
+    const opciones = vehiculos
+      .map(v => {
+        const duenio = conductores.find(c => c.idVehiculo === v.idVehiculo);
+        return {
+          value: v.placa,
+          label: v.placa,
+          sublabel: [
+            v.modelo,
+            v.capacidadPasajeros ? `${v.capacidadPasajeros} pasajeros` : null,
+            duenio ? `Conductor: ${nombreDeConductor(duenio)}` : "Sin conductor"
+          ].filter(Boolean).join(" · ")
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label, "es"));
+    return conValorActual(opciones, valorActual, "Placa actual (no está entre los vehículos registrados)");
+  };
+
+  // Al elegir un conductor con vehículo asignado, se propone su placa automáticamente
+  const alElegirConductorRuta = (setConductor, setPlaca) => (valor, opcion) => {
+    setConductor(valor);
+    const idVehiculo = opcion?.conductor?.idVehiculo;
+    if (idVehiculo) {
+      const veh = vehiculos.find(v => v.idVehiculo === idVehiculo);
+      if (veh) setPlaca(veh.placa);
+    }
   };
 
   const cerrarSesion = () => {
@@ -1164,38 +1463,29 @@ function Admin() {
                         </div>
 
                         <div className="form-group">
-                          <label>Conductor Asignado *</label>
-                          <select
+                          <label htmlFor="nueva-ruta-conductor">Conductor Asignado *</label>
+                          <SelectorBuscable
+                            id="nueva-ruta-conductor"
+                            opciones={opcionesConductoresRuta()}
                             value={nuevaRutaConductor}
-                            onChange={(e) => setNuevaRutaConductor(e.target.value)}
-                            required
-                          >
-                            <option value="">-- Selecciona un conductor --</option>
-                            {conductores.map(c => {
-                              const u = obtenerInfoUsuario(c.idUsuario);
-                              const nom = u.nombre ? `${u.nombre} ${u.apellido || ""}`.trim() : `Conductor #${c.idConductor}`;
-                              return (
-                                <option key={c.idConductor} value={nom}>
-                                  {nom} (Lic: {c.licenciaConduccion || "N/A"})
-                                </option>
-                              );
-                            })}
-                          </select>
+                            onChange={alElegirConductorRuta(setNuevaRutaConductor, setNuevaRutaPlaca)}
+                            placeholder="Busca por nombre, licencia o placa..."
+                            textoSinResultados="Ningún conductor coincide con la búsqueda"
+                            permitirVaciar={false}
+                          />
                         </div>
 
                         <div className="form-group">
-                          <label>Vehículo Asignado</label>
-                          <select
+                          <label htmlFor="nueva-ruta-vehiculo">Vehículo Asignado</label>
+                          <SelectorBuscable
+                            id="nueva-ruta-vehiculo"
+                            opciones={opcionesVehiculosRuta()}
                             value={nuevaRutaPlaca}
-                            onChange={(e) => setNuevaRutaPlaca(e.target.value)}
-                          >
-                            <option value="">-- Selecciona un vehículo --</option>
-                            {vehiculos.map(v => (
-                              <option key={v.idVehiculo} value={v.placa}>
-                                {v.placa} {v.modelo ? `(${v.modelo})` : ""} - Cap: {v.capacidad || "?"} pax
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(valor) => setNuevaRutaPlaca(valor)}
+                            placeholder="Busca por placa, modelo o conductor..."
+                            textoSinResultados="Ningún vehículo coincide con la búsqueda"
+                            textoVacio="Sin vehículo"
+                          />
                         </div>
                       </div>
 
@@ -1324,22 +1614,27 @@ function Admin() {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Conductor Asignado</label>
-                        <input
-                          type="text"
-                          placeholder="Nombre del conductor"
+                        <label htmlFor="editar-ruta-conductor">Conductor Asignado *</label>
+                        <SelectorBuscable
+                          id="editar-ruta-conductor"
+                          opciones={opcionesConductoresRuta(rutaEditando?.id, editRutaConductor)}
                           value={editRutaConductor}
-                          onChange={(e) => setEditRutaConductor(e.target.value)}
-                          required
+                          onChange={alElegirConductorRuta(setEditRutaConductor, setEditRutaPlaca)}
+                          placeholder="Busca por nombre, licencia o placa..."
+                          textoSinResultados="Ningún conductor coincide con la búsqueda"
+                          permitirVaciar={false}
                         />
                       </div>
                       <div className="form-group">
-                        <label>Placa del Vehículo</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. ABC-123"
+                        <label htmlFor="editar-ruta-vehiculo">Vehículo Asignado</label>
+                        <SelectorBuscable
+                          id="editar-ruta-vehiculo"
+                          opciones={opcionesVehiculosRuta(editRutaPlaca)}
                           value={editRutaPlaca}
-                          onChange={(e) => setEditRutaPlaca(e.target.value)}
+                          onChange={(valor) => setEditRutaPlaca(valor)}
+                          placeholder="Busca por placa, modelo o conductor..."
+                          textoSinResultados="Ningún vehículo coincide con la búsqueda"
+                          textoVacio="Sin vehículo"
                         />
                       </div>
                       <div className="modal-actions">
@@ -1688,7 +1983,16 @@ function Admin() {
                         <label>Vehículo Asignado</label>
                         <select value={nuevoConductorVehiculo} onChange={(e) => setNuevoConductorVehiculo(e.target.value)}>
                           <option value="">Sin asignar</option>
-                          {vehiculos.map(v => (<option key={v.idVehiculo} value={v.idVehiculo}>{v.placa}</option>))}
+                          {vehiculos.map(v => {
+                            // Los vehículos de otros conductores se muestran, pero no se pueden elegir
+                            const ocupado = conductorConVehiculo(v.idVehiculo, conductorEditando?.idConductor ?? null);
+                            const u = ocupado ? obtenerInfoUsuario(ocupado.idUsuario) : null;
+                            return (
+                              <option key={v.idVehiculo} value={v.idVehiculo} disabled={!!ocupado}>
+                                {v.placa}{ocupado ? ` (asignado a ${u?.nombre ? `${u.nombre} ${u.apellido || ""}`.trim() : "otro conductor"})` : ""}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div className="modal-actions">
@@ -1810,6 +2114,22 @@ function Admin() {
 
         </div>
       </main>
+
+      {/* NOTIFICACIÓN GLOBAL (éxito / error de validación o del servidor) */}
+      {notificacion.show && (
+        <div
+          key={notificacion.id}
+          className={`toast-notification ${notificacion.type}`}
+          role={notificacion.type === "error" ? "alert" : "status"}
+          aria-live={notificacion.type === "error" ? "assertive" : "polite"}
+        >
+          {notificacion.type === "error" ? <CircleAlert size={20} /> : <CircleCheck size={20} />}
+          <span className="toast-message">{notificacion.message}</span>
+          <button type="button" className="toast-close-btn" onClick={cerrarNotificacion} aria-label="Cerrar notificación">
+            <X size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

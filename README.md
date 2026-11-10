@@ -35,6 +35,7 @@ Plataforma web integral desarrollada con **React**, **Vite**, **ASP.NET Core** y
 - 🗄️ Base de Datos
 - 💻 Frontend
 - 🚀 CI/CD y Deploy
+- 🛠️ Ejecutar en local
 - 📋 Scrum
 - 👥 Equipo
 - 📄 Licencia
@@ -293,6 +294,64 @@ rsync
     ↓
 sudo systemctl restart schooltrack
 ```
+
+---
+
+# 🛠️ Ejecutar en local
+
+## Requisitos
+
+| Herramienta | Versión | Para qué |
+|---|---|---|
+| [Git](https://git-scm.com/) | cualquiera | Clonar el repositorio |
+| [.NET SDK](https://dotnet.microsoft.com/download/dotnet/10.0) | **10** | Backend (API) |
+| [Node.js](https://nodejs.org/) | **24 LTS** (mínimo 22.13) | Frontend web y app móvil |
+
+No hace falta instalar PostgreSQL: en desarrollo se usa la base de datos de Render.
+
+> 🔐 **Pide al equipo por un canal privado** (nunca por GitHub): la cadena de conexión de la base de datos y, si vas a probar el reconocimiento facial, la clave de AWS.
+
+## 1. Backend (API)
+
+```bash
+cd Backend/TransporteEscolarAPI
+
+# Solo la primera vez: guarda la conexión fuera del repositorio (user-secrets de .NET)
+dotnet user-secrets set "ConnectionStrings:PostgreSQLConnection" "Host=...;Port=5432;Database=...;Username=...;Password=...;Ssl Mode=Require;Trust Server Certificate=true"
+
+dotnet run
+```
+
+- La API queda en `http://localhost:5110/api` y, desde otros equipos de la red (por ejemplo el celular), en `http://<IP-de-tu-PC>:5110/api`. La primera vez Windows pregunta si permite el acceso de red a `dotnet`: acepta.
+- ⚠️ **Todos compartimos la misma base de datos.** Al arrancar, la API aplica las migraciones pendientes: si tu rama tiene una migración nueva, se aplicará para todo el equipo. Avísale al equipo antes.
+- `appsettings.json` **no** lleva contraseñas: la conexión real va en user-secrets (local) o en la variable `DATABASE_URL` (Render).
+
+### Reconocimiento facial (opcional)
+
+Sin esto todo funciona, excepto registrar e identificar rostros (la API responde que el servicio no está disponible). Crea el archivo `C:\Users\<tu-usuario>\.aws\credentials` (en Mac/Linux `~/.aws/credentials`):
+
+```ini
+[default]
+aws_access_key_id = <Access key ID, 20 caracteres>
+aws_secret_access_key = <Secret access key, 40 caracteres>
+```
+
+Cada valor va en su propia línea, sin comas ni comillas. Reinicia la API después de crearlo.
+
+## 2. Frontend web
+
+```bash
+cd Frontend/transporte-escolar-web
+npm install
+npm run dev
+```
+
+- Abre `http://localhost:5173`.
+- Por defecto usa la API local (`http://localhost:5110/api`). Para usar la de Render sin levantar el backend, crea `Frontend/transporte-escolar-web/.env.local` con:
+
+  ```
+  VITE_API_URL=https://schooltrack-api-noyk.onrender.com/api
+  ```
 
 ---
 
